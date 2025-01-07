@@ -1,35 +1,38 @@
-import { FlashList } from '@shopify/flash-list';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import type { Post } from '@/api';
-import { usePosts } from '@/api';
-import { Card } from '@/components/card';
-import { EmptyList, FocusAwareStatusBar, Text, View } from '@/components/ui';
+import Footer from '@/components/home/footer';
+import Header from '@/components/home/header';
+import MenuDua from '@/components/home/menu-dua';
+import MenuSatu from '@/components/home/menu-satu';
+import { Text, View } from '@/components/ui';
+import type { UserData } from '@/lib/message-storage';
+import { getMessage } from '@/lib/message-storage';
 
 export default function Feed() {
-  const { data, isPending, isError } = usePosts();
-  const renderItem = React.useCallback(
-    ({ item }: { item: Post }) => <Card {...item} />,
-    []
-  );
+  const [message, setMessage] = useState<UserData | null>(null);
 
-  if (isError) {
-    return (
-      <View>
-        <Text> Error Loading data </Text>
-      </View>
-    );
-  }
+  // Mengambil pesan dari storage ketika komponen dimuat
+  useEffect(() => {
+    const storedMessage = getMessage();
+    if (storedMessage) {
+      setMessage(storedMessage);
+    }
+  }, []);
   return (
-    <View className="flex-1 ">
-      <FocusAwareStatusBar />
-      <FlashList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(_, index) => `item-${index}`}
-        ListEmptyComponent={<EmptyList isLoading={isPending} />}
-        estimatedItemSize={300}
-      />
+    <View className="flex-1 p-4">
+      {/* Header */}
+      <Header data={message} />
+      <View className="my-4 items-center justify-center">
+        <Text className="text-dark-500 mb-6 max-w-xs text-center text-lg font-bold">
+          Selamat Datang di Aplikasi Absensi RSUD H. Amri Tambunan
+        </Text>
+      </View>
+      {/* Baris 1 */}
+      <MenuSatu />
+      {/* Baris 2 */}
+      <MenuDua />
+      {/* Footer */}
+      <Footer />
     </View>
   );
 }
