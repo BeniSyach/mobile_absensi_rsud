@@ -8,7 +8,6 @@ import * as z from 'zod';
 import { Button, ControlledInput, Text, View } from '@/components/ui';
 
 const schema = z.object({
-  name: z.string().optional(),
   email: z
     .string({
       required_error: 'Email is required',
@@ -25,9 +24,15 @@ export type FormType = z.infer<typeof schema>;
 
 export type LoginFormProps = {
   onSubmit?: SubmitHandler<FormType>;
+  isPending?: boolean;
+  isError?: boolean;
 };
 
-export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
+export const LoginForm = ({
+  onSubmit = () => {},
+  isPending,
+  isError,
+}: LoginFormProps) => {
   const { handleSubmit, control } = useForm<FormType>({
     resolver: zodResolver(schema),
   });
@@ -46,18 +51,12 @@ export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
             Sign In
           </Text>
 
-          <Text className="mb-6 max-w-xs text-center text-gray-500">
-            Welcome! 👋 This is a demo login screen! Feel free to use any email
-            and password to sign in and try it out.
-          </Text>
+          {isError && (
+            <Text className="mb-6 max-w-xs text-center text-danger-500">
+              Login failed. Please try again.
+            </Text>
+          )}
         </View>
-
-        <ControlledInput
-          testID="name"
-          control={control}
-          name="name"
-          label="Name"
-        />
 
         <ControlledInput
           testID="email-input"
@@ -76,6 +75,7 @@ export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
         <Button
           testID="login-button"
           label="Login"
+          loading={isPending}
           onPress={handleSubmit(onSubmit)}
         />
       </View>
