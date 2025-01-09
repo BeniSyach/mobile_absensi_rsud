@@ -5,7 +5,7 @@ import { Image, Pressable, Text, View } from '@/components/ui';
 export default function MenuDua() {
   return (
     <View className="flex-row items-center justify-between">
-      <Link href="/feed/add-post" asChild>
+      <Link href="/list-absensi" asChild>
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
@@ -18,7 +18,7 @@ export default function MenuDua() {
           </View>
         </Pressable>
       </Link>
-      <Link href="/feed/add-post" asChild>
+      <Link href="/list-spt" asChild>
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image

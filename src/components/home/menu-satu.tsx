@@ -5,7 +5,7 @@ import { Image, Pressable, Text, View } from '@/components/ui';
 export default function MenuSatu() {
   return (
     <View className="mb-4 flex-row items-center justify-between">
-      <Link href="/feed/add-post" asChild>
+      <Link href="/absensi" asChild>
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
@@ -16,7 +16,7 @@ export default function MenuSatu() {
           </View>
         </Pressable>
       </Link>
-      <Link href="/feed/add-post" asChild>
+      <Link href="/spt" asChild>
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image

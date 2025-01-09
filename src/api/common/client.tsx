@@ -29,20 +29,27 @@ const client = axios.create({
 // Menangani request agar selalu menyertakan token dari zustand
 client.interceptors.request.use(
   async (config) => {
-    const token = useAuth.getState().token; // Ambil token dari zustand
+    const token = useAuth.getState().token;
+    if (!token) return config;
 
-    if (token && useAuth.getState().isTokenNearExpiration(token)) {
-      // Jika token hampir kedaluwarsa (misalnya kurang dari 10 menit), refresh token terlebih dahulu
-      const newToken = await refreshToken(token);
-      useAuth.getState().signIn(newToken); // Simpan token baru ke zustand
-      config.headers['Authorization'] = `Bearer ${newToken}`; // Ganti token di header
-    } else if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    // Ensure token is TokenType
+    const accessToken: TokenType =
+      typeof token === 'string'
+        ? { access: token, refresh: '' } // Include refresh token
+        : token;
+
+    if (useAuth.getState().isTokenNearExpiration(accessToken)) {
+      const newToken = await refreshToken(accessToken);
+      useAuth.getState().signIn(newToken);
+      config.headers['Authorization'] = `Bearer ${newToken.access}`;
+    } else {
+      config.headers['Authorization'] = `Bearer ${accessToken.access}`;
     }
 
     return config;
   },
   (error) => {
+    console.error('Request Error:', error);
     return Promise.reject(error);
   }
 );

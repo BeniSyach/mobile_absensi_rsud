@@ -18,6 +18,7 @@ export interface UserData {
   created_at: string;
   updated_at: string;
   refresh_token: string;
+  absen_masuk_id?: number;
 }
 
 // Fungsi untuk mendapatkan pesan dari storage

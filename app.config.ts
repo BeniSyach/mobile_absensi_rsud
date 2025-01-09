@@ -39,6 +39,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: Env.BUNDLE_ID,
+    infoPlist: {
+      NSCameraUsageDescription:
+        'This app requires access to the camera for scanning.',
+      NSLocationWhenInUseUsageDescription:
+        'This app requires access to your location to provide location-based services.',
+    },
   },
   experiments: {
     typedRoutes: true,
@@ -49,6 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#2E3C4B',
     },
     package: Env.PACKAGE,
+    permissions: ['CAMERA', 'ACCESS_FINE_LOCATION'],
   },
   web: {
     favicon: './assets/favicon.png',

@@ -2,10 +2,7 @@
 import { Redirect, SplashScreen, Tabs } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
 
-import {
-  Feed as FeedIcon,
-  Settings as SettingsIcon,
-} from '@/components/ui/icons';
+import { Feed as FeedIcon, UserIcon } from '@/components/ui/icons';
 import { useAuth, useIsFirstTime } from '@/lib';
 
 export default function TabLayout() {
@@ -45,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           headerShown: false,
-          tabBarIcon: ({ color }) => <SettingsIcon color={color} />,
+          tabBarIcon: ({ color }) => <UserIcon color={color} />,
           tabBarButtonTestID: 'settings-tab',
         }}
       />
