@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
+import type { SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { type GetUserDetailResponse } from '@/api';
 import type { WaktuKerjaResponse } from '@/api/hari-kerja/types';
 import type { Location } from '@/api/lokasi/types';
 import { type GetShiftResponseArray } from '@/api/shift/types';
@@ -11,35 +13,39 @@ import {
   Button,
   Image,
   type OptionType,
+  ScrollView,
   Select,
   Text,
   View,
 } from '@/components/ui';
 
+import LoadingComponent from '../ui/loading';
 import { UseFormState } from './use-form-state';
 
 export const schema = z.object({
   tipe_absensi: z.string({ required_error: 'Tipe Absensi Tidak Boleh Kosong' }),
-  shift: z.string({ required_error: 'Shift Tidak Boleh Kosong' }),
-  hari_kerja: z.string({ required_error: 'Hari Kerja Tidak Boleh Kosong' }),
+  shift_id: z.string({ required_error: 'Shift Tidak Boleh Kosong' }),
+  waktu_kerja_id: z.string({ required_error: 'Hari Kerja Tidak Boleh Kosong' }),
   photo: z.string({ required_error: 'Photo Tidak Boleh Kosong' }),
   longitude: z.string({ required_error: 'Lokasi Tidak Boleh Kosong' }),
   latitude: z.string({ required_error: 'Lokasi Tidak Boleh Kosong' }),
   mimeType: z.string({ required_error: 'Photo Tidak Boleh Kosong' }),
   name: z.string({ required_error: 'photo Tidak Boleh Kosong' }),
+  absen_masuk_id: z.string().optional(),
 });
 
 export type FormType = z.infer<typeof schema>;
 
-interface AbsensiFormProps {
+export type AbsensiFormProps = {
   isPending: boolean;
-  onSubmit: () => void;
+  onSubmit: SubmitHandler<FormType>;
   location: Location;
-}
+  user: GetUserDetailResponse;
+};
 
 const tipe_absensi: OptionType[] = [
-  { value: 'Masuk', label: 'Masuk' },
-  { value: 'Pulang', label: 'Pulang' },
+  { value: '0', label: 'Masuk' },
+  { value: '1', label: 'Pulang' },
 ];
 
 const getShiftOptions = (
@@ -72,6 +78,7 @@ interface FormFieldsProps {
   mimeType: string | null;
   name: string | null;
   errors: any;
+  isTipeAbsensiDisabled: boolean;
 }
 
 const FormFields: React.FC<FormFieldsProps> = ({
@@ -95,6 +102,7 @@ const FormFields: React.FC<FormFieldsProps> = ({
       onSelect={onTipeAbsensiSelect}
       placeholder="Pilih Tipe Absensi"
       error={errors.tipe_absensi?.message}
+      disabled={true}
     />
     <Select
       label="Tipe Shift"
@@ -102,7 +110,7 @@ const FormFields: React.FC<FormFieldsProps> = ({
       value={shift_value}
       onSelect={onShiftSelect}
       placeholder="Pilih Tipe Absensi"
-      error={errors.shift?.message}
+      error={errors.shift_id?.message}
     />
     <Select
       label="Shift/Hari Kerja"
@@ -110,7 +118,7 @@ const FormFields: React.FC<FormFieldsProps> = ({
       value={hari_kerja_value}
       onSelect={onHariKerjaSelect}
       placeholder="Pilih Tipe Absensi"
-      error={errors.hari_kerja?.message}
+      error={errors.waktu_kerja_id?.message}
     />
     <Button label="Ambil Foto Absensi" onPress={onImageSelect} />
     {image ? (
@@ -138,7 +146,7 @@ const FormContainer: React.FC<{
   onSubmit: () => void;
   isPending: boolean;
 }> = ({ children, onSubmit, isPending }) => (
-  <View className="flex-1 p-4">
+  <ScrollView className="flex-1 p-4">
     {children}
     <Button
       label="Absen Masuk"
@@ -147,13 +155,14 @@ const FormContainer: React.FC<{
       size="lg"
       testID="add-post-button"
     />
-  </View>
+  </ScrollView>
 );
 
 export const AbsensiForm: React.FC<AbsensiFormProps> = ({
   isPending,
   onSubmit,
   location,
+  user,
 }) => {
   const {
     setValue,
@@ -164,21 +173,40 @@ export const AbsensiForm: React.FC<AbsensiFormProps> = ({
   });
 
   const state = UseFormState(setValue);
+  // Determine if the user can mark "Masuk" or "Pulang" based on the last attendance status
+  const isTipeAbsensiDisabled = user.lastAbsenStatus?.status === 1; // If status is 1, disable "Masuk"
+  const initialTipeAbsensiValue =
+    user.lastAbsenStatus?.status === 1 ? '1' : '0'; // Default to "Pulang" if status is 1
+  // Set initial value for "tipe_absensi"
+  React.useEffect(() => {
+    setValue('tipe_absensi', initialTipeAbsensiValue);
+    if (user.lastAbsenStatus?.absen_masuk_id) {
+      setValue(
+        'absen_masuk_id',
+        user.lastAbsenStatus.absen_masuk_id.toString()
+      );
+    }
+  }, [initialTipeAbsensiValue, user.lastAbsenStatus?.absen_masuk_id, setValue]);
 
   return (
     <FormContainer onSubmit={handleSubmit(onSubmit)} isPending={isPending}>
-      <Maps
-        selectedLatitude={parseFloat(location.latitude)}
-        selectedLongitude={parseFloat(location.longitude)}
-        radius={location.radius}
-        onLocationUpdate={(lat, lng) => {
-          state.setLatitude(lat.toString());
-          state.setLongitude(lng.toString());
-        }}
-      />
+      {location.latitude && location.longitude && location.radius ? (
+        <Maps
+          selectedLatitude={parseFloat(location.latitude)}
+          selectedLongitude={parseFloat(location.longitude)}
+          radius={location.radius}
+          onLocationUpdate={(lat, lng) => {
+            console.log('Updated Location:', lat, lng);
+            state.setLatitude(lat.toString());
+            state.setLongitude(lng.toString());
+          }}
+        />
+      ) : (
+        <LoadingComponent />
+      )}
       <FormFields
         {...{
-          tipe_absensi_value: state.tipe_absensi,
+          tipe_absensi_value: initialTipeAbsensiValue,
           shift_value: state.shift,
           hari_kerja_value: state.hari_kerja,
           tipe_shift: getShiftOptions(state.shifts),
@@ -190,7 +218,9 @@ export const AbsensiForm: React.FC<AbsensiFormProps> = ({
           image: state.image,
           mimeType: state.mimeType,
           name: state.name,
+          user,
           errors,
+          isTipeAbsensiDisabled,
         }}
       />
     </FormContainer>

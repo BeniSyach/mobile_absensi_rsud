@@ -14,19 +14,25 @@ export const CardSPT = ({ data }: CardProps) => (
     />
     <View className="flex-1">
       {/* Menampilkan nama user */}
-      <Text className="text-lg font-bold">{data.user.name}</Text>
+      <Text className=" dark:text-dark-500 text-lg font-bold">
+        {data.user.name}
+      </Text>
 
       {/* Menampilkan tanggal dan waktu SPT */}
-      <Text className="text-sm text-gray-600">
+      <Text className=" dark:text-dark-500 text-sm text-gray-600">
         Tanggal SPT: {data.tanggal_spt}
       </Text>
-      <Text className="text-sm text-gray-600">Waktu SPT: {data.waktu_spt}</Text>
+      <Text className=" dark:text-dark-500 text-sm text-gray-600">
+        Waktu SPT: {data.waktu_spt}
+      </Text>
 
       {/* Menampilkan lama acara dan lokasi */}
-      <Text className="mt-2 text-sm text-gray-600">
+      <Text className=" dark:text-dark-500 mt-2 text-sm text-gray-600">
         Lama Acara: {data.lama_acara} jam
       </Text>
-      <Text className="text-sm text-gray-600">Lokasi: {data.lokasi_spt}</Text>
+      <Text className=" dark:text-dark-500 text-sm text-gray-600">
+        Lokasi: {data.lokasi_spt}
+      </Text>
     </View>
     <Pressable className="p-2">
       <Image

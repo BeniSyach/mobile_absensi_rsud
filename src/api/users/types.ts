@@ -44,12 +44,19 @@ export type GetUserDetailResponse = {
   email: string;
   email_verified_at: string | null;
   nik: string;
+  nomor_hp: string;
+  alamat: string;
   id_divisi: number;
   id_level_akses: number;
   id_gender: number;
   id_status: number;
   created_at: string;
   updated_at: string;
+  lastAbsenStatus: {
+    absen_masuk_id: number;
+    status: number;
+  };
+  photo: string | null;
   divisi: Divisi;
   level_akses: LevelAkses;
   gender: Gender;
@@ -87,13 +94,11 @@ export interface EditUserVariables {
   id: number;
   name?: string;
   email?: string;
-  password?: string;
   nik: string;
   id_divisi: string; // Assuming it's a string based on your previous data
-  id_level_akses: string; // Assuming it's a string based on your previous data
+  // id_level_akses: string; // Assuming it's a string based on your previous data
   id_gender: string; // Assuming it's a string based on your previous data
   id_status: string; // Assuming it's a string based on your previous data
-  device_token: string; // Assuming it's a string, can be empty
 }
 
 export type UploadPhotoVariables = {

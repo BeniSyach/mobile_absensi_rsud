@@ -6,6 +6,8 @@ export type AbsenPulangVariables = {
   longitude: number;
   latitude: number;
   photo: string;
+  name: string;
+  mimeType: string;
 };
 
 export type AbsenPulangResponse = {

@@ -1,18 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useState } from 'react';
 import { RefreshControl } from 'react-native';
 
+import { GetUser } from '@/api/users';
 import Footer from '@/components/home/footer';
 import Header from '@/components/home/header';
 import MenuDua from '@/components/home/menu-dua';
 import MenuSatu from '@/components/home/menu-satu';
 import { ScrollView, Text, View } from '@/components/ui';
-import type { UserData } from '@/lib/message-storage';
 import { getMessage } from '@/lib/message-storage';
 
 export default function Feed() {
-  const [message, setMessage] = useState<UserData | null>(null);
+  const storedMessage = getMessage();
   const [refreshing, setRefreshing] = useState(false);
-
+  const {
+    data: user,
+    isLoading,
+    isError,
+    refetch,
+  } = GetUser({
+    variables: storedMessage?.id,
+    enabled: !!storedMessage?.id,
+  });
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
@@ -20,13 +29,17 @@ export default function Feed() {
     }, 1000);
   };
 
-  // Mengambil pesan dari storage ketika komponen dimuat
-  useEffect(() => {
-    const storedMessage = getMessage();
-    if (storedMessage) {
-      setMessage(storedMessage);
-    }
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (storedMessage?.id) {
+        refetch(); // Memanggil ulang refetch setiap kali halaman fokus
+      }
+    }, [storedMessage?.id, refetch]) // Pastikan hanya dipanggil jika id berubah
+  );
+
+  if (isLoading) return <Text>Loading...</Text>;
+  if (isError || !user) return <Text>Error loading user data</Text>;
+
   return (
     <ScrollView
       className="flex-1"
@@ -35,7 +48,7 @@ export default function Feed() {
       }
     >
       <View className="flex-1 p-4">
-        <Header data={message} />
+        <Header data={user} />
         <View className="my-4 items-center justify-center">
           <Text className="text-dark-500 mb-6 max-w-xs text-center text-lg font-bold">
             Selamat Datang di Aplikasi Absensi RSUD H. Amri Tambunan

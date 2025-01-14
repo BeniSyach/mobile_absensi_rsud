@@ -22,8 +22,8 @@ export const UseFormState = (setValue: UseFormSetValue<FormType>) => {
 
   React.useEffect(() => {
     if (tipe_absensi) setValue('tipe_absensi', tipe_absensi.toString());
-    if (shift) setValue('shift', shift.toString());
-    if (hari_kerja) setValue('hari_kerja', hari_kerja.toString());
+    if (shift) setValue('shift_id', shift.toString());
+    if (hari_kerja) setValue('waktu_kerja_id', hari_kerja.toString());
     if (longitude) setValue('longitude', longitude);
     if (latitude) setValue('latitude', latitude);
     if (image) setValue('photo', image);

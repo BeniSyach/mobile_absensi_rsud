@@ -7,6 +7,8 @@ export type AbsenMasukVariables = {
   longitude: string;
   latitude: string;
   photo: string;
+  mimeType: string;
+  name: string;
 };
 
 export type AbsenMasukResponse = {

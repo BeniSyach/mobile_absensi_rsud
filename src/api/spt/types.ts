@@ -27,13 +27,15 @@ export type GetAllSPTResponse = {
 };
 
 export interface PostSPTVariables {
-  id: number;
-  id_user: number;
+  id?: number;
+  id_user?: number;
   tanggal_spt: string;
   waktu_spt: string;
   lama_acara: number;
   lokasi_spt: string;
-  file_spt: string;
+  file_spt?: any;
+  name: string;
+  mimeType: string;
 }
 
 export type PostSPTResponse = {

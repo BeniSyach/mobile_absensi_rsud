@@ -61,6 +61,7 @@ export const UseImagePicker = (setValue: UseFormSetValue<FormType>) => {
 
       setImage(imageUri ?? null);
       setMimeType(imageMimeType);
+
       setName(imageName);
       setValue('photo', compressedImageUri);
     }

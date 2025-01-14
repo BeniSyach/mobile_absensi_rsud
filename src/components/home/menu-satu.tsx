@@ -9,10 +9,12 @@ export default function MenuSatu() {
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
-              source={{ uri: 'https://dummyimage.com/100x100' }}
+              source={require('../../../assets/absen.png')}
               className="size-44 rounded-lg"
             />
-            <Text className="mt-2 text-center text-lg font-bold">Absensi</Text>
+            <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
+              Absensi
+            </Text>
           </View>
         </Pressable>
       </Link>
@@ -20,10 +22,12 @@ export default function MenuSatu() {
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
-              source={{ uri: 'https://dummyimage.com/100x100' }}
+              source={require('../../../assets/sptupload.png')}
               className="size-44 rounded-lg"
             />
-            <Text className="mt-2 text-center text-lg font-bold">SPT</Text>
+            <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
+              SPT
+            </Text>
           </View>
         </Pressable>
       </Link>

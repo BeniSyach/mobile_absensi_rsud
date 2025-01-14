@@ -1,5 +1,6 @@
 import { Env } from '@env';
 import axios from 'axios';
+import { Alert } from 'react-native';
 
 import { useAuth } from '@/lib/auth'; // Import dari zustand untuk mendapatkan token
 import { type TokenType } from '@/lib/auth/utils';
@@ -17,7 +18,20 @@ const refreshToken = async (currentToken: TokenType) => {
     return response.data.token;
   } catch (error) {
     console.error('Gagal memperbarui token:', error);
-    throw error;
+    const signOut = useAuth.getState().signOut;
+    Alert.alert(
+      'Sesi Berakhir',
+      'Sesi login Anda telah berakhir. Anda akan logout.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            signOut(); // Logout setelah menekan OK
+          },
+        },
+      ],
+      { cancelable: false } // Memastikan pengguna tidak bisa menutup alert tanpa menekan OK
+    );
   }
 };
 
@@ -50,6 +64,21 @@ client.interceptors.request.use(
   },
   (error) => {
     console.error('Request Error:', error);
+    Alert.alert(
+      'Sesi Berakhir',
+      'Sesi login Anda telah berakhir. Anda akan logout.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            const signOut = useAuth.getState().signOut;
+            signOut(); // Logout setelah menekan OK
+          },
+        },
+      ],
+      { cancelable: false } // Memastikan pengguna tidak bisa menutup alert tanpa menekan OK
+    );
+
     return Promise.reject(error);
   }
 );

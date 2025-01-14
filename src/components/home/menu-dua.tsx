@@ -9,10 +9,10 @@ export default function MenuDua() {
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
-              source={{ uri: 'https://dummyimage.com/100x100' }}
+              source={require('../../../assets/listabsen.png')}
               className="size-44 rounded-lg"
             />
-            <Text className="mt-2 text-center text-lg font-bold">
+            <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
               List Absensi
             </Text>
           </View>
@@ -22,10 +22,12 @@ export default function MenuDua() {
         <Pressable>
           <View className="items-center rounded-lg bg-white p-4 shadow">
             <Image
-              source={{ uri: 'https://dummyimage.com/100x100' }}
+              source={require('../../../assets/daftarspt.png')}
               className="size-44 rounded-lg"
             />
-            <Text className="mt-2 text-center text-lg font-bold">List SPT</Text>
+            <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
+              List SPT
+            </Text>
           </View>
         </Pressable>
       </Link>

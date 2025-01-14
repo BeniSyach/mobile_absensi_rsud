@@ -14,21 +14,28 @@ export const Card = ({ data }: CardProps) => (
     />
     <View className="flex-1">
       {/* Menampilkan nama user */}
-      <Text className="text-lg font-bold">{data.user.name}</Text>
-      <Text className="text-sm text-gray-600">
+      <Text className=" dark:text-dark-500 text-lg font-bold">
+        {data.user.name}
+      </Text>
+      <Text className=" dark:text-dark-500 text-sm text-gray-600">
         Absen Masuk: {data.waktu_masuk}
       </Text>
 
       {/* Menampilkan absen pulang */}
-      <Text className="mt-2 text-sm text-gray-600">Absen Pulang:</Text>
+      <Text className=" dark:text-dark-500 mt-2 text-sm text-gray-600">
+        Absen Pulang:
+      </Text>
       {data.absen_pulang.length > 0 ? (
         data.absen_pulang.map((item, index) => (
-          <Text key={index} className="text-sm text-gray-600">
+          <Text
+            key={index}
+            className="dark:text-dark-500 text-sm text-gray-600"
+          >
             {item.waktu_pulang}
           </Text>
         ))
       ) : (
-        <Text className="text-sm text-gray-600">
+        <Text className=" dark:text-dark-500 text-sm text-gray-600">
           - Belum ada absen pulang -
         </Text>
       )}

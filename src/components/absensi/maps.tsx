@@ -1,15 +1,17 @@
-import React from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import MapView, { Circle, Marker } from 'react-native-maps';
 
 import { Text, View } from '@/components/ui';
 
+import LoadingComponent from '../ui/loading';
 import { UseLocation } from './use-location';
 
 interface MapsProps {
   selectedLatitude: number;
   selectedLongitude: number;
   radius: number;
-  onLocationUpdate: (latitude: number, longitude: number) => void;
+  onLocationUpdate: (latitude: string, longitude: string) => void;
 }
 
 interface MapDisplayProps {
@@ -22,6 +24,17 @@ interface MapDisplayProps {
   radius: number;
 }
 
+const calculateDeltaFromRadius = (
+  radius: number
+): { latitudeDelta: number; longitudeDelta: number } => {
+  // Perhitungan delta berdasarkan radius, semakin kecil radius semakin kecil delta
+  const factor = 0.00001; // Faktor yang digunakan untuk menghitung delta dari radius
+  const latitudeDelta = radius * factor;
+  const longitudeDelta = latitudeDelta; // Menjaga proporsi dengan latitudeDelta
+
+  return { latitudeDelta, longitudeDelta };
+};
+
 const MapDisplay: React.FC<MapDisplayProps> = ({
   location,
   selectedLatitude,
@@ -29,36 +42,59 @@ const MapDisplay: React.FC<MapDisplayProps> = ({
   latitudeDelta,
   longitudeDelta,
   radius,
-}) => (
-  <MapView
-    style={{ height: 200, width: '100%' }}
-    initialRegion={{
-      latitude: location?.coords.latitude || selectedLatitude,
-      longitude: location?.coords.longitude || selectedLongitude,
-      latitudeDelta,
-      longitudeDelta,
-    }}
-  >
-    {/* Lokasi pengguna saat ini */}
-    {location && (
-      <Marker coordinate={location.coords} title="Anda Berada Disini" />
-    )}
+}) => {
+  // Pastikan initialRegion diberi nilai valid
+  const [region, setRegion] = useState({
+    latitude: location?.coords.latitude || selectedLatitude,
+    longitude: location?.coords.longitude || selectedLongitude,
+    latitudeDelta,
+    longitudeDelta,
+  });
 
-    {/* Lokasi yang sudah ditetapkan */}
-    <Marker
-      coordinate={{ latitude: selectedLatitude, longitude: selectedLongitude }}
-      title="Lokasi Terpilih"
-    />
+  useFocusEffect(
+    React.useCallback(() => {
+      if (location) {
+        setRegion({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta,
+          longitudeDelta,
+        });
+      }
+    }, [location, latitudeDelta, longitudeDelta]) // Pastikan hanya dipanggil jika id berubah
+  );
 
-    {/* Lingkaran di sekitar lokasi yang sudah ditetapkan */}
-    <Circle
-      center={{ latitude: selectedLatitude, longitude: selectedLongitude }}
-      radius={radius}
-      strokeColor="rgba(0, 0, 255, 0.5)"
-      fillColor="rgba(0, 0, 255, 0.2)"
-    />
-  </MapView>
-);
+  return (
+    <MapView
+      style={{ height: 200, width: '100%' }}
+      region={region} // Inisialisasi dengan lokasi yang tersedia atau default
+      showsUserLocation={true} // Menampilkan lokasi pengguna jika ada
+      followsUserLocation={true} // Memperbarui lokasi pengguna secara dinamis
+    >
+      {/* Lokasi pengguna saat ini */}
+      {location && (
+        <Marker coordinate={location.coords} title="Anda Berada Disini" />
+      )}
+
+      {/* Lokasi yang sudah ditetapkan */}
+      <Marker
+        coordinate={{
+          latitude: selectedLatitude,
+          longitude: selectedLongitude,
+        }}
+        title="Lokasi Terpilih"
+      />
+
+      {/* Lingkaran di sekitar lokasi yang sudah ditetapkan */}
+      <Circle
+        center={{ latitude: selectedLatitude, longitude: selectedLongitude }}
+        radius={radius}
+        strokeColor="rgba(0, 0, 255, 0.5)"
+        fillColor="rgba(0, 0, 255, 0.2)"
+      />
+    </MapView>
+  );
+};
 
 const Maps: React.FC<MapsProps> = ({
   selectedLatitude,
@@ -66,16 +102,25 @@ const Maps: React.FC<MapsProps> = ({
   radius,
   onLocationUpdate,
 }) => {
-  const { location, errorMsg, distance, latitudeDelta, longitudeDelta } =
-    UseLocation(selectedLatitude, selectedLongitude, radius);
+  const { location, distance } = UseLocation(
+    selectedLatitude,
+    selectedLongitude,
+    radius
+  );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (location) {
       onLocationUpdate(location.coords.latitude, location.coords.longitude);
     }
   }, [location, onLocationUpdate]);
 
-  if (errorMsg) return <Text>{errorMsg}</Text>;
+  if (!location) {
+    return <LoadingComponent />;
+  }
+  const {
+    latitudeDelta: calculatedLatitudeDelta,
+    longitudeDelta: calculatedLongitudeDelta,
+  } = calculateDeltaFromRadius(radius);
 
   return (
     <View className="mb-4">
@@ -84,8 +129,8 @@ const Maps: React.FC<MapsProps> = ({
         distance={distance}
         selectedLatitude={selectedLatitude}
         selectedLongitude={selectedLongitude}
-        latitudeDelta={latitudeDelta}
-        longitudeDelta={longitudeDelta}
+        latitudeDelta={calculatedLatitudeDelta}
+        longitudeDelta={calculatedLongitudeDelta}
         radius={radius}
       />
       {distance !== null && (
