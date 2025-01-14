@@ -185,6 +185,11 @@ export const Select = (props: SelectProps) => {
     [value, options, placeholder]
   );
 
+  // const matchedOption = options.find((t) => t.value === value);
+  // if (!matchedOption) {
+  //   console.warn(`Value ${value} tidak ditemukan di options`, options);
+  // }
+
   return (
     <>
       <View className={styles.container()}>

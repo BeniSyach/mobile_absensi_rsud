@@ -1,14 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
+import { Eye, EyeOff } from 'lucide-react-native';
+import React, { useState } from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as z from 'zod';
 
-import { Button, ControlledInput, Text, View } from '@/components/ui';
+import {
+  Button,
+  ControlledInput,
+  Image,
+  Pressable,
+  Text,
+  View,
+} from '@/components/ui';
 
 const schema = z.object({
-  name: z.string().optional(),
   email: z
     .string({
       required_error: 'Email is required',
@@ -25,12 +32,52 @@ export type FormType = z.infer<typeof schema>;
 
 export type LoginFormProps = {
   onSubmit?: SubmitHandler<FormType>;
+  isPending?: boolean;
+  isError?: boolean;
 };
 
-export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
+const renderControlledInputs = (
+  control: any,
+  showPassword: boolean,
+  togglePasswordVisibility: () => void
+) => (
+  <>
+    <ControlledInput
+      testID="email-input"
+      control={control}
+      name="email"
+      label="Email"
+    />
+    <ControlledInput
+      testID="password-input"
+      control={control}
+      name="password"
+      label="Password"
+      placeholder="***"
+      secureTextEntry={showPassword}
+      rightIcon={
+        <Pressable onPress={togglePasswordVisibility}>
+          {showPassword ? (
+            <EyeOff size={20} color="gray" />
+          ) : (
+            <Eye size={20} color="gray" />
+          )}
+        </Pressable>
+      }
+    />
+  </>
+);
+
+export const LoginForm = ({
+  onSubmit = () => {},
+  isPending,
+}: LoginFormProps) => {
+  const [showPassword, setShowPassword] = useState(true);
   const { handleSubmit, control } = useForm<FormType>({
     resolver: zodResolver(schema),
   });
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -43,39 +90,26 @@ export const LoginForm = ({ onSubmit = () => {} }: LoginFormProps) => {
             testID="form-title"
             className="pb-6 text-center text-4xl font-bold"
           >
-            Sign In
+            Login Absensi
           </Text>
 
-          <Text className="mb-6 max-w-xs text-center text-gray-500">
-            Welcome! 👋 This is a demo login screen! Feel free to use any email
-            and password to sign in and try it out.
-          </Text>
+          <Image
+            source={require('../../assets/logorsud.png')}
+            className="my-5 size-24"
+          />
         </View>
 
-        <ControlledInput
-          testID="name"
-          control={control}
-          name="name"
-          label="Name"
-        />
+        {renderControlledInputs(
+          control,
+          showPassword,
+          togglePasswordVisibility
+        )}
 
-        <ControlledInput
-          testID="email-input"
-          control={control}
-          name="email"
-          label="Email"
-        />
-        <ControlledInput
-          testID="password-input"
-          control={control}
-          name="password"
-          label="Password"
-          placeholder="***"
-          secureTextEntry={true}
-        />
         <Button
           testID="login-button"
           label="Login"
+          size="lg"
+          loading={isPending}
           onPress={handleSubmit(onSubmit)}
         />
       </View>
