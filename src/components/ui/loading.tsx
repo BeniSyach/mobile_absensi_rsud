@@ -9,7 +9,7 @@ const LoadingComponent = () => {
       {/* Spinner animasi loading */}
       <ActivityIndicator size="large" color="#0000ff" />
       {/* Teks tambahan */}
-      <Text className="mt-2 text-lg font-bold">Loading Lokasi...</Text>
+      <Text className="mt-2 text-lg font-bold">Loading...</Text>
     </View>
   );
 };

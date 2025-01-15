@@ -16,6 +16,10 @@ export default function Spt() {
     const formData = {
       ...data,
       id_user: userData?.id,
+      lama_acara: Number(data.lama_acara),
+      file_spt: data.file_spt,
+      name: data.file_spt.name,
+      mimeType: data.file_spt.mimeType,
     };
 
     mutate(formData, {
@@ -24,8 +28,6 @@ export default function Spt() {
           message: 'SPT berhasil dikirim',
           type: 'success',
         });
-
-        // Navigate back to the previous screen after success
         router.back(); // Go back to the previous screen
       },
       onError: (error) => {

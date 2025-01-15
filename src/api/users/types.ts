@@ -102,7 +102,9 @@ export interface EditUserVariables {
 }
 
 export type UploadPhotoVariables = {
-  photo: File; // Foto yang akan di-upload
+  photo: string; // Foto yang akan di-upload
+  name: string;
+  mimeType: string;
 };
 
 export type ResetPasswordResponse = {

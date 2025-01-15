@@ -149,7 +149,7 @@ const FormContainer: React.FC<{
   <ScrollView className="flex-1 p-4">
     {children}
     <Button
-      label="Absen Masuk"
+      label="Absen"
       loading={isPending}
       onPress={onSubmit}
       size="lg"

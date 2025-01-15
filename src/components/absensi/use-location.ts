@@ -49,6 +49,16 @@ export const UseLocation = (
   const handleLocationUpdate = useCallback(
     (loc: Location.LocationObject) => {
       if (!loc.coords) return;
+
+      if (loc.mocked) {
+        Alert.alert(
+          'Peringatan',
+          'Lokasi yang Anda gunakan adalah lokasi palsu',
+          [{ text: 'OK', onPress: () => router.back() }],
+          { cancelable: false }
+        );
+        return;
+      }
       setLocation(loc);
       const distanceToSelected = getDistance(
         { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
@@ -56,7 +66,7 @@ export const UseLocation = (
       );
       setDistance(distanceToSelected);
 
-      const zoomFactor = Math.max(0.005, 0.0922 * (distanceToSelected / 50));
+      const zoomFactor = Math.max(0.005, 0.0922 * (distanceToSelected / 200));
       setLatitudeDelta(zoomFactor);
       setLongitudeDelta(zoomFactor);
 
@@ -65,7 +75,7 @@ export const UseLocation = (
       if (distanceToSelected > radius && isLocationReady) {
         Alert.alert(
           'Peringatan',
-          'Jarak anda melebihi titik lokasi yang sudah ditentukan',
+          `Jarak anda melebihi titik lokasi radius ${radius} meter`,
           [{ text: 'OK', onPress: () => router.back() }],
           { cancelable: false }
         );

@@ -24,17 +24,9 @@ const schema = z.object({
       required_error: 'Waktu SPT diperlukan',
     })
     .regex(/^\d{2}:\d{2}:\d{2}$/, 'Format waktu harus HH:mm:ss'),
-  lama_acara: z
-    .string({
-      required_error: 'Lama acara diperlukan',
-    })
-    .transform((val) => {
-      const num = Number(val);
-      if (isNaN(num)) {
-        throw new Error('Lama acara harus berupa angka');
-      }
-      return num;
-    }),
+  lama_acara: z.string({
+    required_error: 'Lama acara diperlukan',
+  }),
   lokasi_spt: z
     .string({
       required_error: 'Lokasi SPT diperlukan',
@@ -47,8 +39,8 @@ const schema = z.object({
     .refine((file) => file?.type === 'application/pdf', {
       message: 'File harus berupa PDF',
     }),
-  name: z.string(),
-  mimeType: z.string(),
+  name: z.string().optional(),
+  mimeType: z.string().optional(),
 });
 
 export type FormType = z.infer<typeof schema>;
@@ -79,7 +71,7 @@ const FormFields = ({ control, errors }: { control: any; errors: any }) => {
       <ControlledInput
         control={control}
         name="lama_acara"
-        label="Lama Acara"
+        label="Lama Acara /hari"
         keyboardType="numeric"
         error={errors.lama_acara?.message}
       />
@@ -108,8 +100,8 @@ export default function SptForm({
 }: SptFormProps) {
   const {
     control,
-    handleSubmit,
     formState: { errors },
+    handleSubmit,
   } = useForm<FormType>({ resolver: zodResolver(schema) });
 
   return (
@@ -124,6 +116,7 @@ export default function SptForm({
         label="Submit SPT"
         onPress={handleSubmit(onSubmit)}
         loading={isPending}
+        size="lg"
         testID="submit-spt-button"
       />
     </View>

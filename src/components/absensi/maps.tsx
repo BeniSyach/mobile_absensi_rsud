@@ -28,7 +28,7 @@ const calculateDeltaFromRadius = (
   radius: number
 ): { latitudeDelta: number; longitudeDelta: number } => {
   // Perhitungan delta berdasarkan radius, semakin kecil radius semakin kecil delta
-  const factor = 0.00001; // Faktor yang digunakan untuk menghitung delta dari radius
+  const factor = 0.00003; // Faktor yang digunakan untuk menghitung delta dari radius
   const latitudeDelta = radius * factor;
   const longitudeDelta = latitudeDelta; // Menjaga proporsi dengan latitudeDelta
 

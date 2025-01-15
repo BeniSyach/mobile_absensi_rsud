@@ -65,6 +65,7 @@
     "expo-splash-screen": "~0.29.18",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.6",
+    "expo-web-browser": "^14.0.2",
     "geolib": "^3.3.4",
     "i18next": "^23.14.0",
     "jwt-decode": "^4.0.0",
