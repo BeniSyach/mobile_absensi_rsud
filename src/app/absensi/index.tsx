@@ -66,7 +66,6 @@ export default function Absensi() {
   const onSubmit: AbsensiFormProps['onSubmit'] = async (data) => {
     setLoading(true);
     try {
-      console.log('Request Data:', data);
       await submitAbsensi(data);
       showMessage({
         message: 'Absensi berhasil dilakukan!',

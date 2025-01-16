@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 
-export const useImagePicker = () => {
+export default function useImagePicker() {
   return useCallback(
     async (
       setImage: (uri: string | null) => void,
@@ -34,4 +34,4 @@ export const useImagePicker = () => {
     },
     []
   );
-};
+}

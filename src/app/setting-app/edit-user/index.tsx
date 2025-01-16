@@ -29,7 +29,6 @@ export default function EditUser() {
       ...data,
       id: userData.id,
     };
-    console.log(formData);
     mutate(formData);
   };
 

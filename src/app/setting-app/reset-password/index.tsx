@@ -23,7 +23,6 @@ export default function ResetPassword() {
     },
   });
   const onSubmit: FormEditPasswordProps['onSubmit'] = (data) => {
-    console.log(data);
     mutate(data);
   };
   return (

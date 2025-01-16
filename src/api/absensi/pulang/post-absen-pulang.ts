@@ -39,11 +39,6 @@ export const PostAbsenPulang = createMutation<
         formData.append('photo', file as any);
       }
 
-      console.log('data post absen masuk', formData);
-      console.log('Photo URI:', variables.photo);
-      console.log('MimeType:', variables.mimeType);
-      console.log('File Object:', file);
-
       // Mengirim request ke server
       const response = await client({
         url: '/api/absen-pulang',

@@ -23,7 +23,6 @@ export default function UseFetchAbsen() {
   });
 
   useEffect(() => {
-    console.log('Fetched data:', fetchedData);
     if (fetchedData) {
       setData((prevData) =>
         page === 1 ? fetchedData : [...prevData, ...fetchedData]
@@ -49,11 +48,6 @@ export default function UseFetchAbsen() {
       setPage((prevPage) => prevPage + 1);
     }
   }, [isPending, hasMoreData]);
-
-  // console.log('Fetching data for page:', page);
-  console.log('Data length:', data.length);
-  // console.log('Has more data:', hasMoreData);
-  // console.log('Is pending:', isPending);
 
   return {
     data,

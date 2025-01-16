@@ -196,7 +196,6 @@ export const AbsensiForm: React.FC<AbsensiFormProps> = ({
           selectedLongitude={parseFloat(location.longitude)}
           radius={location.radius}
           onLocationUpdate={(lat, lng) => {
-            console.log('Updated Location:', lat, lng);
             state.setLatitude(lat.toString());
             state.setLongitude(lng.toString());
           }}

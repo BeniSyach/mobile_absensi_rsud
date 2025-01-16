@@ -2,6 +2,7 @@
 export type LoginVariables = {
   email: string;
   password: string;
+  device_token: string | null;
 };
 
 export type LoginResponse = {
