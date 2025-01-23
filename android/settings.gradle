@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'MyAbsensiRSUD'
+rootProject.name = 'Absensi RSUD HAT'
 
 dependencyResolutionManagement {
   versionCatalogs {

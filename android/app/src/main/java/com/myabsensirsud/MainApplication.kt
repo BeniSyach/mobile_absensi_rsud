@@ -1,4 +1,4 @@
-package com.myabsensirsud.development
+package com.myabsensirsud
 
 import android.app.Application
 import android.content.res.Configuration
