@@ -1,4 +1,5 @@
 import type { AxiosError } from 'axios';
+import axios from 'axios';
 import { createMutation } from 'react-query-kit';
 
 import { client } from '../common';
@@ -9,13 +10,33 @@ export const UploadPhoto = createMutation<
   UploadPhotoVariables,
   AxiosError
 >({
-  mutationFn: async (variables) =>
-    client({
-      url: '/api/users/upload-photo', // URL API untuk upload foto
-      method: 'POST',
-      data: variables, // Variabel yang berisi foto dan data terkait
-      headers: {
-        'Content-Type': 'multipart/form-data', // Menyatakan bahwa kita mengirimkan form-data
-      },
-    }).then((response) => response.data),
+  mutationFn: async (variables) => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', {
+        uri: variables.photo,
+        name: variables.name,
+        type: variables.mimeType,
+      } as any);
+      const response = await client({
+        url: '/api/upload-photo',
+        method: 'POST',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          'Axios error occurred:',
+          error.response?.data || error.message
+        );
+      } else {
+        console.error('Unknown error occurred:', error);
+      }
+      throw error;
+    }
+  },
 });

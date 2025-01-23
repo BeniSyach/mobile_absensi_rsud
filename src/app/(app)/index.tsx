@@ -8,6 +8,7 @@ import Header from '@/components/home/header';
 import MenuDua from '@/components/home/menu-dua';
 import MenuSatu from '@/components/home/menu-satu';
 import { ScrollView, Text, View } from '@/components/ui';
+import LoadingComponent from '@/components/ui/loading';
 import { getMessage } from '@/lib/message-storage';
 
 export default function Feed() {
@@ -37,7 +38,7 @@ export default function Feed() {
     }, [storedMessage?.id, refetch]) // Pastikan hanya dipanggil jika id berubah
   );
 
-  if (isLoading) return <Text>Loading...</Text>;
+  if (isLoading) return <LoadingComponent />;
   if (isError || !user) return <Text>Error loading user data</Text>;
 
   return (

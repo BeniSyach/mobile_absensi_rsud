@@ -149,7 +149,7 @@ const FormContainer: React.FC<{
   <ScrollView className="flex-1 p-4">
     {children}
     <Button
-      label="Absen Masuk"
+      label="Absen"
       loading={isPending}
       onPress={onSubmit}
       size="lg"
@@ -196,7 +196,6 @@ export const AbsensiForm: React.FC<AbsensiFormProps> = ({
           selectedLongitude={parseFloat(location.longitude)}
           radius={location.radius}
           onLocationUpdate={(lat, lng) => {
-            console.log('Updated Location:', lat, lng);
             state.setLatitude(lat.toString());
             state.setLongitude(lng.toString());
           }}

@@ -1,28 +1,48 @@
 import { type AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import DeviceInfo from 'react-native-device-info';
 
-import { type LoginVariables, useLogin } from '@/api/auth/login';
+import { type LoginVariables, useLogin } from '@/api';
 import type { LoginFormProps } from '@/components/login-form';
 import { LoginForm } from '@/components/login-form';
 import { FocusAwareStatusBar, showErrorMessage } from '@/components/ui';
-import { useAuth } from '@/lib';
-import { setMessage } from '@/lib/message-storage';
+import { getItem, setItem, setMessage, useAuth } from '@/lib';
+
+const getPersistentDeviceId = async () => {
+  let deviceId = getItem<string>('deviceId');
+
+  if (!deviceId) {
+    deviceId = await DeviceInfo.getUniqueId();
+    await setItem('deviceId', deviceId);
+  }
+
+  console.log('Device Persistent ID:', deviceId);
+  return deviceId;
+};
 
 interface ErrorResponse {
-  error: string; // Adjust the type based on your API response structure
+  error: string;
 }
 
 export default function Login() {
   const router = useRouter();
   const signIn = useAuth.use.signIn();
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDeviceId = async () => {
+      const id = await getPersistentDeviceId();
+      setDeviceId(id);
+    };
+
+    fetchDeviceId();
+  }, []);
 
   const handleLoginSuccess = (data: any) => {
     const access = data.token;
     const refresh = data.token;
     const successMessage = data.message;
-
-    console.log('Login successful:', { access, refresh });
 
     // Save token to auth state
     signIn({ access, refresh });
@@ -48,8 +68,11 @@ export default function Login() {
   });
 
   const onSubmit: LoginFormProps['onSubmit'] = (data) => {
-    console.log(data);
-    mutate(data);
+    const loginData = {
+      ...data,
+      device_token: deviceId, // Add deviceId here
+    };
+    mutate(loginData);
   };
 
   return (

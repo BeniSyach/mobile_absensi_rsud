@@ -28,8 +28,6 @@ export const UseImagePicker = (setValue: UseFormSetValue<FormType>) => {
       cameraType: ImagePicker.CameraType.front,
     });
 
-    console.log(result);
-
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
       const imageMimeType = result.assets[0].type ?? null;
@@ -55,9 +53,6 @@ export const UseImagePicker = (setValue: UseFormSetValue<FormType>) => {
           break;
         }
       }
-
-      console.log('Compressed Image URI:', compressedImageUri);
-      console.log('Compressed Image Size:', compressedImageSize);
 
       setImage(imageUri ?? null);
       setMimeType(imageMimeType);

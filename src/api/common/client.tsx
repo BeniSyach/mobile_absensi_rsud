@@ -17,7 +17,6 @@ const refreshToken = async (currentToken: TokenType) => {
     // Mengembalikan token baru
     return response.data.token;
   } catch (error) {
-    console.error('Gagal memperbarui token:', error);
     const signOut = useAuth.getState().signOut;
     Alert.alert(
       'Sesi Berakhir',

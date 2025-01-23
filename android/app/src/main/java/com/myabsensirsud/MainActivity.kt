@@ -1,4 +1,4 @@
-package com.myabsensirsud.development
+package com.myabsensirsud
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
