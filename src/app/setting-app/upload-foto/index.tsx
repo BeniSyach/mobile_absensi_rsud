@@ -6,14 +6,14 @@ import { showMessage } from 'react-native-flash-message';
 import { UploadPhoto } from '@/api';
 import { Button, showErrorMessage, View } from '@/components/ui';
 
-import { useImagePicker } from './image-picker';
+import UseImagePicker from './image-picker';
 
 export default function UploadFoto() {
   const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
   const { mutate, isPending } = UploadPhoto();
-  const pickImage = useImagePicker();
+  const pickImage = UseImagePicker();
 
   const handleUploadImage = async () => {
     if (!image) {

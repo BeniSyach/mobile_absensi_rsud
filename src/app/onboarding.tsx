@@ -21,28 +21,26 @@ export default function Onboarding() {
       </View>
       <View className="justify-end ">
         <Text className="my-3 text-center text-5xl font-bold">
-          Obytes Starter
+          Absensi RSUD Drs.H. Amri Tambunan
         </Text>
         <Text className="mb-2 text-center text-lg text-gray-600">
-          The right way to build your mobile app
+          "Kemudahan Dalam Genggaman Anda"
         </Text>
 
         <Text className="my-1 pt-6 text-left text-lg">
-          🚀 Production-ready{' '}
+          🚀 Efisiensi Kinerja
         </Text>
         <Text className="my-1 text-left text-lg">
           🥷 Developer experience + Productivity
         </Text>
         <Text className="my-1 text-left text-lg">
-          🧩 Minimal code and dependencies
+          🧩 Integrasi mudah dan cepat
         </Text>
-        <Text className="my-1 text-left text-lg">
-          💪 well maintained third-party libraries
-        </Text>
+        <Text className="my-1 text-left text-lg">💪 Absensi Lebih Akurat</Text>
       </View>
       <SafeAreaView className="mt-6">
         <Button
-          label="Let's Get Started "
+          label="Selanjutnya"
           onPress={() => {
             setIsFirstTime(false);
             router.replace('/login');

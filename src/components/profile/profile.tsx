@@ -26,12 +26,12 @@ export default function ProfileCard({ user }: { user: GetUserDetailResponse }) {
       </View>
 
       {/* Nama Pengguna */}
-      <Text className="mb-2 text-center text-2xl font-semibold text-gray-900">
+      <Text className="dark:text-dark-500 mb-2 text-center text-2xl font-semibold text-gray-900">
         {user.name}
       </Text>
 
       {/* Email Pengguna */}
-      <Text className="mb-2 text-center text-sm text-gray-600">
+      <Text className="dark:text-dark-500 mb-2 text-center text-sm text-gray-600">
         {user.email}
       </Text>
 

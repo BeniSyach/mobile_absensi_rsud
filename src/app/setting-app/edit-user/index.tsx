@@ -28,6 +28,7 @@ export default function EditUser() {
     const formData = {
       ...data,
       id: userData.id,
+      opd_id: userData.opd_id?.toString(),
     };
     mutate(formData);
   };

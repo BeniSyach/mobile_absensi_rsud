@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   description: `${Env.NAME} Mobile App`,
   owner: Env.EXPO_ACCOUNT_OWNER,
   scheme: Env.SCHEME,
-  slug: 'obytesapp',
+  slug: 'absensi-rsud',
   version: Env.VERSION.toString(),
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -65,9 +65,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
+        // image: './assets/splash-icon.png',
+        image: './assets/icon.png',
+        resizeMode: 'cover',
         backgroundColor: '#2E3C4B',
-        image: './assets/splash-icon.png',
-        imageWidth: 150,
       },
     ],
     [

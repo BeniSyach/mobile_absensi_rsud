@@ -13,7 +13,7 @@ import {
   AbsensiForm,
   type AbsensiFormProps,
 } from '@/components/absensi/absensi-form';
-import { Button, View } from '@/components/ui';
+import { Button, showErrorMessage, View } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
 import useAbsensiSubmit from './use-absensi-submit';
@@ -40,7 +40,10 @@ export default function Absensi() {
     isLoading,
     isError,
     refetch: ceklokasi,
-  } = useGetLocationDetail({ variables: { id: 2 } });
+  } = useGetLocationDetail({
+    variables: { id: storedMessage?.opd_id ?? 2 },
+    enabled: !!storedMessage?.opd_id,
+  });
 
   const { data: user, refetch } = GetUser({
     variables: storedMessage?.id,
@@ -73,11 +76,7 @@ export default function Absensi() {
       });
       router.back();
     } catch (error: any) {
-      showMessage({
-        message: 'Terjadi kesalahan saat melakukan absensi.',
-        description: error.message || 'Silakan coba lagi.',
-        type: 'danger',
-      });
+      showErrorMessage(error.response?.data?.error || error.message);
     } finally {
       setLoading(false);
     }

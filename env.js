@@ -36,9 +36,9 @@ require('dotenv').config({
 
 const BUNDLE_ID = 'com.myabsensirsud'; // ios bundle id
 const PACKAGE = 'com.myabsensirsud'; // android package name
-const NAME = 'MyAbsensiRSUD'; // app name
-const EXPO_ACCOUNT_OWNER = 'expo-owner'; // expo account owner
-const EAS_PROJECT_ID = 'c3e1075b-6fe7-4686-aa49-35b46a229044'; // eas project id
+const NAME = 'Absensi RSUD HAT'; // app name
+const EXPO_ACCOUNT_OWNER = 'benisyach'; // expo account owner
+const EAS_PROJECT_ID = 'f258a85f-0dc2-49e0-8065-744e37a7ad8a'; // eas project id
 const SCHEME = 'MyAbsensiRSUD'; // app scheme
 
 /**

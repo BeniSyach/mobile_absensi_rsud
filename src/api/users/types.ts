@@ -20,6 +20,12 @@ type StatusPegawai = {
   nama_status: string;
 };
 
+type Opd = {
+  id: number;
+  place_name: string;
+  division_name: string;
+};
+
 export type GetAllUsersResponse = {
   id: number;
   name: string;
@@ -61,6 +67,7 @@ export type GetUserDetailResponse = {
   level_akses: LevelAkses;
   gender: Gender;
   status_pegawai: StatusPegawai;
+  opd: Opd;
 };
 
 export type UpdatePasswordResponse = {

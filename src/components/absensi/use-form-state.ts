@@ -1,7 +1,8 @@
 import React from 'react';
 import { type UseFormSetValue } from 'react-hook-form';
 
-import { GetShifts, GetWaktuKerjaByShift } from '@/api';
+import { GetWaktuKerjaByShiftAndOPD } from '@/api';
+import { GetShiftsByOpd } from '@/api/shift/get-shift-by-opd';
 
 import { type FormType } from './absensi-form';
 import { UseImagePicker } from './use-image-picker';
@@ -14,8 +15,8 @@ export const UseFormState = (setValue: UseFormSetValue<FormType>) => {
   const [latitude, setLatitude] = React.useState<string | null>(null);
   const { image, mimeType, name, takePhoto } = UseImagePicker(setValue);
 
-  const { data: shifts } = GetShifts();
-  const { data: workTimes } = GetWaktuKerjaByShift({
+  const { data: shifts } = GetShiftsByOpd();
+  const { data: workTimes } = GetWaktuKerjaByShiftAndOPD({
     variables: { shiftId: Number(shift) },
     enabled: !!shift,
   });

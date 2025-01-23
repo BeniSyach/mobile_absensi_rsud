@@ -32,7 +32,7 @@ export const CardSPT = ({ data }: CardProps) => {
       <FileText color="black" size={32} className="mr-4" />
       <View className="flex-1">
         {/* Menampilkan nama user */}
-        <Text className=" dark:text-dark-500 text-lg font-bold">
+        <Text className="dark:text-dark-500 text-lg font-bold">
           {data.user.name}
         </Text>
 

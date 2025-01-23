@@ -36,6 +36,7 @@ export const ProfileDetails = ({
       {renderField('Login Sebagai', message.level_akses.nama_level)}
       {renderField('Jenis Kelamin', message.gender.nama_gender)}
       {renderField('Status Pegawai', message.status_pegawai.nama_status)}
+      {renderField('OPD', message.opd.place_name)}
     </View>
   </>
 );

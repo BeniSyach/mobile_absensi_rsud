@@ -3,6 +3,7 @@ export type GetShiftResponse = {
   nama_shift: string;
   created_at: string;
   updated_at: string;
+  opd_id: number;
 };
 
 export type GetShiftResponseArray = GetShiftResponse[];

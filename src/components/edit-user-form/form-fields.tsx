@@ -27,6 +27,14 @@ export const FormFields = ({
   } = useFormOptions();
 
   useEffect(() => {
+    if (control?._defaultValues) {
+      setDivisi_id(control._defaultValues.id_divisi);
+      setGender_id(control._defaultValues.id_gender);
+      setStatus_id(control._defaultValues.id_status);
+    }
+  }, [control]);
+
+  useEffect(() => {
     if (divisi_id) setValue('id_divisi', divisi_id.toString());
     if (gender_id) setValue('id_gender', gender_id.toString());
     if (status_id) setValue('id_status', status_id.toString());
@@ -40,7 +48,7 @@ export const FormFields = ({
       <Select
         label="Divisi"
         options={divisiOptions}
-        value={divisi_id}
+        value={Number(divisi_id)}
         onSelect={(option) => setDivisi_id(option)}
         placeholder={divisiPlaceholder}
         error={errors.id_divisi?.message}
@@ -48,7 +56,7 @@ export const FormFields = ({
       <Select
         label="Jenis Kelamin"
         options={genderOptions}
-        value={gender_id}
+        value={Number(gender_id)}
         onSelect={(option) => setGender_id(option)}
         placeholder={genderPlaceholder}
         error={errors.id_gender?.message}
@@ -56,7 +64,7 @@ export const FormFields = ({
       <Select
         label="Status Kepegawaian"
         options={statusOptions}
-        value={status_id}
+        value={Number(status_id)}
         onSelect={(option) => setStatus_id(option)}
         placeholder={statusPlaceholder}
         error={errors.id_status?.message}

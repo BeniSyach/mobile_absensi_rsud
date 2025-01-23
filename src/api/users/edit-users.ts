@@ -1,4 +1,5 @@
 import type { AxiosError } from 'axios';
+import axios from 'axios';
 import { createMutation } from 'react-query-kit';
 
 import { client } from '../common';
@@ -9,10 +10,24 @@ export const PutUser = createMutation<
   EditUserVariables,
   AxiosError
 >({
-  mutationFn: async (variables) =>
-    client({
-      url: `/api/users/${variables.id}`, // Menyertakan ID dalam URL
-      method: 'PUT',
-      data: variables, // Mengirimkan data user yang diupdate
-    }).then((response) => response.data),
+  mutationFn: async (variables) => {
+    try {
+      const response = await client({
+        url: `/api/users/${variables.id}`,
+        method: 'PUT',
+        data: variables,
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          'Axios error occurred:',
+          error.response?.data || error.message
+        );
+      } else {
+        console.error('Unknown error occurred:', error);
+      }
+      throw error;
+    }
+  },
 });
