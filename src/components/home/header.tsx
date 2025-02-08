@@ -15,6 +15,7 @@ export default function Header({ data }: { data: GetUserDetailResponse }) {
               : `https://dummyimage.com/80x80`, // fallback URL jika data?.photo tidak ada
           }}
           className="mr-4 size-20 rounded-full"
+          transition={1000}
         />
         <View className="flex-1">
           <Text className="dark:text-dark-500 text-lg font-bold">

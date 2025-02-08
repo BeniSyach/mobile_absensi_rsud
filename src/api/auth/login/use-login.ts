@@ -1,5 +1,5 @@
 // use-login.ts
-import type { AxiosError } from 'axios';
+import { type AxiosError } from 'axios';
 import { createMutation } from 'react-query-kit';
 
 import { client } from '../../common';
@@ -10,10 +10,19 @@ export const useLogin = createMutation<
   LoginVariables,
   AxiosError
 >({
-  mutationFn: async (variables) =>
-    client({
-      url: '/api/login',
-      method: 'POST',
-      data: variables,
-    }).then((response) => response.data),
+  mutationFn: async (variables) => {
+    try {
+      const response = await client({
+        url: '/api/login',
+        method: 'POST',
+        data: variables,
+      });
+
+      // Mengembalikan data jika berhasil
+      return response.data;
+    } catch (error) {
+      // Menangani kesalahan dan melempar error
+      throw error; // Lempar kembali error agar bisa ditangani oleh React Query
+    }
+  },
 });

@@ -12,13 +12,8 @@ export const PostAbsenPulang = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) => {
+    console.log('data absen pulang', variables);
     try {
-      const mimeType = 'image/jpeg'; // Set correct MIME type
-      const file = {
-        uri: variables.photo,
-        type: mimeType,
-        name: variables.name,
-      };
       const formData = new FormData();
       // Menambahkan field ke FormData secara manual
       formData.append('absen_masuk_id', String(variables.absen_masuk_id));
@@ -30,13 +25,9 @@ export const PostAbsenPulang = createMutation<
 
       if (Platform.OS === 'ios') {
         // For iOS, the URI might need to be prefixed with 'file://'
-        formData.append('photo', {
-          uri: file.uri.startsWith('file://') ? file.uri : `file://${file.uri}`,
-          type: file.type,
-          name: file.name,
-        } as any);
+        formData.append('photo', variables.photo);
       } else {
-        formData.append('photo', file as any);
+        formData.append('photo', variables.photo);
       }
 
       // Mengirim request ke server

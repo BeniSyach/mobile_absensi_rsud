@@ -27,6 +27,7 @@ export default function Spt() {
         showMessage({
           message: 'SPT berhasil dikirim',
           type: 'success',
+          duration: 7000,
         });
         router.back(); // Go back to the previous screen
       },

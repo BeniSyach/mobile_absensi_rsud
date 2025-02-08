@@ -20,6 +20,7 @@ export default function ProfileCard({ user }: { user: GetUserDetailResponse }) {
                   : 'https://dummyimage.com/80x80',
               }}
               className="size-32 rounded-full border-4 border-gray-200"
+              transition={1000}
             />
           </Pressable>
         </Link>

@@ -14,6 +14,7 @@ export default function EditUser() {
       showMessage({
         message: 'Edit User Berhasil',
         type: 'success',
+        duration: 7000,
       });
       router.back();
     },

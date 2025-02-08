@@ -26,6 +26,7 @@ const AbsenMasuk = ({
           : `https://dummyimage.com/80x80`, // fallback URL jika photo tidak ada
       }}
       className="mr-4 size-16 rounded-full"
+      transition={1000}
     />
     <View className="flex-1">
       <View className="flex-row items-center">
@@ -75,6 +76,7 @@ const AbsenPulang = ({
           : `https://dummyimage.com/80x80`, // fallback URL jika photo tidak ada
       }}
       className="mr-4 size-16 rounded-full"
+      transition={1000}
     />
     <View className="flex-1">
       <View className="flex-row items-center">

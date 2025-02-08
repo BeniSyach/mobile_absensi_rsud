@@ -41,7 +41,7 @@ export default function Login() {
 
   const handleLoginSuccess = (data: any) => {
     const access = data.token;
-    const refresh = data.token;
+    const refresh = data.refresh_token;
     const successMessage = data.message;
 
     // Save token to auth state

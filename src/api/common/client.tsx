@@ -10,7 +10,7 @@ const refreshToken = async (currentToken: TokenType) => {
   try {
     const response = await axios.post(`${Env.API_URL}/api/refresh`, null, {
       headers: {
-        Authorization: `Bearer ${currentToken.access}`, // Use access token
+        Authorization: `Bearer ${currentToken.refresh}`, // Use access token
       },
     });
 

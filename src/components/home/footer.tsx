@@ -7,6 +7,7 @@ export default function Footer() {
       <Image
         source={require('../../../assets/logorsud.png')}
         className="mb-2 size-10"
+        transition={1000}
       />
 
       {/* Teks Footer */}

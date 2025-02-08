@@ -65,10 +65,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        // image: './assets/splash-icon.png',
         image: './assets/icon.png',
+        enableFullScreenImage_legacy: true,
         resizeMode: 'cover',
-        backgroundColor: '#2E3C4B',
       },
     ],
     [
@@ -88,10 +87,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
+      'expo-build-properties',
+      {
+        android: {
+          usesCleartextTraffic: true,
+        },
+      },
+    ],
+    [
       'expo-image-picker',
       {
         photosPermission:
           'The app accesses your photos to let you share them with your friends.',
+      },
+    ],
+    [
+      'expo-camera',
+      {
+        cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera',
+        microphonePermission: 'Allow $(PRODUCT_NAME) to access your microphone',
+        recordAudioAndroid: true,
       },
     ],
   ],

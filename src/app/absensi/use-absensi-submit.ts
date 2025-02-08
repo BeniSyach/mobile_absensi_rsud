@@ -1,6 +1,6 @@
 import { showMessage } from 'react-native-flash-message';
 
-import type { FormType } from '@/components/absensi/absensi-form';
+import type { FormType } from '@/components/absensi/absensi-types';
 import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
@@ -19,6 +19,7 @@ export default function useAbsensiSubmit(addPost: any, addPostPulang: any) {
             showMessage({
               message: 'Absen Masuk Berhasil',
               type: 'success',
+              duration: 7000,
             });
             resolve();
           },
@@ -35,6 +36,7 @@ export default function useAbsensiSubmit(addPost: any, addPostPulang: any) {
               showMessage({
                 message: 'Absen Pulang Berhasil',
                 type: 'success',
+                duration: 7000,
               });
               resolve();
             },

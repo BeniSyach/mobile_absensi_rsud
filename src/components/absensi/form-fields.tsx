@@ -38,7 +38,8 @@ const ImagePreview = ({
       <Image
         source={{ uri: image }}
         className="h-44 w-full"
-        style={{ resizeMode: 'contain' }}
+        contentFit="contain"
+        transition={1000}
       />
     </View>
   ) : (

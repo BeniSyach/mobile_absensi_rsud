@@ -13,12 +13,12 @@ export const PostAbsenMasuk = createMutation<
 >({
   mutationFn: async (variables) => {
     try {
-      const mimeType = 'image/jpeg'; // Set correct MIME type
-      const file = {
-        uri: variables.photo,
-        type: mimeType,
-        name: variables.name,
-      };
+      // const mimeType = 'image/jpeg'; // Set correct MIME type
+      // const file = {
+      //   uri: variables.photo,
+      //   type: mimeType,
+      //   name: variables.name,
+      // };
       const formData = new FormData();
       // Menambahkan field ke FormData secara manual
       formData.append('user_id', String(variables.user_id));
@@ -29,13 +29,9 @@ export const PostAbsenMasuk = createMutation<
 
       if (Platform.OS === 'ios') {
         // For iOS, the URI might need to be prefixed with 'file://'
-        formData.append('photo', {
-          uri: file.uri.startsWith('file://') ? file.uri : `file://${file.uri}`,
-          type: file.type,
-          name: file.name,
-        } as any);
+        formData.append('photo', variables.photo);
       } else {
-        formData.append('photo', file as any);
+        formData.append('photo', variables.photo);
       }
 
       // Mengirim request ke server
@@ -51,15 +47,17 @@ export const PostAbsenMasuk = createMutation<
       // Mengembalikan response dari server
       return response.data;
     } catch (error: unknown) {
+      console.log('absensi error', error);
       if (axios.isAxiosError(error)) {
         console.error(
           'Axios error occurred:',
           error.response?.data || error.message
         );
+        throw error.response?.data;
       } else {
         console.error('Unknown error occurred:', error);
+        throw error;
       }
-      throw error;
     }
   },
 });

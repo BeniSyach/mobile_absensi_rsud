@@ -15,6 +15,7 @@ export default function ResetPassword() {
       showMessage({
         message: 'Password berhasil direset',
         type: 'success',
+        duration: 7000,
       });
       router.back();
     },

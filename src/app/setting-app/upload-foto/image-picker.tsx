@@ -10,6 +10,7 @@ export default function UseImagePicker() {
     ) => {
       const permissionResult =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
+
       if (permissionResult.granted === false) {
         Alert.alert(
           'Permission Required',
@@ -19,17 +20,17 @@ export default function UseImagePicker() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 1,
+        quality: 0.2,
       });
 
       if (!result.canceled) {
-        const imageUri = result.assets[0].uri;
-        const imageName = result.assets[0].fileName ?? 'photo.jpg';
+        const { uri: imageUri, fileName = `photo-${Date.now()}.jpg` } =
+          result.assets[0];
+        console.log('compressedUri', imageUri);
         setImage(imageUri);
-        setName(imageName);
+        setName(fileName);
       }
     },
     []

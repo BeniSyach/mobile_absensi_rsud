@@ -33,7 +33,7 @@ export default function Feed() {
   useFocusEffect(
     React.useCallback(() => {
       if (storedMessage?.id) {
-        refetch(); // Memanggil ulang refetch setiap kali halaman fokus
+        refetch();
       }
     }, [storedMessage?.id, refetch]) // Pastikan hanya dipanggil jika id berubah
   );

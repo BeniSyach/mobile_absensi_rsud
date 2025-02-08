@@ -11,6 +11,7 @@ export default function MenuSatu() {
             <Image
               source={require('../../../assets/absen.png')}
               className="size-44 rounded-lg"
+              transition={1000}
             />
             <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
               Absensi
@@ -24,6 +25,7 @@ export default function MenuSatu() {
             <Image
               source={require('../../../assets/sptupload.png')}
               className="size-44 rounded-lg"
+              transition={1000}
             />
             <Text className="dark:text-dark-500 mt-2 text-center text-lg font-bold">
               SPT

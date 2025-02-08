@@ -1,10 +1,11 @@
-import { useFocusEffect } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import MapView, { Circle, Marker } from 'react-native-maps';
+import React from 'react';
+import { ActivityIndicator } from 'react-native';
+import type MapView from 'react-native-maps';
+import { Circle, Marker } from 'react-native-maps';
 
 import { Text, View } from '@/components/ui';
 
-import LoadingComponent from '../ui/loading';
+import { MapContent } from './map-content';
 import { UseLocation } from './use-location';
 
 interface MapsProps {
@@ -14,132 +15,199 @@ interface MapsProps {
   onLocationUpdate: (latitude: string, longitude: string) => void;
 }
 
-interface MapDisplayProps {
+interface MapAnimationProps {
   location: any;
-  distance: number | null;
-  selectedLatitude: number;
-  selectedLongitude: number;
+  mapRef: React.RefObject<MapView>;
+  hasAnimated: React.RefObject<boolean>;
+  isMounted: React.RefObject<boolean>;
   latitudeDelta: number;
   longitudeDelta: number;
-  radius: number;
+}
+
+interface LocationUpdateProps {
+  location: any;
+  lastLocation: React.RefObject<any>;
+  isMounted: React.RefObject<boolean>;
+  onLocationUpdate: (latitude: string, longitude: string) => void;
 }
 
 const calculateDeltaFromRadius = (
   radius: number
 ): { latitudeDelta: number; longitudeDelta: number } => {
-  // Perhitungan delta berdasarkan radius, semakin kecil radius semakin kecil delta
-  const factor = 0.00003; // Faktor yang digunakan untuk menghitung delta dari radius
+  const factor = 0.00003;
   const latitudeDelta = radius * factor;
-  const longitudeDelta = latitudeDelta; // Menjaga proporsi dengan latitudeDelta
+  const longitudeDelta = latitudeDelta;
 
   return { latitudeDelta, longitudeDelta };
 };
 
-const MapDisplay: React.FC<MapDisplayProps> = ({
-  location,
-  selectedLatitude,
-  selectedLongitude,
-  latitudeDelta,
-  longitudeDelta,
-  radius,
-}) => {
-  // Pastikan initialRegion diberi nilai valid
-  const [region, setRegion] = useState({
-    latitude: location?.coords.latitude || selectedLatitude,
-    longitude: location?.coords.longitude || selectedLongitude,
-    latitudeDelta,
-    longitudeDelta,
-  });
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (location) {
-        setRegion({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta,
-          longitudeDelta,
-        });
-      }
-    }, [location, latitudeDelta, longitudeDelta]) // Pastikan hanya dipanggil jika id berubah
-  );
-
-  return (
-    <MapView
-      style={{ height: 200, width: '100%' }}
-      region={region} // Inisialisasi dengan lokasi yang tersedia atau default
-      showsUserLocation={true} // Menampilkan lokasi pengguna jika ada
-      followsUserLocation={true} // Memperbarui lokasi pengguna secara dinamis
-    >
-      {/* Lokasi pengguna saat ini */}
-      {location && (
-        <Marker coordinate={location.coords} title="Anda Berada Disini" />
-      )}
-
-      {/* Lokasi yang sudah ditetapkan */}
-      <Marker
-        coordinate={{
-          latitude: selectedLatitude,
-          longitude: selectedLongitude,
-        }}
-        title="Lokasi Terpilih"
-      />
-
-      {/* Lingkaran di sekitar lokasi yang sudah ditetapkan */}
-      <Circle
-        center={{ latitude: selectedLatitude, longitude: selectedLongitude }}
-        radius={radius}
-        strokeColor="rgba(0, 0, 255, 0.5)"
-        fillColor="rgba(0, 0, 255, 0.2)"
-      />
-    </MapView>
-  );
-};
-
-const Maps: React.FC<MapsProps> = ({
-  selectedLatitude,
-  selectedLongitude,
-  radius,
-  onLocationUpdate,
-}) => {
-  const { location, distance } = UseLocation(
+const MapMarkers = React.memo(
+  ({
+    location,
     selectedLatitude,
     selectedLongitude,
-    radius
-  );
+    radius,
+  }: {
+    location: any;
+    selectedLatitude: number;
+    selectedLongitude: number;
+    radius: number;
+  }) => {
+    if (!location?.coords) return null;
 
-  useEffect(() => {
-    if (location) {
-      onLocationUpdate(location.coords.latitude, location.coords.longitude);
-    }
-  }, [location, onLocationUpdate]);
-
-  if (!location) {
-    return <LoadingComponent />;
+    return (
+      <>
+        <Marker
+          coordinate={{
+            latitude: Number(location.coords.latitude),
+            longitude: Number(location.coords.longitude),
+          }}
+          title="Anda Berada Disini"
+          pinColor="blue"
+        />
+        <Marker
+          coordinate={{
+            latitude: selectedLatitude,
+            longitude: selectedLongitude,
+          }}
+          title="Lokasi Terpilih"
+        />
+        <Circle
+          center={{
+            latitude: selectedLatitude,
+            longitude: selectedLongitude,
+          }}
+          radius={radius}
+          strokeColor="rgba(0, 0, 255, 0.5)"
+          fillColor="rgba(0, 0, 255, 0.1)"
+          strokeWidth={2}
+        />
+      </>
+    );
   }
-  const {
-    latitudeDelta: calculatedLatitudeDelta,
-    longitudeDelta: calculatedLongitudeDelta,
-  } = calculateDeltaFromRadius(radius);
+);
 
-  return (
-    <View className="mb-4">
-      <MapDisplay
+const LoadingOverlay = ({ isMapReady }: { isMapReady: boolean }) => (
+  <View className="absolute inset-0 items-center justify-center bg-gray-100/50">
+    <ActivityIndicator size="large" color="#0000ff" />
+    <Text className="mt-2 text-sm text-gray-600">
+      {!isMapReady ? 'Memuat peta...' : 'Mendapatkan lokasi...'}
+    </Text>
+  </View>
+);
+
+const useMapAnimation = ({
+  location,
+  mapRef,
+  isMounted,
+  latitudeDelta,
+  longitudeDelta,
+}: MapAnimationProps) => {
+  const [hasAnimatedState, setHasAnimatedState] = React.useState(false);
+
+  React.useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (location?.coords && !hasAnimatedState && isMounted.current) {
+      timeoutId = setTimeout(() => {
+        if (mapRef.current && isMounted.current) {
+          setHasAnimatedState(true);
+          mapRef.current.animateToRegion(
+            {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta,
+              longitudeDelta,
+            },
+            500
+          );
+        }
+      }, 1000);
+    }
+    return () => timeoutId && clearTimeout(timeoutId);
+  }, [
+    location,
+    latitudeDelta,
+    longitudeDelta,
+    hasAnimatedState,
+    isMounted,
+    mapRef,
+  ]);
+};
+
+const useLocationUpdate = ({
+  location,
+  lastLocation,
+  isMounted,
+  onLocationUpdate,
+}: LocationUpdateProps) => {
+  React.useEffect(() => {
+    if (
+      location?.coords &&
+      isMounted.current &&
+      JSON.stringify(location) !== JSON.stringify(lastLocation.current)
+    ) {
+      onLocationUpdate(
+        location.coords.latitude.toString(),
+        location.coords.longitude.toString()
+      );
+    }
+  }, [location, lastLocation, isMounted, onLocationUpdate]);
+};
+
+const Maps = React.memo<MapsProps>(
+  ({ selectedLatitude, selectedLongitude, radius, onLocationUpdate }) => {
+    const isMounted = React.useRef(true);
+    const lastLocation = React.useRef<any>(null);
+    const hasAnimated = React.useRef(false);
+    const mapRef = React.useRef<MapView>(null);
+
+    const { location, distance } = UseLocation({
+      selectedLatitude,
+      selectedLongitude,
+      radius,
+    });
+
+    const { latitudeDelta, longitudeDelta } = React.useMemo(
+      () => calculateDeltaFromRadius(Number(radius)),
+      [radius]
+    );
+
+    useMapAnimation({
+      location,
+      mapRef,
+      hasAnimated,
+      isMounted,
+      latitudeDelta,
+      longitudeDelta,
+    });
+    useLocationUpdate({ location, lastLocation, isMounted, onLocationUpdate });
+
+    if (!location?.coords) {
+      return (
+        <View className="mb-4">
+          <View className="relative h-[200px] w-full">
+            <LoadingOverlay isMapReady={false} />
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <MapContent
         location={location}
-        distance={distance}
+        mapRef={mapRef}
+        latitudeDelta={latitudeDelta}
+        longitudeDelta={longitudeDelta}
         selectedLatitude={selectedLatitude}
         selectedLongitude={selectedLongitude}
-        latitudeDelta={calculatedLatitudeDelta}
-        longitudeDelta={calculatedLongitudeDelta}
         radius={radius}
+        distance={distance}
       />
-      {distance !== null && (
-        <Text className="mt-2 text-sm">
-          Jarak Anda dengan lokasi Absen: {distance} meter
-        </Text>
-      )}
-    </View>
-  );
-};
+    );
+  }
+);
+
+MapMarkers.displayName = 'MapMarkers';
+Maps.displayName = 'Maps';
 
 export default Maps;

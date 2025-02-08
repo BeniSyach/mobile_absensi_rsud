@@ -34,6 +34,7 @@ export default function AddPost() {
           showMessage({
             message: 'Post added successfully',
             type: 'success',
+            duration: 7000,
           });
           // here you can navigate to the post list and refresh the list data
           //queryClient.invalidateQueries(usePosts.getKey());

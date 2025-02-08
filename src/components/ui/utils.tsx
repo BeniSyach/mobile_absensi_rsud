@@ -16,7 +16,7 @@ export const showError = (error: AxiosError) => {
     message: 'Error',
     description,
     type: 'danger',
-    duration: 4000,
+    duration: 6000,
     icon: 'danger',
   });
 };
@@ -25,7 +25,7 @@ export const showErrorMessage = (message: string = 'Something went wrong ') => {
   showMessage({
     message,
     type: 'danger',
-    duration: 4000,
+    duration: 6000,
   });
 };
 
