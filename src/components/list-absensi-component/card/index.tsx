@@ -1,16 +1,13 @@
-import { Env } from '@env';
-
-import { type AbsenMasukDanPulangByUserResponse } from '@/api';
-import { Image, Text, View } from '@/components/ui';
+import { type AbsensiData } from '@/api';
+import { Text, View } from '@/components/ui';
 
 interface CardProps {
-  data: AbsenMasukDanPulangByUserResponse; // menerima objek tunggal
+  data: AbsensiData; // menerima objek tunggal
 }
 
 const AbsenMasuk = ({
   waktuMasuk,
   keterangan,
-  photo,
   tpp_in,
 }: {
   waktuMasuk: string;
@@ -18,8 +15,8 @@ const AbsenMasuk = ({
   photo: string;
   tpp_in: string;
 }) => (
-  <View className="mb-4 flex-row items-start">
-    <Image
+  <View className="my-2 flex-row items-start">
+    {/* <Image
       source={{
         uri: photo
           ? `${Env.API_URL}/storage/${photo}`
@@ -27,7 +24,8 @@ const AbsenMasuk = ({
       }}
       className="mr-4 size-16 rounded-full"
       transition={1000}
-    />
+      contentFit="contain"
+    /> */}
     <View className="flex-1">
       <View className="flex-row items-center">
         <Text className="dark:text-dark-500 w-32 text-sm font-bold text-gray-700">
@@ -60,7 +58,6 @@ const AbsenMasuk = ({
 const AbsenPulang = ({
   waktuPulang,
   keterangan,
-  photo,
   tpp_out,
 }: {
   waktuPulang: string;
@@ -68,8 +65,8 @@ const AbsenPulang = ({
   photo: string;
   tpp_out: string;
 }) => (
-  <View className="flex-row items-start">
-    <Image
+  <View className="my-2 flex-row items-start">
+    {/* <Image
       source={{
         uri: photo
           ? `${Env.API_URL}/storage/${photo}`
@@ -77,7 +74,8 @@ const AbsenPulang = ({
       }}
       className="mr-4 size-16 rounded-full"
       transition={1000}
-    />
+      contentFit="contain"
+    /> */}
     <View className="flex-1">
       <View className="flex-row items-center">
         <Text className="dark:text-dark-500 w-32 text-sm font-bold text-gray-700">
@@ -108,7 +106,7 @@ const AbsenPulang = ({
 );
 
 export const Card = ({ data }: CardProps) => (
-  <View className="dark:bg-dark-500 my-4 rounded-lg bg-white p-4 shadow">
+  <View className="dark:bg-dark-500 m-2 my-4 rounded-lg bg-white p-4 shadow">
     <AbsenMasuk
       waktuMasuk={data.waktu_masuk}
       keterangan={data.keterangan}

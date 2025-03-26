@@ -13,7 +13,7 @@ export const PutUser = createMutation<
   mutationFn: async (variables) => {
     try {
       const response = await client({
-        url: `/api/users/${variables.id}`,
+        url: `/api/users`,
         method: 'PUT',
         data: variables,
       });

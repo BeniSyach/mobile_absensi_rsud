@@ -5,7 +5,7 @@ import { getMessage } from '@/lib/message-storage';
 
 export default function UseFetchAbsen() {
   const storedMessage = getMessage();
-  const userId = storedMessage?.id;
+  const userId = storedMessage?.data.nik;
 
   const [page, setPage] = useState(1);
   const [data, setData] = useState<any[]>([]);
@@ -23,11 +23,11 @@ export default function UseFetchAbsen() {
   });
 
   useEffect(() => {
-    if (fetchedData) {
+    if (fetchedData?.data) {
       setData((prevData) =>
-        page === 1 ? fetchedData : [...prevData, ...fetchedData]
+        page === 1 ? fetchedData.data : [...prevData, ...fetchedData.data]
       );
-      setHasMoreData(fetchedData.length > 0);
+      setHasMoreData(fetchedData.data.length > 0);
     }
   }, [fetchedData, page]);
 

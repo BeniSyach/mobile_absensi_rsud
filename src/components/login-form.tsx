@@ -13,7 +13,6 @@ import {
   ControlledInput,
   Image,
   Pressable,
-  Text,
   View,
 } from '@/components/ui';
 
@@ -23,11 +22,12 @@ const storage = new MMKV({
 });
 
 const schema = z.object({
-  email: z
+  nik: z
     .string({
-      required_error: 'Email is required',
+      required_error: 'NIK is required',
     })
-    .email('Invalid email format'),
+    .length(16, 'NIK harus 16 digits')
+    .regex(/^\d+$/, 'NIK harus angka'),
   password: z
     .string({
       required_error: 'Password is required',
@@ -35,10 +35,17 @@ const schema = z.object({
     .min(6, 'Password must be at least 6 characters'),
 });
 
+// Add a separate schema for the transformed output
+const transformedSchema = schema.transform((data) => ({
+  ...data,
+  nik: parseInt(data.nik, 10),
+}));
+
 export type FormType = z.infer<typeof schema>;
+export type TransformedFormType = z.infer<typeof transformedSchema>;
 
 export type LoginFormProps = {
-  onSubmit?: SubmitHandler<FormType>;
+  onSubmit?: SubmitHandler<TransformedFormType>;
   isPending?: boolean;
   isError?: boolean;
 };
@@ -47,7 +54,7 @@ type RenderInputsProps = {
   control: any;
   showPassword: boolean;
   togglePasswordVisibility: () => void;
-  email: string;
+  nik: string;
   password: string;
 };
 
@@ -55,16 +62,17 @@ const renderControlledInputs = ({
   control,
   showPassword,
   togglePasswordVisibility,
-  email,
+  nik,
   password,
 }: RenderInputsProps) => (
   <>
     <ControlledInput
       testID="email-input"
       control={control}
-      name="email"
-      label="Email"
-      defaultValue={email}
+      name="nik"
+      label="NIK"
+      defaultValue={nik}
+      keyboardType="numeric"
     />
     <ControlledInput
       testID="password-input"
@@ -99,7 +107,7 @@ const CheckboxEmailAndPassword = ({ control }: { control: any }) => {
         storage.set(
           'savedCredentials',
           JSON.stringify({
-            email: values.email,
+            nik: values.nik,
             password: values.password,
           })
         );
@@ -119,20 +127,18 @@ const CheckboxEmailAndPassword = ({ control }: { control: any }) => {
       className="py-2"
     >
       <Checkbox.Icon checked={checked} />
-      <Checkbox.Label text="Email dan Password Anda Akan Disimpan" />
+      <Checkbox.Label text="Nik dan Password Anda Akan Disimpan" />
     </Checkbox.Root>
   );
 };
 
 const FormHeader = () => (
   <View className="items-center justify-center">
-    <Text testID="form-title" className="pb-6 text-center text-4xl font-bold">
-      Login Absensi
-    </Text>
     <Image
-      source={require('../../assets/logorsud.png')}
-      className="my-5 size-24"
+      source={require('../../assets/logo_login.png')}
+      className="size-56"
       transition={1000}
+      contentFit="contain"
     />
   </View>
 );
@@ -142,12 +148,12 @@ export const LoginForm = ({
   isPending,
 }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(true);
-  const [savedEmail, setSavedEmail] = useState('');
+  const [savedNik, setSavedNik] = useState('');
   const [savedPassword, setSavedPassword] = useState('');
-  const { handleSubmit, control, setValue } = useForm<FormType>({
-    resolver: zodResolver(schema),
+  const { handleSubmit, control, setValue } = useForm<TransformedFormType>({
+    resolver: zodResolver(transformedSchema),
     defaultValues: {
-      email: '',
+      nik: 0,
       password: '',
     },
   });
@@ -158,10 +164,10 @@ export const LoginForm = ({
       try {
         const savedCredentials = storage.getString('savedCredentials');
         if (savedCredentials) {
-          const { email, password } = JSON.parse(savedCredentials);
-          setSavedEmail(email);
+          const { nik, password } = JSON.parse(savedCredentials);
+          setSavedNik(nik);
           setSavedPassword(password);
-          setValue('email', email);
+          setValue('nik', nik);
           setValue('password', password);
         }
         console.log('sukses', savedCredentials);
@@ -184,13 +190,14 @@ export const LoginForm = ({
           control,
           showPassword,
           togglePasswordVisibility,
-          email: savedEmail,
+          nik: savedNik,
           password: savedPassword,
         })}
         <Button
           testID="login-button"
           label="Login"
           size="lg"
+          className="rounded-full bg-[#0B3880] dark:bg-[#5491f3]"
           loading={isPending}
           onPress={handleSubmit(onSubmit)}
         />

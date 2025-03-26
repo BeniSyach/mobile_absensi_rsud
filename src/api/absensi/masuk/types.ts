@@ -9,6 +9,7 @@ export type AbsenMasukVariables = {
   photo: string;
   mimeType: string;
   name: string;
+  kode_unit_kerja: string;
 };
 
 export type AbsenMasukResponse = {
@@ -101,4 +102,60 @@ export type AbsenMasukDanPulangByUserResponse = {
   updated_at: string;
   user: User;
   absen_pulang: AbsenPulang[];
+};
+
+type AbsenPulangDetail = {
+  absen_masuk_id: number;
+  created_at: string;
+  id: number;
+  keterangan: string;
+  latitude: string;
+  longitude: string;
+  nik: number;
+  photo: string;
+  selish: string;
+  shift_id: number;
+  tpp_out: string;
+  updated_at: string;
+  waktu_kerja_id: number;
+  waktu_pulang: string;
+};
+
+export type AbsensiData = {
+  absen_pulang: AbsenPulangDetail[];
+  created_at: string;
+  id: number;
+  keterangan: string;
+  latitude: string;
+  longitude: string;
+  nik: number;
+  photo: string;
+  selish: string;
+  shift_id: number;
+  tpp_in: string;
+  updated_at: string;
+  waktu_kerja_id: number;
+  waktu_masuk: string;
+};
+
+type PaginationLink = {
+  active: boolean;
+  label: string;
+  url: string | null;
+};
+
+export type Pagination = {
+  current_page: number;
+  data: AbsensiData[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: PaginationLink[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
 };

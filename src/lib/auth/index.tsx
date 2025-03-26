@@ -1,10 +1,13 @@
 import { jwtDecode } from 'jwt-decode';
+import { MMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
+
+import { LogoutUser } from '@/api/auth/logout/use-logout';
 
 import { createSelectors } from '../utils';
 import type { TokenType } from './utils';
-import { getToken, removeToken, setToken } from './utils';
-
+import { getToken, setToken } from './utils';
+const storage = new MMKV();
 interface AuthState {
   token: TokenType | null;
   status: 'idle' | 'signOut' | 'signIn';
@@ -12,7 +15,6 @@ interface AuthState {
   signOut: () => void;
   hydrate: () => void;
   isTokenExpired: (token: TokenType) => boolean;
-  isTokenNearExpiration: (token: TokenType) => boolean;
 }
 
 const _useAuth = create<AuthState>((set, get) => ({
@@ -22,8 +24,13 @@ const _useAuth = create<AuthState>((set, get) => ({
     setToken(token);
     set({ status: 'signIn', token });
   },
-  signOut: () => {
-    removeToken();
+  signOut: async () => {
+    try {
+      await LogoutUser.mutationFn();
+    } catch (error) {
+      console.error('Logout API error 2:', error);
+    }
+    storage.clearAll();
     set({ status: 'signOut', token: null });
   },
   hydrate: () => {
@@ -35,8 +42,8 @@ const _useAuth = create<AuthState>((set, get) => ({
         get().signOut();
       }
     } catch (e) {
-      // catch error here
-      // Maybe sign_out user!
+      console.error('Error during hydration:', e);
+      get().signOut();
     }
   },
   isTokenExpired: (token) => {
@@ -44,14 +51,6 @@ const _useAuth = create<AuthState>((set, get) => ({
     const decoded: any = jwtDecode(token.access);
     const currentTime = Date.now() / 1000;
     return decoded.exp < currentTime;
-  },
-  isTokenNearExpiration: (token) => {
-    if (!token) return false;
-    const decoded: any = jwtDecode(token.access);
-    const currentTime = Date.now() / 1000;
-    const timeLeft = decoded.exp - currentTime;
-    const refreshThreshold = 10 * 60; // 10 menit sebelum kadaluarsa
-    return timeLeft <= refreshThreshold; // Jika token kurang dari 10 menit untuk kadaluarsa
   },
 }));
 
@@ -62,5 +61,3 @@ export const signIn = (token: TokenType) => _useAuth.getState().signIn(token);
 export const hydrateAuth = () => _useAuth.getState().hydrate();
 export const isTokenExpired = (token: TokenType) =>
   _useAuth.getState().isTokenExpired(token);
-export const isTokenNearExpiration = (token: TokenType) =>
-  _useAuth.getState().isTokenNearExpiration(token);

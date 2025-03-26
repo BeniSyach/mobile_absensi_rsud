@@ -30,10 +30,11 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="MyAbsensiRSUD"/>
-        <data android:scheme="com.myabsensirsud.development"/>
+        <data android:scheme="com.deliserdang.sehat.development"/>
         <data android:scheme="exp+obytesapp"/>
         <data android:scheme="exp+absensi-rsud"/>
-        <data android:scheme="com.myabsensirsud"/>
+        <data android:scheme="com.deliserdang.sehat"/>
+        <data android:scheme="DeliSerdangSehat"/>
       </intent-filter>
     </activity>
   </application>

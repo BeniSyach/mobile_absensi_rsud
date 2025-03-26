@@ -1,4 +1,4 @@
-package com.myabsensirsud
+package com.deliserdang.sehat
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

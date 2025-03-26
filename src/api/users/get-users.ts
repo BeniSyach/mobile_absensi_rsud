@@ -2,13 +2,13 @@ import type { AxiosError } from 'axios';
 import { createQuery } from 'react-query-kit';
 
 import { client } from '../common';
-import type { GetUserDetailResponse } from './types';
+import type { ApiResponse } from './types';
 
-export const GetUser = createQuery<GetUserDetailResponse, number, AxiosError>({
+export const GetUser = createQuery<ApiResponse, number, AxiosError>({
   queryKey: ['getUser'] as const,
-  fetcher: async (userId) =>
+  fetcher: async () =>
     client({
-      url: `/api/users/${userId}`,
+      url: `/secured/profile`,
       method: 'GET',
     }).then((response) => response.data),
 });

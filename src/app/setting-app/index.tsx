@@ -4,11 +4,11 @@ import { Stack } from 'expo-router';
 import { Item } from '@/components/settings/item';
 import { ItemsContainer } from '@/components/settings/items-container';
 import { ThemeItem } from '@/components/settings/theme-item';
-import { FocusAwareStatusBar, ScrollView } from '@/components/ui';
+import { FocusAwareStatusBar, SafeAreaView, ScrollView } from '@/components/ui';
 
 export default function SettingsApp() {
   return (
-    <>
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
       <Stack.Screen
         options={{
           title: 'Setting App',
@@ -27,6 +27,6 @@ export default function SettingsApp() {
           <Item text="settings.version" value={Env.VERSION} />
         </ItemsContainer>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }

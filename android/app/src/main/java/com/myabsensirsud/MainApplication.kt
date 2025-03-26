@@ -1,4 +1,4 @@
-package com.myabsensirsud
+package com.deliserdang.sehat
 
 import android.app.Application
 import android.content.res.Configuration

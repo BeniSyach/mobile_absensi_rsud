@@ -1,27 +1,33 @@
-interface Hari {
+type Hari = {
+  created_at: string;
   id: number;
   nama_hari: string;
-  created_at: string;
   updated_at: string;
-}
+};
 
-interface Shift {
+type Shift = {
+  created_at: string;
   id: number;
   nama_shift: string;
-  created_at: string;
+  opd_id: string;
   updated_at: string;
-}
+};
 
-interface WaktuKerja {
-  id: number;
+type Jadwal = {
+  created_at: string;
+  hari: Hari;
   hari_id: number;
-  shift_id: number;
+  id: number;
   jam_mulai: string;
   jam_selesai: string;
-  created_at: string;
-  updated_at: string;
-  hari: Hari;
   shift: Shift;
-}
+  shift_id: number;
+  updated_at: string;
+};
 
-export type WaktuKerjaResponse = WaktuKerja[];
+export type HariKerjaResponse = {
+  status: 'success' | 'error';
+  data: {
+    data: Jadwal[];
+  };
+};

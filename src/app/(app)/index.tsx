@@ -1,64 +1,47 @@
-import { useFocusEffect } from 'expo-router';
-import React, { useState } from 'react';
-import { RefreshControl } from 'react-native';
+import React from 'react';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { GetUser } from '@/api/users';
 import Footer from '@/components/home/footer';
-import Header from '@/components/home/header';
-import MenuDua from '@/components/home/menu-dua';
-import MenuSatu from '@/components/home/menu-satu';
-import { ScrollView, Text, View } from '@/components/ui';
+import MenuUtama from '@/components/home/menu-utama';
+import Navbar from '@/components/home/navbar';
+import { Image, ScrollView, Text, View } from '@/components/ui';
 import LoadingComponent from '@/components/ui/loading';
-import { getMessage } from '@/lib/message-storage';
 
 export default function Feed() {
-  const storedMessage = getMessage();
-  const [refreshing, setRefreshing] = useState(false);
-  const {
-    data: user,
-    isLoading,
-    isError,
-    refetch,
-  } = GetUser({
-    variables: storedMessage?.id,
-    enabled: !!storedMessage?.id,
-  });
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  };
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (storedMessage?.id) {
-        refetch();
-      }
-    }, [storedMessage?.id, refetch]) // Pastikan hanya dipanggil jika id berubah
-  );
+  const { data: user, isLoading, isError } = GetUser();
 
   if (isLoading) return <LoadingComponent />;
   if (isError || !user) return <Text>Error loading user data</Text>;
 
   return (
-    <ScrollView
-      className="flex-1"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View className="flex-1 p-4">
-        <Header data={user} />
-        <View className="my-4 items-center justify-center">
-          <Text className="text-dark-500 mb-6 max-w-xs text-center text-lg font-bold">
-            Selamat Datang di Aplikasi Absensi RSUD H. Amri Tambunan
-          </Text>
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
+      <View className="h-48 rounded-b-3xl bg-[#0B3880]">
+        <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+        <Navbar />
+        <View className="items-center justify-center">
+          <Image
+            source={require('../../../assets/logo_menu_utama.png')}
+            style={{ width: 300, height: 100 }}
+            contentFit="contain"
+            transition={1000}
+          />
         </View>
-        <MenuSatu />
-        <MenuDua />
-        <Footer />
       </View>
-    </ScrollView>
+      <ImageBackground
+        source={require('../../../assets/background/background_home.png')}
+        resizeMode="stretch"
+        className="flex-1"
+      >
+        <ScrollView className="flex-1">
+          <View className="items-center justify-center p-4">
+            <Text className="text-xl italic">Haloo.... Selamat Datang,</Text>
+            <Text className="text-xl font-bold">{user.data.nama}</Text>
+          </View>
+          <MenuUtama />
+        </ScrollView>
+        <Footer />
+      </ImageBackground>
+    </SafeAreaView>
   );
 }

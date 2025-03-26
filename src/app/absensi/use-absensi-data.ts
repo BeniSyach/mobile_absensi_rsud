@@ -1,58 +1,35 @@
 import { useFocusEffect } from 'expo-router';
-import React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { GetUser, useGetLocationDetail } from '@/api';
-import { getMessage } from '@/lib/message-storage';
+import { GetUser } from '@/api';
+import { GetStatusAbsenUser } from '@/api/absensi/cek-status-absen-user';
 
 export default function useAbsensiData() {
-  const storedMessage = getMessage();
-  const [pageLoading, setPageLoading] = useState(true);
-
   const {
-    data: location,
-    isLoading: locationLoading,
-    isError,
-    refetch: ceklokasi,
-  } = useGetLocationDetail({
-    variables: { id: storedMessage?.opd_id ?? 2 },
-    enabled: !!storedMessage?.opd_id,
-  });
+    data: userStatus,
+    isLoading: statusUserLoading,
+    refetch: refetchUserStatus,
+  } = GetStatusAbsenUser();
 
   const {
     data: user,
     isLoading: userLoading,
+    isError,
     refetch: refetchUser,
-  } = GetUser({
-    variables: storedMessage?.id,
-    enabled: !!storedMessage?.id,
-  });
-
-  useEffect(() => {
-    setPageLoading(true);
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  } = GetUser();
 
   useFocusEffect(
-    React.useCallback(() => {
-      const loadData = async () => {
-        setPageLoading(true);
-        if (storedMessage?.id) {
-          await Promise.all([refetchUser(), ceklokasi()]);
-        }
-        setPageLoading(false);
-      };
-      loadData();
-    }, [storedMessage?.id, refetchUser, ceklokasi])
+    useCallback(() => {
+      Promise.all([refetchUser(), refetchUserStatus()]).catch((error) =>
+        console.error('Error fetching absensi data:', error)
+      );
+    }, [refetchUser, refetchUserStatus]) // Tambahkan dependensi agar efek berjalan setiap kali layar fokus kembali
   );
 
   return {
-    location,
     user,
     isError,
-    isLoading: pageLoading || locationLoading || userLoading,
+    isLoading: userLoading || statusUserLoading,
+    userStatus,
   };
 }

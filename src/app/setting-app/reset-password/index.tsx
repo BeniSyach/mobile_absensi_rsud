@@ -6,7 +6,7 @@ import { ResetPasswordUser } from '@/api';
 import FormEditPassword, {
   type FormEditPasswordProps,
 } from '@/components/edit-password-user/form-edit-password';
-import { showErrorMessage } from '@/components/ui';
+import { SafeAreaView, showErrorMessage } from '@/components/ui';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function ResetPassword() {
     mutate(data);
   };
   return (
-    <>
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
       <Stack.Screen
         options={{
           title: 'Reset Password',
@@ -39,6 +39,6 @@ export default function ResetPassword() {
         isPending={isPending}
         isError={isError}
       />
-    </>
+    </SafeAreaView>
   );
 }

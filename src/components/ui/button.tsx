@@ -1,6 +1,6 @@
 import React from 'react';
-import type { PressableProps, View } from 'react-native';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import type { PressableProps } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { VariantProps } from 'tailwind-variants';
 import { tv } from 'tailwind-variants';
 
@@ -9,6 +9,7 @@ const button = tv({
     container: 'my-2 flex flex-row items-center justify-center rounded-md px-4',
     label: 'font-inter text-base font-semibold',
     indicator: 'h-6 text-white',
+    icon: 'mr-2', // Add spacing between icon and text
   },
 
   variants: {
@@ -90,6 +91,8 @@ interface Props extends ButtonVariants, Omit<PressableProps, 'disabled'> {
   loading?: boolean;
   className?: string;
   textClassName?: string;
+  icon?: React.ReactNode; // Add icon prop
+  iconPosition?: 'left' | 'right'; // Add icon position prop
 }
 
 export const Button = React.forwardRef<View, Props>(
@@ -103,6 +106,8 @@ export const Button = React.forwardRef<View, Props>(
       className = '',
       testID,
       textClassName = '',
+      icon, // Add icon prop
+      iconPosition = 'left', // Default to left position
       ...props
     },
     ref
@@ -112,6 +117,37 @@ export const Button = React.forwardRef<View, Props>(
       [variant, disabled, size]
     );
 
+    const renderContent = () => {
+      if (props.children) {
+        return props.children;
+      }
+
+      if (loading) {
+        return (
+          <ActivityIndicator
+            size="small"
+            className={styles.indicator()}
+            testID={testID ? `${testID}-activity-indicator` : undefined}
+          />
+        );
+      }
+
+      const iconElement = icon && <View className={styles.icon()}>{icon}</View>;
+
+      return (
+        <>
+          {iconPosition === 'left' && iconElement}
+          <Text
+            testID={testID ? `${testID}-label` : undefined}
+            className={styles.label({ className: textClassName })}
+          >
+            {text}
+          </Text>
+          {iconPosition === 'right' && iconElement}
+        </>
+      );
+    };
+
     return (
       <Pressable
         disabled={disabled || loading}
@@ -120,26 +156,7 @@ export const Button = React.forwardRef<View, Props>(
         ref={ref}
         testID={testID}
       >
-        {props.children ? (
-          props.children
-        ) : (
-          <>
-            {loading ? (
-              <ActivityIndicator
-                size="small"
-                className={styles.indicator()}
-                testID={testID ? `${testID}-activity-indicator` : undefined}
-              />
-            ) : (
-              <Text
-                testID={testID ? `${testID}-label` : undefined}
-                className={styles.label({ className: textClassName })}
-              >
-                {text}
-              </Text>
-            )}
-          </>
-        )}
+        {renderContent()}
       </Pressable>
     );
   }

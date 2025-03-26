@@ -105,7 +105,7 @@ export default function SptForm({
   } = useForm<FormType>({ resolver: zodResolver(schema) });
 
   return (
-    <View className="p-4">
+    <View className="m-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
       <FormFields control={control} errors={errors} />
       {isError && (
         <View className="my-2">

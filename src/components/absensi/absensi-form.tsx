@@ -2,8 +2,8 @@ import { type CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import * as React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 
-import { type GetUserDetailResponse } from '@/api';
-import type { Location } from '@/api/lokasi/types';
+import { type ApiResponse } from '@/api';
+import { type LastAbsenStatus } from '@/api/absensi/cek-status-absen-user';
 import Maps from '@/components/absensi/maps';
 import {
   Button,
@@ -21,8 +21,8 @@ import { useAbsensiForm } from './use-absensi-form';
 export type AbsensiFormProps = {
   isPending: boolean;
   onSubmit: SubmitHandler<FormType>;
-  location: Location;
-  user: GetUserDetailResponse;
+  user: ApiResponse;
+  userStatus: LastAbsenStatus | undefined;
 };
 
 const tipe_absensi: OptionType[] = [
@@ -75,7 +75,7 @@ const CameraSection = React.memo<{
       try {
         const photo = (await cameraRef.current.takePictureAsync({
           base64: true,
-          quality: 1,
+          quality: 0.1,
           exif: false,
           skipProcessing: false,
         })) as { uri: string; base64: string };
@@ -100,6 +100,7 @@ const CameraSection = React.memo<{
     </View>
   );
 });
+CameraSection.displayName = 'CameraSection';
 
 const ImagePreview = React.memo<{
   image: { uri: string } | null;
@@ -135,6 +136,7 @@ const ImagePreview = React.memo<{
     </View>
   );
 });
+ImagePreview.displayName = 'ImagePreview';
 
 const SelectFields = React.memo<{
   tipe_absensi_value: string | number | undefined;
@@ -175,6 +177,7 @@ const SelectFields = React.memo<{
         onSelect={onShiftSelect}
         placeholder="Pilih Tipe Shift"
         error={errors.shift_id?.message}
+        disabled={true}
       />
       <Select
         label="Shift/Hari Kerja"
@@ -187,7 +190,6 @@ const SelectFields = React.memo<{
     </>
   )
 );
-
 SelectFields.displayName = 'SelectFields';
 
 const FormFields = React.memo<FormFieldsProps>(
@@ -238,36 +240,39 @@ const FormFields = React.memo<FormFieldsProps>(
     );
   }
 );
+FormFields.displayName = 'FormFields';
 
 const FormContainer = React.memo<{
   children: React.ReactNode;
   onSubmit: () => void;
   isPending: boolean;
 }>(({ children, onSubmit, isPending }) => (
-  <ScrollView className="flex-1 p-4">
-    {children}
-    <Button
-      label="Absen"
-      loading={isPending}
-      onPress={onSubmit}
-      size="lg"
-      className="mb-20"
-      testID="add-post-button"
-    />
+  <ScrollView className="mb-4 flex-1 p-2">
+    <View className="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
+      {children}
+      <Button
+        label="Absen"
+        loading={isPending}
+        onPress={onSubmit}
+        size="lg"
+        className="mb-20"
+        testID="add-post-button"
+      />
+    </View>
   </ScrollView>
 ));
+FormContainer.displayName = 'FormContainer';
 
-export const AbsensiForm: React.FC<AbsensiFormProps> = React.memo(
-  ({ isPending, onSubmit, location, user }) => {
+export const AbsensiForm = React.memo<AbsensiFormProps>(
+  ({ isPending, onSubmit, user, userStatus }) => {
     const { handleSubmit, handleLocationUpdate, formFieldProps } =
-      useAbsensiForm(user);
-
+      useAbsensiForm(user, userStatus);
     return (
       <FormContainer onSubmit={handleSubmit(onSubmit)} isPending={isPending}>
         <Maps
-          selectedLatitude={parseFloat(location.latitude)}
-          selectedLongitude={parseFloat(location.longitude)}
-          radius={location.radius}
+          selectedLatitude={parseFloat(user.data.unit_kerja.latitude)}
+          selectedLongitude={parseFloat(user.data.unit_kerja.longitude)}
+          radius={user.data.unit_kerja.radius}
           onLocationUpdate={handleLocationUpdate}
         />
         <FormFields {...formFieldProps} />
@@ -275,9 +280,3 @@ export const AbsensiForm: React.FC<AbsensiFormProps> = React.memo(
     );
   }
 );
-
-CameraSection.displayName = 'CameraSection';
-ImagePreview.displayName = 'ImagePreview';
-FormFields.displayName = 'FormFields';
-FormContainer.displayName = 'FormContainer';
-AbsensiForm.displayName = 'AbsensiForm';

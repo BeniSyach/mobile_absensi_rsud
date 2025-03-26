@@ -1,9 +1,14 @@
-export type GetShiftResponse = {
+type Shift = {
+  created_at: string;
   id: number;
   nama_shift: string;
-  created_at: string;
+  opd_id: string;
   updated_at: string;
-  opd_id: number;
 };
 
-export type GetShiftResponseArray = GetShiftResponse[];
+export type ShiftResponse = {
+  status: 'success' | 'error';
+  data: {
+    data: Shift[];
+  };
+};

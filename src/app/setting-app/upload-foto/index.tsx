@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { showMessage } from 'react-native-flash-message';
 
 import { UploadPhoto } from '@/api';
-import { Image } from '@/components/ui';
+import { Image, SafeAreaView } from '@/components/ui';
 import { Button, showErrorMessage, View } from '@/components/ui';
 
 import UseImagePicker from './image-picker';
@@ -42,26 +42,29 @@ export default function UploadFoto() {
   };
   console.log('image', image);
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Stack.Screen
-        options={{ title: 'Upload Foto', headerBackTitle: 'upload-foto' }}
-      />
-      {image && (
-        <Image
-          source={{ uri: image }}
-          style={{ width: 200, height: 200 }}
-          transition={1000}
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Stack.Screen
+          options={{ title: 'Upload Foto', headerBackTitle: 'upload-foto' }}
         />
-      )}
-      <Button
-        label="Pick an Image"
-        onPress={() => pickImage(setImage, setName)}
-      />
-      <Button
-        label="Upload Image"
-        onPress={handleUploadImage}
-        disabled={isPending}
-      />
-    </View>
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={{ width: 200, height: 200 }}
+            transition={1000}
+            contentFit="contain"
+          />
+        )}
+        <Button
+          label="Pick an Image"
+          onPress={() => pickImage(setImage, setName)}
+        />
+        <Button
+          label="Upload Image"
+          onPress={handleUploadImage}
+          disabled={isPending}
+        />
+      </View>
+    </SafeAreaView>
   );
 }

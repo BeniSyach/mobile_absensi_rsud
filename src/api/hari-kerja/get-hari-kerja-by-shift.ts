@@ -1,24 +1,21 @@
 import type { AxiosError } from 'axios';
 import { createQuery } from 'react-query-kit';
 
-import { getMessage } from '@/lib/message-storage';
-
 import { client } from '../common';
-import type { WaktuKerjaResponse } from './types'; // Import tipe yang sudah dibuat sebelumnya
+import type { HariKerjaResponse } from './types'; // Import tipe yang sudah dibuat sebelumnya
 
 export const GetWaktuKerjaByShiftAndOPD = createQuery<
-  WaktuKerjaResponse,
+  HariKerjaResponse,
   { shiftId: number },
   AxiosError
 >({
   queryKey: ['getWaktuKerjaByShiftAndOPD'] as const,
   fetcher: async ({ shiftId }) => {
-    const storedMessage = getMessage();
     return client({
-      url: `/api/waktu-kerja/shift/${shiftId}`,
+      url: `/secured/absen-waktu-kerja`,
       method: 'GET',
       params: {
-        opd_id: storedMessage?.opd_id,
+        shift_id: shiftId,
       },
     }).then((response) => response.data);
   },

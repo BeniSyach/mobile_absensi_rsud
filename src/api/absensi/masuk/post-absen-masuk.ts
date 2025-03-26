@@ -21,11 +21,12 @@ export const PostAbsenMasuk = createMutation<
       // };
       const formData = new FormData();
       // Menambahkan field ke FormData secara manual
-      formData.append('user_id', String(variables.user_id));
+      formData.append('nik', String(variables.user_id));
       formData.append('shift_id', String(variables.shift_id));
       formData.append('waktu_kerja_id', String(variables.waktu_kerja_id));
       formData.append('longitude', String(variables.longitude));
       formData.append('latitude', String(variables.latitude));
+      formData.append('kode_unit_kerja', String(variables.kode_unit_kerja));
 
       if (Platform.OS === 'ios') {
         // For iOS, the URI might need to be prefixed with 'file://'
@@ -36,7 +37,7 @@ export const PostAbsenMasuk = createMutation<
 
       // Mengirim request ke server
       const response = await client({
-        url: '/api/absen-masuk',
+        url: '/secured/absen-masuk',
         method: 'POST',
         data: formData,
         headers: {

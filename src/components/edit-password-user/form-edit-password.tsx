@@ -39,41 +39,43 @@ export default function FormEditPassword({
       behavior="padding"
       keyboardVerticalOffset={10}
     >
-      <View className="justify-center p-4">
-        <View className="items-center justify-center">
-          <Text
-            testID="form-title"
-            className="pb-6 text-center text-4xl font-bold"
-          >
-            Edit Password User
-          </Text>
-        </View>
-        <ControlledInput
-          control={control}
-          name="old_password"
-          label="Password Lama"
-        />
-        <ControlledInput
-          control={control}
-          name="new_password"
-          label="Password Baru"
-          placeholder="***"
-          secureTextEntry={true}
-        />
-        <ControlledInput
-          control={control}
-          name="new_password_confirmation"
-          label="Konfirmasi Password"
-          placeholder="***"
-          secureTextEntry={true}
-        />
+      <View className="m-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
+        <View className="justify-center p-4">
+          <View className="items-center justify-center">
+            <Text
+              testID="form-title"
+              className="pb-6 text-center text-2xl font-bold"
+            >
+              Edit Password User
+            </Text>
+          </View>
+          <ControlledInput
+            control={control}
+            name="old_password"
+            label="Password Lama"
+          />
+          <ControlledInput
+            control={control}
+            name="new_password"
+            label="Password Baru"
+            placeholder="***"
+            secureTextEntry={true}
+          />
+          <ControlledInput
+            control={control}
+            name="new_password_confirmation"
+            label="Konfirmasi Password"
+            placeholder="***"
+            secureTextEntry={true}
+          />
 
-        <Button
-          testID="edit-user-button"
-          label="Edit Data"
-          loading={isPending}
-          onPress={handleSubmit(onSubmit)}
-        />
+          <Button
+            testID="edit-user-button"
+            label="Edit Data"
+            loading={isPending}
+            onPress={handleSubmit(onSubmit)}
+          />
+        </View>
       </View>
     </KeyboardAvoidingView>
   );

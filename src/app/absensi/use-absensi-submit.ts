@@ -9,7 +9,8 @@ export default function useAbsensiSubmit(addPost: any, addPostPulang: any) {
     const userData = getMessage();
     const commonPayload = {
       ...data,
-      user_id: userData?.id,
+      user_id: userData?.data.nik,
+      kode_unit_kerja: userData?.data.unit_kerja_id,
     };
 
     return new Promise<void>((resolve, reject) => {

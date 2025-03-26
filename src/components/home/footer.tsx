@@ -2,18 +2,24 @@ import { Image, Text, View } from '@/components/ui';
 
 export default function Footer() {
   return (
-    <View className="mt-4 items-center justify-center py-4">
+    <View className="flex-row items-center justify-center">
       {/* Logo */}
       <Image
         source={require('../../../assets/logorsud.png')}
-        className="mb-2 size-10"
+        className="size-14"
         transition={1000}
+        contentFit="contain"
       />
 
       {/* Teks Footer */}
-      <Text className="text-center text-sm font-bold text-gray-700">
-        Powered by Tim SIMRS RSUD HAT
-      </Text>
+      <View className="ml-2">
+        <Text className="text-md font-bold text-gray-700 dark:text-black">
+          Powered By
+        </Text>
+        <Text className="text-md font-bold text-gray-700 dark:text-black">
+          Tim SIMRS RSUD HAT
+        </Text>
+      </View>
     </View>
   );
 }

@@ -8,6 +8,7 @@ export type AbsenPulangVariables = {
   photo: string;
   name: string;
   mimeType: string;
+  kode_unit_kerja: string;
 };
 
 export type AbsenPulangResponse = {

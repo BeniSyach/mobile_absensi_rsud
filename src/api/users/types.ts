@@ -68,6 +68,7 @@ export type GetUserDetailResponse = {
   gender: Gender;
   status_pegawai: StatusPegawai;
   opd: Opd;
+  shift_id: string;
 };
 
 export type UpdatePasswordResponse = {
@@ -82,7 +83,6 @@ export type UploadPhotoResponse = {
 export type EditUserResponse = {
   message: string;
   user: {
-    id: number;
     name: string;
     email: string;
     email_verified_at: string | null;
@@ -98,7 +98,6 @@ export type EditUserResponse = {
 };
 
 export interface EditUserVariables {
-  id: number;
   name?: string;
   email?: string;
   nik: string;
@@ -122,4 +121,99 @@ export type ResetPasswordVariables = {
   old_password: string; // Password lama
   new_password: string; // Password baru
   new_password_confirmation: string; // Konfirmasi password baru
+};
+
+type Pegawai = {
+  id_pegawai: string;
+  nik: number;
+  password: string;
+  nip: number;
+  nip_lama: number;
+  gelar_depan_id: string;
+  gelar_depan: {
+    id_gelar_depan: string;
+    kode_gelar_depan: string;
+    nama_gelar_depan: string;
+  };
+  nama: string;
+  gelar_belakang_id: string;
+  gelar_belakang: {
+    id_gelar_belakang: string;
+    kode_gelar_belakang: string;
+    nama_gelar_belakang: string;
+  };
+  alamat: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
+  jenis_kelamin: string;
+  agama_id: string;
+  agama: {
+    id_agama: string;
+    kode_agama: string;
+    nama_agama: string;
+  };
+  status_kawin_id: string;
+  status_kawin: {
+    id_status_kawin: string;
+    kode_status_kawin: string;
+    nama_status_kawin: string;
+  };
+  jenis_pegawai_id: string;
+  jenis_pegawai: {
+    id_jenis_pegawai: string;
+    kode_jenis_pegawai: string;
+    nama_jenis_pegawai: string;
+  };
+  photo: string;
+  status_pegawai_id: string;
+  status_pegawai: {
+    id_status_pegawai: string;
+    kode_status_pegawai: string;
+    nama_status_pegawai: string;
+  };
+  unit_kerja_id: string;
+  unit_kerja: {
+    id_unit_kerja: string;
+    kode_unit_kerja: string;
+    nama_unit_kerja: string;
+    radius: number;
+    latitude: string;
+    longitude: string;
+  };
+  jabatan_id: string;
+  jabatan: {
+    id_jabatan: string;
+    kode_jabatan: string;
+    nama_jabatan: string;
+  };
+  pangkat_id: string;
+  pangkat: {
+    id_pangkat: string;
+    kode_pangkat: string;
+    nama_pangkat: string;
+  };
+  golongan_ruang_id: string;
+  golongan_ruang: {
+    id_golongan_ruang: string;
+    kode_golongan_ruang: string;
+    nama_golongan_ruang: string;
+  };
+  struktural_fungsional_id: string;
+  struktural_fungsional: {
+    id_struktural_fungsional: string;
+    kode_struktural_fungsional: string;
+    nama_struktural_fungsional: string;
+  };
+  shift_absen_id: string;
+  is_active: boolean;
+  is_online: boolean;
+  created_at: string;
+  updated_at: string;
+  created_user: string;
+  updated_user: string;
+};
+
+export type ApiResponse = {
+  status: string;
+  data: Pegawai;
 };

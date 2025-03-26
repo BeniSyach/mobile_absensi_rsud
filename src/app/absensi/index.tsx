@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { Alert, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { PostAbsenMasuk, PostAbsenPulang } from '@/api';
@@ -8,7 +9,7 @@ import {
   AbsensiForm,
   type AbsensiFormProps,
 } from '@/components/absensi/absensi-form';
-import { Button, showErrorMessage, View } from '@/components/ui';
+import { Button, SafeAreaView, showErrorMessage, View } from '@/components/ui';
 
 import useAbsensiData from './use-absensi-data';
 import useAbsensiSubmit from './use-absensi-submit';
@@ -29,7 +30,7 @@ const ErrorState = () => (
 
 export default function Absensi() {
   const router = useRouter();
-  const { location, user, isError, isLoading } = useAbsensiData();
+  const { user, isError, isLoading, userStatus } = useAbsensiData();
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const { mutate: addPost, isPending: isAddingMasuk } = PostAbsenMasuk();
@@ -55,19 +56,30 @@ export default function Absensi() {
   };
 
   if (isLoading) return <LoadingState />;
-  if (isError || !user || !location) return <ErrorState />;
+  if (isError || !user) return <ErrorState />;
+
+  if (!user.data.shift_absen_id) {
+    Alert.alert('Peringatan', 'Shift belum diatur. Silakan hubungi admin.', [
+      { text: 'OK', onPress: () => router.back() },
+    ]);
+  }
 
   return (
-    <>
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
       <Stack.Screen
-        options={{ title: 'Absensi', headerBackTitle: 'Absensi' }}
+        options={{
+          title: 'Absensi',
+          headerBackTitle: 'Absensi',
+        }}
       />
+      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+
       <AbsensiForm
         isPending={submitLoading || isAddingMasuk || isAddingPulang}
         onSubmit={onSubmit}
-        location={location}
         user={user}
+        userStatus={userStatus?.data.data.lastAbsenStatus}
       />
-    </>
+    </SafeAreaView>
   );
 }

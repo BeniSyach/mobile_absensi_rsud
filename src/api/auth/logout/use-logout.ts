@@ -1,17 +1,26 @@
+import { Env } from '@env';
 import type { AxiosError } from 'axios';
+import axios from 'axios';
 import { createMutation } from 'react-query-kit';
 
-import { client } from '../../common';
+import { getToken } from '@/lib/auth/utils';
+
 import type { LogoutResponse } from './types';
 
-export const DeleteUser = createMutation<
-  LogoutResponse,
-  number, // ID dari user yang akan dihapus
-  AxiosError
->({
-  mutationFn: async (id) =>
-    client({
-      url: `/api/users/${id}`,
-      method: 'DELETE',
-    }).then((response) => response.data),
+export const LogoutUser = createMutation<LogoutResponse, void, AxiosError>({
+  mutationFn: async () => {
+    const token = await getToken();
+
+    const response = await axios({
+      url: `${Env.API_URL}/secured/logout`,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token.access}`,
+      },
+    }).catch((error) => {
+      console.error('Logout API error 1:', error);
+    });
+
+    return response?.data;
+  },
 });

@@ -4,7 +4,7 @@ import { showMessage } from 'react-native-flash-message';
 
 import { PostSPT } from '@/api/spt/post-spt';
 import SptForm, { type SptFormProps } from '@/components/spt/spt-form';
-import { showErrorMessage, View } from '@/components/ui';
+import { SafeAreaView, showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
 export default function Spt() {
@@ -38,7 +38,7 @@ export default function Spt() {
     });
   };
   return (
-    <View>
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
       <Stack.Screen
         options={{
           title: 'Surat Perintah Tugas',
@@ -47,6 +47,6 @@ export default function Spt() {
       />
 
       <SptForm onSubmit={onSubmit} isPending={isPending} isError={isError} />
-    </View>
+    </SafeAreaView>
   );
 }

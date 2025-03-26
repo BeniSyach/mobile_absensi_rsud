@@ -13,11 +13,9 @@ const schema = z.object({
   name: z.string({
     required_error: 'Nama is required',
   }),
-  email: z
-    .string({
-      required_error: 'Nama is required',
-    })
-    .email('Invalid email format'),
+  nip: z.string({
+    required_error: 'nip is required',
+  }),
   nik: z.string({
     required_error: 'NIK is required',
   }),
@@ -75,19 +73,21 @@ export default function FormEditUser({
         behavior="padding"
         keyboardVerticalOffset={10}
       >
-        <View className="flex-1 justify-center p-4">
-          <View className="items-center justify-center">
-            <Text className="pb-6 text-center text-4xl font-bold">
-              Edit Data User
-            </Text>
+        <View className="m-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
+          <View className="flex-1 justify-center p-4">
+            <View className="items-center justify-center">
+              <Text className="pb-6 text-center text-2xl font-bold">
+                Edit Data User
+              </Text>
+            </View>
+            <FormFields control={control} errors={errors} setValue={setValue} />
+            <Button
+              testID="edit-user-button"
+              label="Edit Data"
+              loading={isPending}
+              onPress={handleSubmit(onSubmit)}
+            />
           </View>
-          <FormFields control={control} errors={errors} setValue={setValue} />
-          <Button
-            testID="edit-user-button"
-            label="Edit Data"
-            loading={isPending}
-            onPress={handleSubmit(onSubmit)}
-          />
         </View>
       </KeyboardAvoidingView>
     </ScrollView>

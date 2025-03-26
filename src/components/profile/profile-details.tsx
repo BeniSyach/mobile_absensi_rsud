@@ -1,4 +1,6 @@
-import { type GetUserDetailResponse } from '@/api';
+import React from 'react';
+
+import { type ApiResponse } from '@/api';
 import { Text, View } from '@/components/ui';
 
 const renderField = (label: string, value: string) => (
@@ -12,31 +14,27 @@ const renderField = (label: string, value: string) => (
   </View>
 );
 
-export const ProfileDetails = ({
-  message,
-}: {
-  message: GetUserDetailResponse;
-}) => (
+export const ProfileDetails = ({ message }: { message: ApiResponse }) => (
   <>
     <View className="flex flex-col space-y-2">
-      {renderField('NIK', message.nik)}
-      {renderField('Nomor HP', message.nomor_hp)}
+      {renderField('NIK', message.data.nik.toString())}
       {renderField(
         'Alamat',
-        message.alamat.length > 15
-          ? `${message.alamat.substring(0, 15)}...`
-          : message.alamat
+        message.data.alamat.length > 15
+          ? `${message.data.alamat.substring(0, 15)}...`
+          : message.data.alamat
       )}
       {renderField(
-        'Divisi',
-        message.divisi.nama_divisi.length > 15
-          ? `${message.divisi.nama_divisi.substring(0, 15)}...`
-          : message.divisi.nama_divisi
+        'Unit Kerja',
+        message.data.unit_kerja.nama_unit_kerja.length > 15
+          ? `${message.data.unit_kerja.nama_unit_kerja.substring(0, 15)}...`
+          : message.data.unit_kerja.nama_unit_kerja
       )}
-      {renderField('Login Sebagai', message.level_akses.nama_level)}
-      {renderField('Jenis Kelamin', message.gender.nama_gender)}
-      {renderField('Status Pegawai', message.status_pegawai.nama_status)}
-      {renderField('OPD', message.opd.place_name)}
+      {renderField('Jenis Kelamin', message.data.jenis_kelamin)}
+      {renderField(
+        'Status Pegawai',
+        message.data.jenis_pegawai.nama_jenis_pegawai
+      )}
     </View>
   </>
 );

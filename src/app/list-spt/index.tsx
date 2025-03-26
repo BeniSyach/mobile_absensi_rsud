@@ -2,13 +2,23 @@ import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
-import { GetAllSPTbyUser, type GetAllSPTResponse } from '@/api';
+import {
+  type ApiResponse,
+  GetAllSPTbyUser,
+  type GetAllSPTResponse,
+} from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
-import { EmptyList, FocusAwareStatusBar, Text, View } from '@/components/ui';
-import { getMessage, type UserData } from '@/lib/message-storage';
+import {
+  EmptyList,
+  FocusAwareStatusBar,
+  SafeAreaView,
+  Text,
+  View,
+} from '@/components/ui';
+import { getMessage } from '@/lib/message-storage';
 
 export default function ListSpt() {
-  const [message, setMessage] = useState<UserData | null>(null);
+  const [message, setMessage] = useState<ApiResponse | null>(null);
   useEffect(() => {
     const storedMessage = getMessage();
     if (storedMessage) {
@@ -16,10 +26,7 @@ export default function ListSpt() {
     }
   }, []);
 
-  const { data, isLoading, error } = GetAllSPTbyUser({
-    variables: { userId: message?.id },
-    enabled: !!message?.id,
-  });
+  const { data, isLoading, error } = GetAllSPTbyUser();
 
   const renderItem = React.useCallback(
     ({ item }: { item: GetAllSPTResponse }) => <CardSPT data={item} />,
@@ -40,7 +47,7 @@ export default function ListSpt() {
     );
   }
   return (
-    <View className="flex-1">
+    <SafeAreaView className="flex-1 bg-[#0B3880]">
       <Stack.Screen
         options={{
           title: 'List Surat Perintah Tugas',
@@ -55,6 +62,6 @@ export default function ListSpt() {
         ListEmptyComponent={<EmptyList isLoading={isLoading} />}
         estimatedItemSize={300}
       />
-    </View>
+    </SafeAreaView>
   );
 }

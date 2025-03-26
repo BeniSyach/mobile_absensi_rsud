@@ -2,34 +2,50 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 
-import type { GetUserDetailResponse } from '@/api';
-import type { WaktuKerjaResponse } from '@/api/hari-kerja/types';
-import { type GetShiftResponseArray } from '@/api/shift/types';
+import type { ApiResponse } from '@/api';
+import { type LastAbsenStatus } from '@/api/absensi/cek-status-absen-user';
+import type { HariKerjaResponse } from '@/api/hari-kerja/types';
+import type { ShiftResponse } from '@/api/shift/types';
 import type { OptionType } from '@/components/ui';
 
 import { type FormType, schema } from './absensi-types';
 import { UseFormState } from './use-form-state';
 
-const getShiftOptions = (
-  shifts: GetShiftResponseArray | undefined
-): OptionType[] =>
-  shifts?.map((d) => ({
+const getShiftOptions = (shifts: ShiftResponse | undefined): OptionType[] => {
+  if (!shifts?.data?.data) {
+    return [];
+  }
+
+  const shiftData = Array.isArray(shifts.data.data) ? shifts.data.data : [];
+
+  return shiftData.map((d) => ({
     value: d.id,
     label: d.nama_shift,
-  })) || [];
+  }));
+};
 
 const getWorkTimeOptions = (
-  workTimes: WaktuKerjaResponse | undefined
-): OptionType[] =>
-  workTimes?.map((w) => ({
+  workTimes: HariKerjaResponse | undefined
+): OptionType[] => {
+  if (!workTimes?.data?.data) {
+    return [];
+  }
+
+  const workTimeData = Array.isArray(workTimes.data.data)
+    ? workTimes.data.data
+    : [];
+
+  return workTimeData.map((w) => ({
     value: w.id,
     label: w.hari.nama_hari,
-  })) || [];
+  }));
+};
 
 interface FormFieldConfig {
   state: ReturnType<typeof UseFormState>;
   isMapReady: boolean;
   initialTipeAbsensiValue: string;
+  initialShiftValue: string;
   isTipeAbsensiDisabled: boolean;
   errors: any;
 }
@@ -38,6 +54,7 @@ function useFormFieldProps({
   state,
   isMapReady,
   initialTipeAbsensiValue,
+  initialShiftValue,
   isTipeAbsensiDisabled,
   errors,
 }: FormFieldConfig) {
@@ -46,7 +63,7 @@ function useFormFieldProps({
   return React.useMemo(
     () => ({
       tipe_absensi_value: initialTipeAbsensiValue,
-      shift_value: state.shift,
+      shift_value: initialShiftValue,
       hari_kerja_value: state.hari_kerja,
       tipe_shift: getShiftOptions(state.shifts),
       tipe_hari_kerja: getWorkTimeOptions(state.workTimes),
@@ -62,6 +79,7 @@ function useFormFieldProps({
     }),
     [
       initialTipeAbsensiValue,
+      initialShiftValue,
       state,
       isMapReady,
       errors,
@@ -71,21 +89,31 @@ function useFormFieldProps({
   );
 }
 
-function useAbsensiInitialState(user: GetUserDetailResponse) {
+function useAbsensiInitialState(
+  userStatus: LastAbsenStatus | undefined,
+  user: ApiResponse
+) {
   const initialTipeAbsensiValue = React.useMemo(
-    () => (user.lastAbsenStatus?.status === 1 ? '1' : '0'),
-    [user.lastAbsenStatus?.status]
+    () => (userStatus?.status === 1 ? '1' : '0'),
+    [userStatus?.status]
+  );
+  const initialShiftValue = React.useMemo(
+    () => user.data.shift_absen_id,
+    [user.data.shift_absen_id]
   );
 
   const isTipeAbsensiDisabled = React.useMemo(
-    () => user.lastAbsenStatus?.status === 1,
-    [user.lastAbsenStatus?.status]
+    () => userStatus?.status === 1,
+    [userStatus?.status]
   );
 
-  return { initialTipeAbsensiValue, isTipeAbsensiDisabled };
+  return { initialTipeAbsensiValue, initialShiftValue, isTipeAbsensiDisabled };
 }
 
-export function useAbsensiForm(user: GetUserDetailResponse) {
+export function useAbsensiForm(
+  user: ApiResponse,
+  userStatus: LastAbsenStatus | undefined
+) {
   const {
     setValue,
     handleSubmit,
@@ -94,10 +122,10 @@ export function useAbsensiForm(user: GetUserDetailResponse) {
     resolver: zodResolver(schema),
   });
 
-  const state = UseFormState(setValue);
+  const state = UseFormState(setValue, user);
   const [isMapReady, setIsMapReady] = React.useState(false);
-  const { initialTipeAbsensiValue, isTipeAbsensiDisabled } =
-    useAbsensiInitialState(user);
+  const { initialTipeAbsensiValue, initialShiftValue, isTipeAbsensiDisabled } =
+    useAbsensiInitialState(userStatus, user);
 
   const handleLocationUpdate = React.useCallback(
     (lat: string, lng: string) => {
@@ -110,18 +138,22 @@ export function useAbsensiForm(user: GetUserDetailResponse) {
 
   React.useEffect(() => {
     setValue('tipe_absensi', initialTipeAbsensiValue);
-    if (user.lastAbsenStatus?.absen_masuk_id) {
-      setValue(
-        'absen_masuk_id',
-        user.lastAbsenStatus.absen_masuk_id.toString()
-      );
+    if (userStatus?.absen_masuk_id && user.data.shift_absen_id) {
+      setValue('absen_masuk_id', userStatus.absen_masuk_id.toString());
+      setValue('shift_id', user.data.shift_absen_id);
     }
-  }, [initialTipeAbsensiValue, user.lastAbsenStatus?.absen_masuk_id, setValue]);
+  }, [
+    initialTipeAbsensiValue,
+    userStatus?.absen_masuk_id,
+    user.data.shift_absen_id,
+    setValue,
+  ]);
 
   const formFieldProps = useFormFieldProps({
     state,
     isMapReady,
     initialTipeAbsensiValue,
+    initialShiftValue,
     isTipeAbsensiDisabled,
     errors,
   });

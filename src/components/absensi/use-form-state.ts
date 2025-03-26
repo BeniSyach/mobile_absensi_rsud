@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import React from 'react';
 import { type UseFormSetValue } from 'react-hook-form';
 
-import { GetWaktuKerjaByShiftAndOPD } from '@/api';
+import { type ApiResponse, GetWaktuKerjaByShiftAndOPD } from '@/api';
 import { GetShiftsByOpd } from '@/api/shift/get-shift-by-opd';
 
 import { type FormType } from './absensi-types';
@@ -28,9 +28,14 @@ const createPhotoFile = async (base64Data: string) => {
   };
 };
 
-export const UseFormState = (setValue: UseFormSetValue<FormType>) => {
+export function UseFormState(
+  setValue: UseFormSetValue<FormType>,
+  user: ApiResponse
+) {
   const [tipe_absensi, Settipe_absensi] = React.useState<string | number>();
-  const [shift, Setshift] = React.useState<string | number>();
+  const [shift, Setshift] = React.useState<string | number>(
+    user.data.shift_absen_id
+  );
   const [hari_kerja, Sethari_kerja] = React.useState<string | number>();
   const [longitude, setLongitude] = React.useState<string | null>(null);
   const [latitude, setLatitude] = React.useState<string | null>(null);
@@ -38,8 +43,8 @@ export const UseFormState = (setValue: UseFormSetValue<FormType>) => {
 
   const { data: shifts } = GetShiftsByOpd();
   const { data: workTimes } = GetWaktuKerjaByShiftAndOPD({
-    variables: { shiftId: Number(shift) },
-    enabled: !!shift,
+    variables: { shiftId: Number(user.data.shift_absen_id) },
+    enabled: !!user.data.shift_absen_id,
   });
 
   React.useEffect(() => {
@@ -88,4 +93,4 @@ export const UseFormState = (setValue: UseFormSetValue<FormType>) => {
     shifts,
     workTimes,
   };
-};
+}

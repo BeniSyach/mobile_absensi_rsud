@@ -19,11 +19,14 @@ export default function TabLayout() {
     }
   }, [hideSplash, status]);
 
-  if (isFirstTime) {
-    return <Redirect href="/onboarding" />;
-  }
+  console.log('isFirstTime', isFirstTime);
+  console.log('status', status);
+
+  // if (isFirstTime && status !== 'signOut') {
+  //   return <Redirect href="/onboarding" />;
+  // }
   if (status === 'signOut') {
-    return <Redirect href="/login" />;
+    return <Redirect href="/onboarding" />;
   }
   return (
     <Tabs>
