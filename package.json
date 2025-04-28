@@ -1,6 +1,6 @@
 {
   "name": "Deli Serdang Sehat",
-  "version": "0.1.3",
+  "version": "0.2.1",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {

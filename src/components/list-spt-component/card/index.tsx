@@ -3,11 +3,11 @@ import * as WebBrowser from 'expo-web-browser';
 import { Eye, FileText } from 'lucide-react-native';
 import { Alert } from 'react-native';
 
-import { type GetAllSPTResponse } from '@/api';
 import { Pressable, Text, View } from '@/components/ui';
+import { SPTData } from '@/api';
 
 interface CardProps {
-  data: GetAllSPTResponse; // menerima objek tunggal SPT
+  data: SPTData; // menerima objek tunggal SPT
 }
 
 export const CardSPT = ({ data }: CardProps) => {
@@ -32,9 +32,7 @@ export const CardSPT = ({ data }: CardProps) => {
       <FileText color="black" size={32} className="mr-4" />
       <View className="flex-1">
         {/* Menampilkan nama user */}
-        <Text className="dark:text-dark-500 text-lg font-bold">
-          {data.user.name}
-        </Text>
+
 
         {/* Menampilkan tanggal dan waktu SPT */}
         <Text className=" dark:text-dark-500 text-sm text-gray-600">

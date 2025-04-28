@@ -40,16 +40,19 @@ export function UseFormState(
   const [longitude, setLongitude] = React.useState<string | null>(null);
   const [latitude, setLatitude] = React.useState<string | null>(null);
   const [photo, setPhoto] = React.useState<PhotoFile>(null);
-
   const { data: shifts } = GetShiftsByOpd();
-  const { data: workTimes } = GetWaktuKerjaByShiftAndOPD({
-    variables: { shiftId: Number(user.data.shift_absen_id) },
-    enabled: !!user.data.shift_absen_id,
-  });
+  const shiftId = Number(user?.data?.shift_absen_id);
 
+  const { data: workTimes, refetch } = GetWaktuKerjaByShiftAndOPD({
+    variables: { shiftId },
+  });
+  React.useEffect(() => {
+    if (shift) {
+      refetch();
+    }
+  }, [shift]);
   React.useEffect(() => {
     let isSubscribed = true;
-
     if (isSubscribed) {
       if (tipe_absensi) setValue('tipe_absensi', tipe_absensi.toString());
       if (shift) setValue('shift_id', shift.toString());
@@ -58,7 +61,6 @@ export function UseFormState(
       if (latitude) setValue('latitude', latitude);
       if (photo) setValue('photo', photo);
     }
-
     return () => {
       isSubscribed = false;
     };

@@ -10,9 +10,17 @@ export const useGetAllAbsenMasukByUser = createQuery<
   queryKey: ['getAllAbsenMasukByUser'],
   fetcher: async ({ userId, page, limit = 10 }) => {
     if (!userId) throw new Error('User ID is required');
-    const response = await client.get(`/secured/absen-masuk/list`, {
-      params: { page, limit },
+    const url = `/secured/absen-masuk/list`;
+    console.log('Request URL:', url);
+    console.log('Request Params:', { nik: userId, page, limit });
+
+    const response = await client.get(url, {
+      params: { nik: userId, page, limit },
     });
+
+    console.log('Full Response Object:', response);
+    console.log('Response Data:', response.data);
+    console.log('Nested Response Data:', response.data.data.data.data);
     return response.data.data.data.data;
   },
 });

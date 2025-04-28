@@ -50,3 +50,38 @@ export interface PutSPTVariables extends PostSPTVariables {
 export type DeleteSPTResponse = {
   message: string; // Pesan sukses atau error dari server
 };
+
+export type SPTData = {
+  id: number;
+  nik: number;
+  lokasi_spt: string;
+  tanggal_spt: string;
+  waktu_spt: string;
+  lama_acara: number;
+  file_spt: string;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaginationLink = {
+  url: string | null;
+  label: string;
+  active: boolean;
+};
+
+export type Pagination = {
+  current_page: number;
+  data: SPTData[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: PaginationLink[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+};

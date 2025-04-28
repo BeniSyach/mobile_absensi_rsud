@@ -43,7 +43,6 @@ export const FormFields = ({
   return (
     <>
       <ControlledInput control={control} name="name" label="Nama" />
-      <ControlledInput control={control} name="email" label="Email" />
       <ControlledInput control={control} name="nik" label="NIK" />
       <Select
         label="Divisi"

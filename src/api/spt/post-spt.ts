@@ -18,7 +18,7 @@ export const PostSPT = createMutation<
       throw new Error('id_user is required but was not provided.');
     }
 
-    formData.append('id_user', variables.id_user.toString());
+    formData.append('nik', variables.id_user.toString());
     formData.append('tanggal_spt', variables.tanggal_spt);
     formData.append('waktu_spt', variables.waktu_spt.slice(0, 5));
     formData.append('lama_acara', variables.lama_acara.toString());
@@ -31,7 +31,7 @@ export const PostSPT = createMutation<
 
     try {
       const response = await client({
-        url: '/api/spt',
+        url: '/secured/spt',
         method: 'POST',
         data: formData,
         headers: {

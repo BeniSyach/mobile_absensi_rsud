@@ -15,7 +15,7 @@ export default function Spt() {
     const userData = getMessage();
     const formData = {
       ...data,
-      id_user: userData?.id,
+      id_user: userData?.data.nik,
       lama_acara: Number(data.lama_acara),
       file_spt: data.file_spt,
       name: data.file_spt.name,

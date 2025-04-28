@@ -123,6 +123,7 @@ export function useAbsensiForm(
   });
 
   const state = UseFormState(setValue, user);
+
   const [isMapReady, setIsMapReady] = React.useState(false);
   const { initialTipeAbsensiValue, initialShiftValue, isTipeAbsensiDisabled } =
     useAbsensiInitialState(userStatus, user);

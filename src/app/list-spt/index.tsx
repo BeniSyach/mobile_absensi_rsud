@@ -1,66 +1,40 @@
-import { FlashList } from '@shopify/flash-list';
-import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import {
-  type ApiResponse,
-  GetAllSPTbyUser,
-  type GetAllSPTResponse,
-} from '@/api';
+import { type SPTData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
-import {
-  EmptyList,
-  FocusAwareStatusBar,
-  SafeAreaView,
-  Text,
-  View,
-} from '@/components/ui';
-import { getMessage } from '@/lib/message-storage';
+import { SafeAreaView, Text, View } from '@/components/ui';
 
-export default function ListSpt() {
-  const [message, setMessage] = useState<ApiResponse | null>(null);
-  useEffect(() => {
-    const storedMessage = getMessage();
-    if (storedMessage) {
-      setMessage(storedMessage);
-    }
-  }, []);
+import UseFetchAbsen from '../list-absensi/use-fetch-absen';
+import ListContent from './list-content';
 
-  const { data, isLoading, error } = GetAllSPTbyUser();
+export default function ListSPT() {
+  const { data, isPending, error, handleLoadMore, isRefreshing, onRefresh } =
+    UseFetchAbsen();
+
+  console.log('data list absensi', data);
 
   const renderItem = React.useCallback(
-    ({ item }: { item: GetAllSPTResponse }) => <CardSPT data={item} />,
+    ({ item }: { item: SPTData }) => <CardSPT data={item} />,
     []
   );
 
   if (error) {
     return (
       <View>
-        <Stack.Screen
-          options={{
-            title: 'List Surat Perintah Tugas',
-            headerBackTitle: 'list-spt',
-          }}
-        />
-        <Text>Error Loading data</Text>
+        <Text>Error Loading Data</Text>
       </View>
     );
   }
+
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <Stack.Screen
-        options={{
-          title: 'List Surat Perintah Tugas',
-          headerBackTitle: 'list-spt',
-        }}
-      />
-      <FocusAwareStatusBar />
-      <FlashList
+      <ListContent
         data={data}
+        isPending={isPending}
+        handleLoadMore={handleLoadMore}
         renderItem={renderItem}
-        keyExtractor={(_, index) => `item-${index}`}
-        ListEmptyComponent={<EmptyList isLoading={isLoading} />}
-        estimatedItemSize={300}
+        isRefreshing={isRefreshing}
+        onRefresh={onRefresh}
       />
     </SafeAreaView>
   );

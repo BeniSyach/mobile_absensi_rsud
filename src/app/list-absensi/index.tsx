@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 
-import { type AbsenMasukDanPulangByUserResponse } from '@/api';
+import { type AbsensiData } from '@/api';
 import { Card } from '@/components/list-absensi-component/card';
 import { Text } from '@/components/ui';
 import { SafeAreaView } from '@/components/ui';
@@ -13,10 +13,10 @@ export default function ListAbsensi() {
   const { data, isPending, error, handleLoadMore, isRefreshing, onRefresh } =
     UseFetchAbsen();
 
+  console.log('data list absensi', data);
+
   const renderItem = React.useCallback(
-    ({ item }: { item: AbsenMasukDanPulangByUserResponse }) => (
-      <Card data={item} />
-    ),
+    ({ item }: { item: AbsensiData }) => <Card data={item} />,
     []
   );
 
