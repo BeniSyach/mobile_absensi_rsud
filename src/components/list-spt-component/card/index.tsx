@@ -1,21 +1,32 @@
-import { Env } from '@env';
 import * as WebBrowser from 'expo-web-browser';
 import { Eye, FileText } from 'lucide-react-native';
 import { Alert } from 'react-native';
 
+import { type SPTData } from '@/api';
+import { useViewSPT } from '@/api/spt/view-spt';
 import { Pressable, Text, View } from '@/components/ui';
-import { SPTData } from '@/api';
 
 interface CardProps {
-  data: SPTData; // menerima objek tunggal SPT
+  dataSPT: SPTData;
 }
 
-export const CardSPT = ({ data }: CardProps) => {
+export const CardSPT = ({ dataSPT }: CardProps) => {
+  // Tempatkan hook di level atas komponen
+  const { refetch, isFetching } = useViewSPT({
+    variables: {
+      userId: dataSPT?.nik,
+      file: dataSPT?.file_spt,
+    },
+    enabled: false, // agar hanya dijalankan saat refetch dipanggil
+  });
+
   const handleViewPDF = async () => {
     try {
-      const pdfUri = `${Env.API_URL}/storage/${data.file_spt}`; // pastikan `pdf_url` ada pada data yang diterima
+      const { data: result } = await refetch();
+
+      // Misalnya result.url adalah URL file PDF dari server
+      const pdfUri = `${result?.url}`; // atau bisa juga pakai result.url kalau tersedia
       if (pdfUri) {
-        // Menggunakan expo-web-browser untuk membuka PDF di dalam browser atau aplikasi PDF
         await WebBrowser.openBrowserAsync(pdfUri);
       } else {
         Alert.alert('Error', 'PDF not found');
@@ -28,29 +39,22 @@ export const CardSPT = ({ data }: CardProps) => {
 
   return (
     <View className="my-4 flex-row items-center rounded-lg bg-white p-4 shadow">
-      {/* Menampilkan gambar user */}
       <FileText color="black" size={32} className="mr-4" />
       <View className="flex-1">
-        {/* Menampilkan nama user */}
-
-
-        {/* Menampilkan tanggal dan waktu SPT */}
         <Text className=" dark:text-dark-500 text-sm text-gray-600">
-          Tanggal SPT: {data.tanggal_spt}
+          Tanggal SPT: {dataSPT.tanggal_spt}
         </Text>
         <Text className=" dark:text-dark-500 text-sm text-gray-600">
-          Waktu SPT: {data.waktu_spt}
+          Waktu SPT: {dataSPT.waktu_spt}
         </Text>
-
-        {/* Menampilkan lama acara dan lokasi */}
         <Text className=" dark:text-dark-500 mt-2 text-sm text-gray-600">
-          Lama Acara: {data.lama_acara} jam
+          Lama Acara: {dataSPT.lama_acara} jam
         </Text>
         <Text className=" dark:text-dark-500 text-sm text-gray-600">
-          Lokasi: {data.lokasi_spt}
+          Lokasi: {dataSPT.lokasi_spt}
         </Text>
       </View>
-      <Pressable className="p-2" onPress={handleViewPDF}>
+      <Pressable className="p-2" onPress={handleViewPDF} disabled={isFetching}>
         <Eye color="blue" size={24} />
       </Pressable>
     </View>

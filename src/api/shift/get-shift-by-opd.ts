@@ -15,8 +15,7 @@ export const GetShiftsByOpd = createQuery<ShiftResponse, void, AxiosError>({
       method: 'GET',
       params: {
         opd_id: storedMessage?.data.unit_kerja_id,
-        page: 1,
-        per_page: 10,
+        _t: Date.now(),
       },
     }).then((response) => response.data);
   },

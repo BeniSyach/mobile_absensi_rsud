@@ -22,6 +22,14 @@ export default function UseFetchAbsen() {
     enabled: !!userId,
   });
 
+  // Reset data ketika page kembali ke 1
+  useEffect(() => {
+    if (page === 1) {
+      setData([]);
+    }
+  }, [page, userId]);
+
+  // Update data berdasarkan hasil fetch
   useEffect(() => {
     if (fetchedData?.data) {
       setData((prevData) =>
@@ -33,9 +41,9 @@ export default function UseFetchAbsen() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    setPage(1);
+    setPage(1); // ini akan trigger useEffect untuk reset data
     try {
-      await refetch();
+      await refetch(); // fetch ulang halaman 1
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {

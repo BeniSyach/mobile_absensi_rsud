@@ -36,6 +36,7 @@ export interface PostSPTVariables {
   file_spt?: any;
   name: string;
   mimeType: string;
+  opd_id: string | undefined;
 }
 
 export type PostSPTResponse = {
@@ -84,4 +85,5 @@ export type Pagination = {
   prev_page_url: string | null;
   to: number;
   total: number;
+  url: string | null;
 };

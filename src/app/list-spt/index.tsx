@@ -4,17 +4,17 @@ import { type SPTData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
 import { SafeAreaView, Text, View } from '@/components/ui';
 
-import UseFetchAbsen from '../list-absensi/use-fetch-absen';
 import ListContent from './list-content';
+import UseFetchSPT from './use-fetch-spt';
 
 export default function ListSPT() {
   const { data, isPending, error, handleLoadMore, isRefreshing, onRefresh } =
-    UseFetchAbsen();
+    UseFetchSPT();
 
-  console.log('data list absensi', data);
+  console.log('data list SPT', data);
 
   const renderItem = React.useCallback(
-    ({ item }: { item: SPTData }) => <CardSPT data={item} />,
+    ({ item }: { item: SPTData }) => <CardSPT dataSPT={item} />,
     []
   );
 

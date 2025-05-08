@@ -15,6 +15,7 @@ export default function Spt() {
     const userData = getMessage();
     const formData = {
       ...data,
+      opd_id: userData?.data.unit_kerja.kode_unit_kerja,
       id_user: userData?.data.nik,
       lama_acara: Number(data.lama_acara),
       file_spt: data.file_spt,

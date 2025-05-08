@@ -1,6 +1,7 @@
-import { useGetAllSPTByUser } from "@/api";
-import { getMessage } from "@/lib";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from 'react';
+
+import { useGetAllSPTByUser } from '@/api';
+import { getMessage } from '@/lib';
 
 export default function UseFetchSPT() {
   const storedMessage = getMessage();
@@ -11,10 +12,22 @@ export default function UseFetchSPT() {
   const [hasMoreData, setHasMoreData] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data : fetchedData, isPending, error, refetch } = useGetAllSPTByUser({
+  const {
+    data: fetchedData,
+    isPending,
+    error,
+    refetch,
+  } = useGetAllSPTByUser({
     variables: { userId, page },
     enabled: !!userId,
   });
+
+  // Reset data saat userId atau page == 1
+  useEffect(() => {
+    if (page === 1) {
+      setData([]); // reset data dulu sebelum fetch baru
+    }
+  }, [page, userId]);
 
   useEffect(() => {
     if (fetchedData?.data) {
@@ -27,9 +40,9 @@ export default function UseFetchSPT() {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    setPage(1);
+    setPage(1); // Ini akan trigger reset data di useEffect atas
     try {
-      await refetch();
+      await refetch(); // refetch manual
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {

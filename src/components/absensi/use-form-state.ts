@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import React from 'react';
 import { type UseFormSetValue } from 'react-hook-form';
 
-import { type ApiResponse, GetWaktuKerjaByShiftAndOPD } from '@/api';
+import { type ApiResponse, useGetWaktuKerjaByShiftAndOPD } from '@/api';
 import { GetShiftsByOpd } from '@/api/shift/get-shift-by-opd';
 
 import { type FormType } from './absensi-types';
@@ -40,17 +40,26 @@ export function UseFormState(
   const [longitude, setLongitude] = React.useState<string | null>(null);
   const [latitude, setLatitude] = React.useState<string | null>(null);
   const [photo, setPhoto] = React.useState<PhotoFile>(null);
-  const { data: shifts } = GetShiftsByOpd();
-  const shiftId = Number(user?.data?.shift_absen_id);
-
-  const { data: workTimes, refetch } = GetWaktuKerjaByShiftAndOPD({
-    variables: { shiftId },
+  const { data: shifts, refetch: refetchShifts } = GetShiftsByOpd({
+    enabled: true,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  const { data: workTimes, refetch: refetchWorkTimes } =
+    useGetWaktuKerjaByShiftAndOPD({
+      enabled: true,
+      staleTime: 0,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+    });
+
   React.useEffect(() => {
-    if (shift) {
-      refetch();
-    }
-  }, [shift]);
+    refetchShifts();
+    refetchWorkTimes();
+  }, [refetchShifts, refetchWorkTimes]);
+
   React.useEffect(() => {
     let isSubscribed = true;
     if (isSubscribed) {
@@ -94,5 +103,7 @@ export function UseFormState(
     handlePhotoCapture,
     shifts,
     workTimes,
+    refetchShifts,
+    refetchWorkTimes,
   };
 }

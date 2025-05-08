@@ -35,7 +35,7 @@ export default function Feed() {
       >
         <ScrollView className="flex-1">
           <View className="items-center justify-center p-4">
-            <Text className="text-xl italic">Haloo.... Selamat Datang,</Text>
+            <Text className="text-xl italic">Haloo.... Selamat Datang, </Text>
             <Text className="text-xl font-bold">{user.data.nama}</Text>
           </View>
           <MenuUtama />

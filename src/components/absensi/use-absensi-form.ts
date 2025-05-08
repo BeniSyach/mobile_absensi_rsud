@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useFocusEffect } from '@react-navigation/native';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -123,10 +124,29 @@ export function useAbsensiForm(
   });
 
   const state = UseFormState(setValue, user);
+  const { refetchShifts, refetchWorkTimes } = state;
 
   const [isMapReady, setIsMapReady] = React.useState(false);
   const { initialTipeAbsensiValue, initialShiftValue, isTipeAbsensiDisabled } =
     useAbsensiInitialState(userStatus, user);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (refetchShifts) {
+        console.log('Refetching shifts on focus');
+        refetchShifts();
+      }
+
+      if (refetchWorkTimes) {
+        console.log('Refetching work times on focus');
+        refetchWorkTimes();
+      }
+
+      return () => {
+        // Optional cleanup
+      };
+    }, [refetchShifts, refetchWorkTimes])
+  );
 
   const handleLocationUpdate = React.useCallback(
     (lat: string, lng: string) => {

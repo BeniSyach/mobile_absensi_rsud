@@ -24,8 +24,8 @@ const ListContent = ({
     <FocusAwareStatusBar />
     <Stack.Screen
       options={{
-        title: 'List Absensi',
-        headerBackTitle: 'list-absensi',
+        title: 'List SPT',
+        headerBackTitle: 'list-spt',
       }}
     />
     <FlashList

@@ -23,6 +23,7 @@ export const PostSPT = createMutation<
     formData.append('waktu_spt', variables.waktu_spt.slice(0, 5));
     formData.append('lama_acara', variables.lama_acara.toString());
     formData.append('lokasi_spt', variables.lokasi_spt);
+    formData.append('opd_id', variables.opd_id ?? '');
     formData.append('file_spt', {
       uri: variables.file_spt.uri,
       type: mimeType,
