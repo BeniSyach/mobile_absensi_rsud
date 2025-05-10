@@ -41,17 +41,37 @@ export const CardSPT = ({ dataSPT }: CardProps) => {
     <View className="my-4 flex-row items-center rounded-lg bg-white p-4 shadow">
       <FileText color="black" size={32} className="mr-4" />
       <View className="flex-1">
-        <Text className=" dark:text-dark-500 text-sm text-gray-600">
+        <Text className="dark:text-dark-500 text-sm text-gray-600">
           Tanggal SPT: {dataSPT.tanggal_spt}
         </Text>
-        <Text className=" dark:text-dark-500 text-sm text-gray-600">
+        <Text className="dark:text-dark-500 text-sm text-gray-600">
           Waktu SPT: {dataSPT.waktu_spt}
         </Text>
-        <Text className=" dark:text-dark-500 mt-2 text-sm text-gray-600">
-          Lama Acara: {dataSPT.lama_acara} jam
+        <Text className="dark:text-dark-500 mt-2 text-sm text-gray-600">
+          Lama Acara: {dataSPT.lama_acara} Hari
         </Text>
-        <Text className=" dark:text-dark-500 text-sm text-gray-600">
+        <Text className="dark:text-dark-500 text-sm text-gray-600">
           Lokasi: {dataSPT.lokasi_spt}
+        </Text>
+        {/* Status SPT */}
+        <Text
+          className={`
+        mt-2 text-sm font-semibold
+        ${
+          dataSPT.status?.toString() === '1'
+            ? 'text-green-600'
+            : dataSPT.status?.toString() === '0'
+              ? 'text-red-600'
+              : 'text-yellow-600'
+        }
+      `}
+        >
+          Status:{' '}
+          {dataSPT.status?.toString() === '1'
+            ? 'SPT diverifikasi Atasan'
+            : dataSPT.status?.toString() === '0'
+              ? 'SPT ditolak Atasan'
+              : 'Menunggu verifikasi Atasan'}
         </Text>
       </View>
       <Pressable className="p-2" onPress={handleViewPDF} disabled={isFetching}>

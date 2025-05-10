@@ -37,6 +37,7 @@ export interface PostSPTVariables {
   name: string;
   mimeType: string;
   opd_id: string | undefined;
+  status: string;
 }
 
 export type PostSPTResponse = {
