@@ -76,7 +76,7 @@ export default function FormEditUser({
         <View className="m-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
           <View className="flex-1 justify-center p-4">
             <View className="items-center justify-center">
-              <Text className="pb-6 text-center text-2xl font-bold">
+              <Text className="pb-6 text-center text-2xl font-bold text-blue-500">
                 Edit Data User
               </Text>
             </View>

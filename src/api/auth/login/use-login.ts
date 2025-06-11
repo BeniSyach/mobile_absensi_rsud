@@ -13,7 +13,11 @@ export const useLogin = createMutation<
     try {
       const response = await axios.post<LoginResponse>(
         `${Env.API_URL}/auth/login`,
-        variables
+        {
+          nik: variables.nik.replace(/['"]/g, ''),
+          password: variables.password,
+          device_token: variables.device_token,
+        }
       );
 
       return response.data; // Mengembalikan response sesuai tipe LoginResponse

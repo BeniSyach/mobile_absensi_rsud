@@ -17,3 +17,13 @@ export const Title = ({ text, className }: Props) => {
     </View>
   );
 };
+export const TitleSecondary = ({ text, className }: Props) => {
+  return (
+    <View className="flex-row items-center justify-start py-2">
+      <Text className="dark:text-dark mx-2 text-xl font-bold tracking-tight">
+        {text}
+      </Text>
+      <View className={`h-px flex-1 ${className}`} />
+    </View>
+  );
+};

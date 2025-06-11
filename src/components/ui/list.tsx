@@ -25,6 +25,74 @@ export const EmptyList = React.memo(({ isLoading }: Props) => {
   );
 });
 
+export const EmptyListPad = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center text-slate-600">
+            Masukkan NPWPD / Nama / Alamat
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
+export const EmptyListPbb = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center text-slate-600">
+            Masukkan Nomor NOP dan NIK Anda
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
+export const EmptyListUmkm = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center text-slate-600">
+            Masukkan NIK Anda
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
+export const EmptyListPihps = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center text-slate-600">
+            Silahkan Input Data
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
 export const NoData = () => (
   <Svg width={200} height={200} viewBox="0 0 647.636 632.174">
     <Path

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { showMessage } from 'react-native-flash-message';
@@ -32,9 +33,36 @@ export default function Spt() {
         });
         router.back(); // Go back to the previous screen
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error('Error submitting SPT:', error);
-        showErrorMessage('Terjadi kesalahan saat mengirim SPT');
+        let errorMessage = 'Terjadi kesalahan saat mengirim SPT';
+        if (error?.response) {
+          const status = error.response.status;
+          const data = error.response.data;
+          if (status === 413) {
+            errorMessage =
+              'Ukuran data terlalu besar (Request Entity Too Large)';
+          } else if (status === 422) {
+            errorMessage =
+              'Data tidak valid. Silakan periksa kembali input Anda.';
+          } else if (status === 500) {
+            errorMessage =
+              'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
+          }
+          if (typeof data === 'string') {
+            errorMessage = data;
+          } else if (data?.message) {
+            errorMessage = data.message;
+          } else if (data?.messages) {
+            errorMessage = data.messages;
+          } else if (data?.error) {
+            errorMessage = data.error;
+          }
+        } else if (error?.message) {
+          // Jika error adalah instance dari Error
+          errorMessage = error.message;
+        }
+        showErrorMessage(errorMessage);
       },
     });
   };

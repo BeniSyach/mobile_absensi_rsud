@@ -9,6 +9,8 @@ type Shift = {
 export type ShiftResponse = {
   status: 'success' | 'error';
   data: {
-    data: Shift[];
+    data: {
+      data: Shift[];
+    };
   };
 };

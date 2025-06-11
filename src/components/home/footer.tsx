@@ -17,7 +17,7 @@ export default function Footer() {
           Powered By
         </Text>
         <Text className="text-md font-bold text-gray-700 dark:text-black">
-          Tim SIMRS RSUD HAT
+          Tim IT Deli Serdang Sehat
         </Text>
       </View>
     </View>

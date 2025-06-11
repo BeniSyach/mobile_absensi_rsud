@@ -1,6 +1,6 @@
 // types.ts
 export type LoginVariables = {
-  nik: number;
+  nik: string;
   password: string;
   device_token: string | null;
 };

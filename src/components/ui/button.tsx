@@ -7,7 +7,7 @@ import { tv } from 'tailwind-variants';
 const button = tv({
   slots: {
     container: 'my-2 flex flex-row items-center justify-center rounded-md px-4',
-    label: 'font-inter text-base font-semibold',
+    label: 'font-inter text-base font-semibold ',
     indicator: 'h-6 text-white',
     icon: 'mr-2', // Add spacing between icon and text
   },
@@ -15,8 +15,8 @@ const button = tv({
   variants: {
     variant: {
       default: {
-        container: 'bg-black dark:bg-white',
-        label: 'text-white dark:text-black',
+        container: 'bg-black',
+        label: 'text-gray-300',
         indicator: 'text-white dark:text-black',
       },
       secondary: {

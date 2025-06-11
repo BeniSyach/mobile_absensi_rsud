@@ -13,12 +13,13 @@ import { type FormType, schema } from './absensi-types';
 import { UseFormState } from './use-form-state';
 
 const getShiftOptions = (shifts: ShiftResponse | undefined): OptionType[] => {
-  if (!shifts?.data?.data) {
+  if (!shifts?.data?.data.data) {
     return [];
   }
 
-  const shiftData = Array.isArray(shifts.data.data) ? shifts.data.data : [];
-
+  const shiftData = Array.isArray(shifts.data.data.data)
+    ? shifts.data.data.data
+    : [];
   return shiftData.map((d) => ({
     value: d.id,
     label: d.nama_shift,

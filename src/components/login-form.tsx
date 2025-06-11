@@ -38,7 +38,7 @@ const schema = z.object({
 // Add a separate schema for the transformed output
 const transformedSchema = schema.transform((data) => ({
   ...data,
-  nik: parseInt(data.nik, 10),
+  nik: data.nik,
 }));
 
 export type FormType = z.infer<typeof schema>;
@@ -72,7 +72,7 @@ const renderControlledInputs = ({
       name="nik"
       label="NIK"
       defaultValue={nik}
-      keyboardType="numeric"
+      keyboardType="number-pad"
     />
     <ControlledInput
       testID="password-input"
@@ -153,7 +153,7 @@ export const LoginForm = ({
   const { handleSubmit, control, setValue } = useForm<TransformedFormType>({
     resolver: zodResolver(transformedSchema),
     defaultValues: {
-      nik: 0,
+      nik: '',
       password: '',
     },
   });

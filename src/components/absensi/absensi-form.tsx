@@ -64,7 +64,9 @@ const CameraSection = React.memo<{
   if (!permission.granted) {
     return (
       <View className="mt-2 items-center">
-        <Text className="mb-2">Aplikasi Membutuhkan Izin Akses Kamera</Text>
+        <Text className="mb-2 text-gray-400">
+          Aplikasi Membutuhkan Izin Akses Kamera
+        </Text>
         <Button label="Izinkan Akses Kamera" onPress={requestPermission} />
       </View>
     );

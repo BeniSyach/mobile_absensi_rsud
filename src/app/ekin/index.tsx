@@ -57,10 +57,10 @@ export default function Ekin() {
       >
         <NavbarEkin />
         <View className="px-4">
-          <Text className="mt-3 text-lg font-bold text-white">
+          <Text className="mt-3 text-lg font-bold text-blue-500">
             Hallo, {user.name}
           </Text>
-          <Text className="text-sm font-bold text-white">Instansi : </Text>
+          <Text className="text-sm font-bold text-blue-500">Instansi : </Text>
         </View>
         <ScrollView className="flex-1">
           <MenuKegiatanHarianSaya />

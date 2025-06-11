@@ -4,15 +4,18 @@ import Svg from 'react-native-svg';
 export * from './button';
 export * from './checkbox';
 export { default as colors } from './colors';
+export * from './date-input-original';
 export * from './focus-aware-status-bar';
 export * from './image';
 export * from './input';
 export * from './list';
+export * from './mask-input';
 export * from './modal';
 export * from './progress-bar';
 export * from './select';
 export * from './text';
 export * from './utils';
+export * from './year-picker';
 
 // export base components from react-native
 export {
