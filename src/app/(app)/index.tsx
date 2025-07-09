@@ -1,19 +1,14 @@
 import React from 'react';
 import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
-import { GetUser } from '@/api/users';
 import Footer from '@/components/home/footer';
 import MenuUtama from '@/components/home/menu-utama';
 import Navbar from '@/components/home/navbar';
 import { Image, ScrollView, Text, View } from '@/components/ui';
-import LoadingComponent from '@/components/ui/loading';
+import { getMessage } from '@/lib';
 
 export default function Feed() {
-  const { data: user, isLoading, isError } = GetUser();
-
-  if (isLoading) return <LoadingComponent />;
-  if (isError || !user) return <Text>Error loading user data</Text>;
-
+  const storedMessage = getMessage();
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
       <View className="h-48 rounded-b-3xl bg-[#0B3880]">
@@ -39,7 +34,7 @@ export default function Feed() {
               Haloo.... Selamat Datang,{' '}
             </Text>
             <Text className="text-xl font-bold text-black">
-              {user.data.nama}
+              {storedMessage.nama}
             </Text>
           </View>
           <MenuUtama />

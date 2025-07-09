@@ -12,7 +12,7 @@ export const LogoutUser = createMutation<LogoutResponse, void, AxiosError>({
     const token = await getToken();
 
     const response = await axios({
-      url: `${Env.API_URL}/secured/logout`,
+      url: `${Env.API_URL}/auth-mobile/logout`,
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token.access}`,

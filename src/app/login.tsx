@@ -41,23 +41,19 @@ export default function Login() {
       const id = await getPersistentDeviceId();
       setDeviceId(id);
     };
-
     fetchDeviceId();
   }, [router, status]);
 
   const handleLoginSuccess = (data: LoginResponse) => {
-    const access = data?.data?.tokens?.access_token || '0';
-    const refresh = data?.data?.tokens?.refresh_token || '0';
-    const successMessage = data?.data?.data_pegawai || '0';
-
+    const access = data?.access_token || '0';
+    const refresh = data?.refresh_token || '0';
+    const successMessage = data?.user || '0';
     // Save token to auth state
     signIn({ access, refresh });
     setMessage(successMessage);
-
     // Redirect to the main page
     router.push('/');
   };
-
   const handleLoginError = (
     error: AxiosError<unknown, any>,
     _variables: LoginVariables,
@@ -65,18 +61,21 @@ export default function Login() {
   ) => {
     showErrorMessage((error.response?.data as any)?.message || error.message);
   };
-
-  const { mutate, isPending, isError } = useLogin({
+  const { mutateAsync, isPending, isError } = useLogin({
     onSuccess: handleLoginSuccess,
     onError: handleLoginError,
   });
-
-  const onSubmit: LoginFormProps['onSubmit'] = (data) => {
+  const onSubmit: LoginFormProps['onSubmit'] = async (data) => {
     const loginData = {
       ...data,
       device_token: deviceId,
     };
-    mutate(loginData);
+    try {
+      const response = await mutateAsync(loginData);
+      handleLoginSuccess(response);
+    } catch (error) {
+      handleLoginError(error as AxiosError, loginData, null);
+    }
   };
 
   return (

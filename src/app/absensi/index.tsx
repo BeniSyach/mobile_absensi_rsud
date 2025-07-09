@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
@@ -30,18 +30,28 @@ const ErrorState = () => (
 
 export default function Absensi() {
   const router = useRouter();
-  const { user, isError, isLoading, userStatus } = useAbsensiData();
+  const { user, isError, isLoading, userStatus, getStatusDataAbsenUser } =
+    useAbsensiData();
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const { mutate: addPost, isPending: isAddingMasuk } = PostAbsenMasuk();
-  const { mutate: addPostPulang, isPending: isAddingPulang } =
+  const { mutateAsync: addPost, isPending: isAddingMasuk } = PostAbsenMasuk();
+  const { mutateAsync: addPostPulang, isPending: isAddingPulang } =
     PostAbsenPulang();
   const submitAbsensi = useAbsensiSubmit(addPost, addPostPulang);
-
+  useFocusEffect(
+    useCallback(() => {
+      getStatusDataAbsenUser();
+    }, [])
+  );
   const onSubmit: AbsensiFormProps['onSubmit'] = async (data) => {
     setSubmitLoading(true);
     try {
-      await submitAbsensi(data);
+      const response = await submitAbsensi(data);
+      console.log('respon absensi', response);
+      if (response?.data?.data.error) {
+        showErrorMessage(response.data.data.error);
+        return;
+      }
       showMessage({
         message: 'Absensi berhasil dilakukan!',
         type: 'success',
@@ -49,7 +59,9 @@ export default function Absensi() {
       });
       router.back();
     } catch (error: any) {
-      showErrorMessage(error.response?.data?.error || error.message);
+      showErrorMessage(
+        error?.response?.data?.error || error?.message || 'Terjadi kesalahan'
+      );
     } finally {
       setSubmitLoading(false);
     }

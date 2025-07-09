@@ -17,9 +17,9 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
     disabled: false,
   },
   {
-    href: '/pelayanan-publik/salak-deli',
-    image: require('../../../assets/image/pelayanan-publik/icon-salak-deli.png'),
-    disabled: true,
+    href: '/pelayanan-publik/smart-city',
+    image: require('../../../assets/image/pelayanan-publik/icon-smartcity.png'),
+    disabled: false,
   },
   {
     href: '/pelayanan-publik/bapenda',
@@ -27,9 +27,9 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
     disabled: false,
   },
   {
-    href: '/pelayanan-publik/jumpa-madu',
-    image: require('../../../assets/image/pelayanan-publik/icon-jumpa-madu.png'),
-    disabled: true,
+    href: '/pelayanan-publik/keuangan',
+    image: require('../../../assets/image/pelayanan-publik/keuangan_sp2d_icon.png'),
+    disabled: false,
   },
   {
     href: '/pelayanan-publik/pihps',
@@ -37,8 +37,9 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
     disabled: false,
   },
   {
-    href: '/pelayanan-publik/smart-city',
-    image: require('../../../assets/image/pelayanan-publik/icon-smartcity.png'),
+    href: '/pelayanan-publik/sada-sada',
+    image: require('../../../assets/image/pelayanan-publik/koperasi/logo-sada-sada.png'),
+    // image: require('../../../assets/image/pelayanan-publik/icon-opd.png'),
     disabled: false,
   },
   {
@@ -57,14 +58,19 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
     disabled: false,
   },
   {
-    href: '/pelayanan-publik/opd',
-    image: require('../../../assets/image/pelayanan-publik/icon-opd-true.png'),
-    disabled: false,
+    href: '/pelayanan-publik/salak-deli',
+    image: require('../../../assets/image/pelayanan-publik/icon-spbe.png'),
+    disabled: true,
+  },
+
+  {
+    href: '/pelayanan-publik/salak-deli',
+    image: require('../../../assets/image/pelayanan-publik/icon-salak-deli.png'),
+    disabled: true,
   },
   {
-    href: '/pelayanan-publik/sada-sada',
-    image: require('../../../assets/image/pelayanan-publik/koperasi/logo-sada-sada.png'),
-    // image: require('../../../assets/image/pelayanan-publik/icon-opd.png'),
+    href: '/pelayanan-publik/opd',
+    image: require('../../../assets/image/pelayanan-publik/icon-opd-true.png'),
     disabled: false,
   },
 ];
@@ -72,7 +78,7 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
 export default function MenuUtamaPelayananPublik() {
   return (
     <View>
-      {[0, 1, 2, 3].map((rowIndex) => (
+      {[0, 1, 2, 3, 4].map((rowIndex) => (
         <View
           key={rowIndex}
           className="flex-row items-center justify-between py-2"

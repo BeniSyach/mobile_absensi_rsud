@@ -14,5 +14,8 @@ export const GetStatusAbsenUser = createQuery<
     client({
       url: `/secured/absen-status`,
       method: 'GET',
+      params: {
+        _t: Date.now(),
+      },
     }).then((response) => response.data),
 });

@@ -12,7 +12,7 @@ export const useLogin = createMutation<
   mutationFn: async (variables) => {
     try {
       const response = await axios.post<LoginResponse>(
-        `${Env.API_URL}/auth/login`,
+        `${Env.API_URL}/auth-mobile/login`,
         {
           nik: variables.nik.replace(/['"]/g, ''),
           password: variables.password,

@@ -1,56 +1,31 @@
-import { showMessage } from 'react-native-flash-message';
-
 import type { FormType } from '@/components/absensi/absensi-types';
-import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
-export default function useAbsensiSubmit(addPost: any, addPostPulang: any) {
-  return (data: FormType) => {
+export default function useAbsensiSubmit(
+  addPost: (data: any) => Promise<any>,
+  addPostPulang: (data: any) => Promise<any>
+) {
+  return async (data: FormType) => {
     const userData = getMessage();
+
     const commonPayload = {
       ...data,
       user_id: userData?.data.nik,
       kode_unit_kerja: userData?.data.unit_kerja_id,
     };
 
-    return new Promise<void>((resolve, reject) => {
-      if (data.tipe_absensi === '0') {
-        addPost(commonPayload, {
-          onSuccess: () => {
-            showMessage({
-              message: 'Absen Masuk Berhasil',
-              type: 'success',
-              duration: 7000,
-            });
-            resolve();
-          },
-          onError: (error: any) => {
-            showErrorMessage('Error recording absen masuk');
-            reject(error);
-          },
-        });
-      } else if (data.tipe_absensi === '1') {
-        addPostPulang(
-          { ...commonPayload },
-          {
-            onSuccess: () => {
-              showMessage({
-                message: 'Absen Pulang Berhasil',
-                type: 'success',
-                duration: 7000,
-              });
-              resolve();
-            },
-            onError: (error: any) => {
-              showErrorMessage('Error recording absen pulang');
-              reject(error);
-            },
-          }
-        );
-      } else {
-        showErrorMessage('Invalid tipe absensi');
-        reject(new Error('Invalid tipe absensi'));
-      }
-    });
+    if (data.tipe_absensi === '0') {
+      // Absen masuk
+      const response = await addPost(commonPayload);
+      return response;
+    }
+
+    if (data.tipe_absensi === '1') {
+      // Absen pulang
+      const response = await addPostPulang(commonPayload);
+      return response;
+    }
+
+    throw new Error('Invalid tipe absensi');
   };
 }
