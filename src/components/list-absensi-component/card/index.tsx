@@ -1,8 +1,8 @@
-import { type AbsensiData } from '@/api';
+import { type AbsenMasuk } from '@/api';
 import { Text, View } from '@/components/ui';
 
 interface CardProps {
-  data: AbsensiData; // menerima objek tunggal
+  data: AbsenMasuk; // menerima objek tunggal
 }
 
 const AbsenMasuk = ({

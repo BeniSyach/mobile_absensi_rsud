@@ -5,7 +5,7 @@ import { getMessage } from '@/lib/message-storage';
 
 export default function UseFetchAbsen() {
   const storedMessage = getMessage();
-  const userId = storedMessage?.data.nik;
+  const userId = storedMessage?.nik ?? '';
 
   const [page, setPage] = useState(1);
   const [data, setData] = useState<any[]>([]);

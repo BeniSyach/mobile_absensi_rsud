@@ -1,13 +1,9 @@
 export interface LastAbsenStatus {
-  absen_masuk_id: number;
   status: number;
+  absen_masuk_id: number;
+  status_message: string;
 }
 
 export interface LastAbsenStatusResponse {
-  status: string;
-  data: {
-    data: {
-      lastAbsenStatus: LastAbsenStatus;
-    };
-  };
+  lastAbsenStatus: LastAbsenStatus;
 }

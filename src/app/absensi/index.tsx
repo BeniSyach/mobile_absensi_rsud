@@ -47,9 +47,9 @@ export default function Absensi() {
     setSubmitLoading(true);
     try {
       const response = await submitAbsensi(data);
-      console.log('respon absensi', response);
-      if (response?.data?.data.error) {
-        showErrorMessage(response.data.data.error);
+      console.log(response);
+      if (response?.error) {
+        showErrorMessage(response.error);
         return;
       }
       showMessage({
@@ -90,7 +90,7 @@ export default function Absensi() {
         isPending={submitLoading || isAddingMasuk || isAddingPulang}
         onSubmit={onSubmit}
         user={user}
-        userStatus={userStatus?.data.data.lastAbsenStatus}
+        userStatus={userStatus?.lastAbsenStatus}
       />
     </SafeAreaView>
   );

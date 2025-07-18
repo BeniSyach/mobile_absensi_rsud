@@ -4,9 +4,14 @@ import { MMKV } from 'react-native-mmkv';
 
 export const storage = new MMKV();
 
-export function getItem<T>(key: string): T {
+export function getItem<T>(key: string): T | null {
   const value = storage.getString(key);
-  return value ? JSON.parse(value) || null : null;
+  try {
+    return value ? (JSON.parse(value) as T) : null;
+  } catch (error) {
+    console.error(`Error parsing value for key "${key}":`, error);
+    return null;
+  }
 }
 
 export async function setItem<T>(key: string, value: T) {
@@ -24,7 +29,6 @@ const getPersistentDeviceId = async () => {
     await setItem('deviceId', deviceId);
   }
 
-  console.log('Device Persistent ID:', deviceId);
   return deviceId;
 };
 

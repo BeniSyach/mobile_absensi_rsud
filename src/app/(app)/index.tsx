@@ -34,7 +34,7 @@ export default function Feed() {
               Haloo.... Selamat Datang,{' '}
             </Text>
             <Text className="text-xl font-bold text-black">
-              {storedMessage.nama}
+              {storedMessage?.nama ?? ''}
             </Text>
           </View>
           <MenuUtama />

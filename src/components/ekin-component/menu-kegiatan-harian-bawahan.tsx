@@ -6,8 +6,12 @@ import { Title } from '../title';
 
 export default function MenuKegiatanHarianBawahan() {
   return (
-    <View className="bg-whites m-2 rounded-2xl bg-white">
-      <Title text="Kegiatan Harian Bawahan" className="bg-[#0B3880]" />
+    <View className="bg-whites mx-2 my-5 rounded-2xl bg-white shadow-lg">
+      <Title
+        text="Kegiatan Harian Bawahan"
+        className="bg-[#287BDC]"
+        textColor="text-[#287BDC]"
+      />
       <View className="flex-row items-center justify-between p-2">
         <Link href="/ekin" asChild>
           <Pressable>
@@ -32,7 +36,7 @@ export default function MenuKegiatanHarianBawahan() {
               contentFit="contain"
             />
             <Text className="text-md text-center font-bold text-blue-700">
-              Pending
+              Diterima
             </Text>
             <Text className="text-md text-center font-bold">2000</Text>
           </Pressable>
@@ -46,7 +50,7 @@ export default function MenuKegiatanHarianBawahan() {
               contentFit="contain"
             />
             <Text className="text-md text-center font-bold text-blue-700">
-              Pending
+              Ditolak
             </Text>
             <Text className="text-md text-center font-bold">2000</Text>
           </Pressable>

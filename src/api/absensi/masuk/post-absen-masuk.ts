@@ -37,7 +37,7 @@ export const PostAbsenMasuk = createMutation<
 
       // Mengirim request ke server
       const response = await client({
-        url: '/secured/absen-masuk',
+        url: '/absensi/absen-masuk',
         method: 'POST',
         data: formData,
         headers: {
@@ -48,7 +48,6 @@ export const PostAbsenMasuk = createMutation<
       // Mengembalikan response dari server
       return response.data;
     } catch (error: unknown) {
-      console.log('absensi error', error);
       if (axios.isAxiosError(error)) {
         console.error(
           'Axios error occurred:',

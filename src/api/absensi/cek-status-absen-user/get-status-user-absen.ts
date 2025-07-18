@@ -4,18 +4,21 @@ import { createQuery } from 'react-query-kit';
 import { client } from '../../common';
 import type { LastAbsenStatusResponse } from './types';
 
-export const GetStatusAbsenUser = createQuery<
+interface Variables {
+  nik: string;
+  shift_id: number;
+}
+
+export const useStatusAbsenUser = createQuery<
   LastAbsenStatusResponse,
-  number,
+  Variables,
   AxiosError
 >({
-  queryKey: ['GetStatusAbsenUser'] as const,
-  fetcher: async () =>
+  queryKey: ['GetStatusAbsenUser'],
+  fetcher: async ({ nik, shift_id }) =>
     client({
-      url: `/secured/absen-status`,
+      url: `/absensi/status-absen-user/${nik}/${shift_id}`,
       method: 'GET',
-      params: {
-        _t: Date.now(),
-      },
-    }).then((response) => response.data),
+      params: { _t: Date.now() },
+    }).then((res) => res.data),
 });

@@ -2,19 +2,19 @@ import * as WebBrowser from 'expo-web-browser';
 import { Eye, FileText } from 'lucide-react-native';
 import { Alert } from 'react-native';
 
-import { type SPTData } from '@/api';
+import { type SptData } from '@/api';
 import { useViewSPT } from '@/api/spt/view-spt';
 import { Pressable, Text, View } from '@/components/ui';
 
 interface CardProps {
-  dataSPT: SPTData;
+  dataSPT: SptData;
 }
 
 export const CardSPT = ({ dataSPT }: CardProps) => {
   // Tempatkan hook di level atas komponen
   const { refetch, isFetching } = useViewSPT({
     variables: {
-      userId: dataSPT?.nik,
+      userId: Number(dataSPT?.nik),
       file: dataSPT?.file_spt,
     },
     enabled: false, // agar hanya dijalankan saat refetch dipanggil

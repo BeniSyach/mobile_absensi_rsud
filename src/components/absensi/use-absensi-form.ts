@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 
 import type { ApiResponse } from '@/api';
 import { type LastAbsenStatus } from '@/api/absensi/cek-status-absen-user';
-import type { HariKerjaResponse } from '@/api/hari-kerja/types';
+import type { ShiftWaktuResponse } from '@/api/hari-kerja/types';
 import type { ShiftResponse } from '@/api/shift/types';
 import type { OptionType } from '@/components/ui';
 
@@ -13,33 +13,29 @@ import { type FormType, schema } from './absensi-types';
 import { UseFormState } from './use-form-state';
 
 const getShiftOptions = (shifts: ShiftResponse | undefined): OptionType[] => {
-  if (!shifts?.data?.data.data) {
+  if (!shifts?.data) {
     return [];
   }
 
-  const shiftData = Array.isArray(shifts.data.data.data)
-    ? shifts.data.data.data
-    : [];
+  const shiftData = Array.isArray(shifts.data) ? shifts.data : [];
   return shiftData.map((d) => ({
     value: d.id,
-    label: d.nama_shift,
+    label: d.nama_shift_absen,
   }));
 };
 
 const getWorkTimeOptions = (
-  workTimes: HariKerjaResponse | undefined
+  workTimes: ShiftWaktuResponse | undefined
 ): OptionType[] => {
-  if (!workTimes?.data?.data) {
+  if (!workTimes?.data) {
     return [];
   }
 
-  const workTimeData = Array.isArray(workTimes.data.data)
-    ? workTimes.data.data
-    : [];
+  const workTimeData = Array.isArray(workTimes.data) ? workTimes.data : [];
 
   return workTimeData.map((w) => ({
     value: w.id,
-    label: w.hari.nama_hari,
+    label: w.nama_hari,
   }));
 };
 
@@ -134,12 +130,10 @@ export function useAbsensiForm(
   useFocusEffect(
     React.useCallback(() => {
       if (refetchShifts) {
-        console.log('Refetching shifts on focus');
         refetchShifts();
       }
 
       if (refetchWorkTimes) {
-        console.log('Refetching work times on focus');
         refetchWorkTimes();
       }
 

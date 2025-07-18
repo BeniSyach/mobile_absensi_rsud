@@ -22,7 +22,7 @@ type Props = {
   statusEdit?: boolean;
 };
 
-const AlertModal = ({
+export const AlertModal = ({
   visible,
   onConfirm,
   onCancel,

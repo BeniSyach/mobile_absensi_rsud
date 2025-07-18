@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type SPTData } from '@/api';
+import { type SptData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
 import { SafeAreaView, Text, View } from '@/components/ui';
 
@@ -11,10 +11,8 @@ export default function ListSPT() {
   const { data, isPending, error, handleLoadMore, isRefreshing, onRefresh } =
     UseFetchSPT();
 
-  console.log('data list SPT', data);
-
   const renderItem = React.useCallback(
-    ({ item }: { item: SPTData }) => <CardSPT dataSPT={item} />,
+    ({ item }: { item: SptData }) => <CardSPT dataSPT={item} />,
     []
   );
 

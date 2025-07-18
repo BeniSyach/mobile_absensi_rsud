@@ -17,8 +17,8 @@ export default function Spt() {
 
     const formData = {
       ...data,
-      opd_id: userData?.data.unit_kerja.kode_unit_kerja,
-      id_user: userData?.data.nik,
+      opd_id: userData?.kode_unit_kerja,
+      id_user: userData?.nik,
       lama_acara: Number(data.lama_acara),
       file_spt: data.file_spt,
       name: data.file_spt.name,

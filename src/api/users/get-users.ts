@@ -1,14 +1,16 @@
+import { useQuery } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
-import { createQuery } from 'react-query-kit';
 
 import { client } from '../common';
 import type { ApiResponse } from './types';
 
-export const GetUser = createQuery<ApiResponse, number, AxiosError>({
-  queryKey: ['getUser'] as const,
-  fetcher: async () =>
-    client({
-      url: `/secured/profile`,
-      method: 'GET',
-    }).then((response) => response.data),
-});
+export const useGetUser = (nik: string) =>
+  useQuery<ApiResponse, AxiosError>({
+    queryKey: ['getUser', nik],
+    queryFn: async () =>
+      client({
+        url: `/aggregation/pegawai/${nik}`,
+        method: 'GET',
+      }).then((res) => res.data),
+    enabled: !!nik, // hanya jalankan jika nik tersedia
+  });

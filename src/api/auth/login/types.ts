@@ -11,7 +11,11 @@ export interface User {
   nama: string;
   kode_unit_kerja: string;
   nama_unit_kerja: string;
+  device_token: string;
   photo: string | undefined;
+  kode_jenis_pegawai: string;
+  nama_jenis_pegawai: string;
+  shift_absen_id: number;
 }
 
 export interface LoginResponse {

@@ -69,22 +69,22 @@ export type GetAllAbsenMasukVariables = {
   user_id?: number; // Optional filter by user_id
 };
 
-export type AbsenPulang = {
-  id: number;
-  absen_masuk_id: number;
-  user_id: number;
-  waktu_pulang: string;
-  shift_id: number;
-  waktu_kerja_id: number;
-  longitude: string;
-  latitude: string;
-  selish: string;
-  photo: string;
-  tpp_out: string;
-  keterangan: string;
-  created_at: string;
-  updated_at: string;
-};
+// export type AbsenPulang = {
+//   id: number;
+//   absen_masuk_id: number;
+//   user_id: number;
+//   waktu_pulang: string;
+//   shift_id: number;
+//   waktu_kerja_id: number;
+//   longitude: string;
+//   latitude: string;
+//   selish: string;
+//   photo: string;
+//   tpp_out: string;
+//   keterangan: string;
+//   created_at: string;
+//   updated_at: string;
+// };
 
 export type AbsenMasukDanPulangByUserResponse = {
   id: number;
@@ -138,24 +138,80 @@ export type AbsensiData = {
   waktu_masuk: string;
 };
 
-type PaginationLink = {
-  active: boolean;
-  label: string;
-  url: string | null;
-};
+// type PaginationLink = {
+//   active: boolean;
+//   label: string;
+//   url: string | null;
+// };
 
-export type Pagination = {
-  current_page: number;
-  data: AbsensiData[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: PaginationLink[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
+// export type Pagination = {
+//   current_page: number;
+//   data: AbsensiData[];
+//   first_page_url: string;
+//   from: number;
+//   last_page: number;
+//   last_page_url: string;
+//   links: PaginationLink[];
+//   next_page_url: string | null;
+//   path: string;
+//   per_page: number;
+//   prev_page_url: string | null;
+//   to: number;
+//   total: number;
+// };
+
+export interface AbsenPulang {
+  id: string;
+  absen_masuk_id: string;
+  nik: string;
+  nama_pegawai: string;
+  shift_id: number;
+  nama_shift: string;
+  waktu_kerja_id: number;
+  kode_unit_kerja: string;
+  nama_unit_kerja: string;
+  waktu_pulang: string; // format datetime string
+  longitude: string;
+  latitude: string;
+  selisih: string; // format HH:mm:ss
+  photo: string;
+  tpp_out: string;
+  keterangan: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AbsenMasuk {
+  id: string;
+  nik: string;
+  nama_pegawai: string;
+  shift_id: number;
+  nama_shift: string;
+  waktu_kerja_id: number;
+  kode_unit_kerja: string;
+  nama_unit_kerja: string;
+  waktu_masuk: string; // format datetime string
+  longitude: string;
+  latitude: string;
+  selisih: string; // format HH:mm:ss
+  photo: string;
+  tpp_in: string;
+  keterangan: string;
+  created_at: string;
+  updated_at: string;
+  absen_pulang: AbsenPulang[];
+}
+
+export interface Pagination {
   total: number;
-};
+  page: number;
+  limit: number;
+  last_page: number;
+}
+
+export interface AbsenResponse {
+  status: number;
+  message: string;
+  data: AbsenMasuk[];
+  pagination: Pagination;
+}

@@ -12,7 +12,6 @@ export const PostAbsenPulang = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) => {
-    console.log('data absen pulang', variables);
     try {
       const formData = new FormData();
       // Menambahkan field ke FormData secara manual
@@ -33,7 +32,7 @@ export const PostAbsenPulang = createMutation<
 
       // Mengirim request ke server
       const response = await client({
-        url: '/secured/absen-pulang',
+        url: '/absensi/absen-pulang',
         method: 'POST',
         data: formData,
         headers: {

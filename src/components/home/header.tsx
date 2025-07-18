@@ -4,7 +4,11 @@ import { Link } from 'expo-router';
 import { type User } from '@/api';
 import { Image, Text, View } from '@/components/ui';
 
-export default function Header({ data }: { data: User }) {
+export default function Header({ data }: { data: User | null }) {
+  if (!data) {
+    return null;
+  }
+
   return (
     <Link href="/settings">
       <View className="flex-row items-center rounded-lg bg-[#C9DEFE] p-2 shadow">
@@ -37,11 +41,11 @@ export default function Header({ data }: { data: User }) {
               ? `${data.nama_unit_kerja.slice(0, 30)}...`
               : data.nama_unit_kerja}
           </Text>
-          {/* <Text className="dark:text-dark-500 font-semibold text-gray-600">
+          <Text className="dark:text-dark-500 font-semibold text-gray-600">
             {data.nama_jenis_pegawai && data.nama_jenis_pegawai.length > 30
               ? `${data.nama_jenis_pegawai.slice(0, 30)}...`
               : data.nama_jenis_pegawai}
-          </Text> */}
+          </Text>
         </View>
         {/* <Pressable className="p-2">
         <Image

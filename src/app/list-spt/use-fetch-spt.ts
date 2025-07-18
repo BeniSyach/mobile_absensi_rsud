@@ -5,7 +5,7 @@ import { getMessage } from '@/lib';
 
 export default function UseFetchSPT() {
   const storedMessage = getMessage();
-  const userId = storedMessage?.data.nik;
+  const userId = storedMessage?.nik ?? '';
 
   const [page, setPage] = useState(1);
   const [data, setData] = useState<any[]>([]);

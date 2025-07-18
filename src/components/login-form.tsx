@@ -170,7 +170,6 @@ export const LoginForm = ({
           setValue('nik', nik);
           setValue('password', password);
         }
-        console.log('sukses', savedCredentials);
       } catch (error) {
         console.error('Error loading credentials:', error);
       }

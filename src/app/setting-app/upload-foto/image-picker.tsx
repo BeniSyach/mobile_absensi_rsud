@@ -28,7 +28,6 @@ export default function UseImagePicker() {
       if (!result.canceled) {
         const { uri: imageUri, fileName = `photo-${Date.now()}.jpg` } =
           result.assets[0];
-        console.log('compressedUri', imageUri);
         setImage(imageUri);
         setName(fileName);
       }

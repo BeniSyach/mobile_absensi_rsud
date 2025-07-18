@@ -59,6 +59,23 @@ export const EmptyListPbb = React.memo(({ isLoading }: Props) => {
   );
 });
 
+export const EmptyListEkin = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center text-slate-600">
+            Ketikkan Cari dan Pilih Tanggal Awal dan Akhir
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
 export const EmptyListUmkm = React.memo(({ isLoading }: Props) => {
   return (
     <View className="min-h-[400px] flex-1 items-center justify-center">

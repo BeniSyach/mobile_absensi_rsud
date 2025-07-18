@@ -6,8 +6,12 @@ import { Title } from '../title';
 
 export default function MenuKegiatanHarianSaya() {
   return (
-    <View className="bg-whites m-2 rounded-2xl bg-white">
-      <Title text="Kegiatan Harian Saya" className="bg-[#0B3880]" />
+    <View className="bg-whites mx-2 my-5 mt-8 rounded-2xl bg-white shadow-lg">
+      <Title
+        text="Kegiatan Harian Saya"
+        className="bg-[#287BDC]"
+        textColor="text-[#287BDC]"
+      />
       <View className="flex-row items-center justify-between p-2">
         <Link href="/ekin" asChild>
           <Pressable>
@@ -20,7 +24,7 @@ export default function MenuKegiatanHarianSaya() {
             <Text className="text-md text-center font-bold text-blue-700">
               Pending
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-extrabold">2000</Text>
           </Pressable>
         </Link>
         <Link href="/ekin" asChild>
@@ -32,9 +36,9 @@ export default function MenuKegiatanHarianSaya() {
               contentFit="contain"
             />
             <Text className="text-md text-center font-bold text-blue-700">
-              Pending
+              Diterima
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-extrabold">2000</Text>
           </Pressable>
         </Link>
         <Link href="/ekin" asChild>
@@ -46,9 +50,9 @@ export default function MenuKegiatanHarianSaya() {
               contentFit="contain"
             />
             <Text className="text-md text-center font-bold text-blue-700">
-              Pending
+              Ditolak
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-extrabold">2000</Text>
           </Pressable>
         </Link>
       </View>

@@ -2,20 +2,16 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 
-import { GetUser } from '@/api';
 import Header from '@/components/home/header';
 import MenuKeduaSimpeg from '@/components/simpegComponent/menu-kedua-simpeg';
 import MenuUtamaSimpeg from '@/components/simpegComponent/menu-utama-simpeg';
 import NavbarSimpeg from '@/components/simpegComponent/navbar-simpeg';
 import { Title } from '@/components/title';
-import { SafeAreaView, ScrollView, Text, View } from '@/components/ui';
-import LoadingComponent from '@/components/ui/loading';
+import { SafeAreaView, ScrollView, View } from '@/components/ui';
+import { getMessage } from '@/lib';
 
 export default function Simpeg() {
-  const { data: user, isLoading, isError } = GetUser();
-
-  if (isLoading) return <LoadingComponent />;
-  if (isError || !user) return <Text>Error loading user data</Text>;
+  const storedMessage = getMessage();
 
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
@@ -30,7 +26,7 @@ export default function Simpeg() {
       <View className="h-56 rounded-b-3xl bg-[#0B3880]">
         <NavbarSimpeg />
         <View className="mt-5 px-4">
-          <Header data={user} />
+          <Header data={storedMessage} />
         </View>
       </View>
       <ImageBackground

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import * as FileSystem from 'expo-file-system';
 import React from 'react';
 import { type UseFormSetValue } from 'react-hook-form';

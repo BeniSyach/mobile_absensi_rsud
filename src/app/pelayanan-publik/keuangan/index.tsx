@@ -11,7 +11,6 @@ export default function KeuanganSp2d() {
   const [data, setData] = useState<ResponseSPM>();
 
   const handleDataFromChild = (data: ResponseSPM) => {
-    console.log('Data dari child:', data);
     setData(data);
   };
   return (

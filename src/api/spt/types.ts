@@ -28,7 +28,7 @@ export type GetAllSPTResponse = {
 
 export interface PostSPTVariables {
   id?: number;
-  id_user?: number;
+  id_user?: string;
   tanggal_spt: string;
   waktu_spt: string;
   lama_acara: number;
@@ -86,4 +86,27 @@ export type Pagination = {
   to: number;
   total: number;
   url: string | null;
+};
+
+export type SptData = {
+  id: string;
+  nik: string;
+  nama_pegawai: string;
+  kode_unit_kerja: string | null;
+  nama_unit_kerja: string;
+  tanggal_spt: string; // ISO date string
+  waktu_spt: string; // ISO time string
+  lama_acara: number;
+  lokasi_spt: string;
+  file_spt: string;
+  status: string | null;
+  alasan_tolak: string | null;
+  created_at: string; // ISO datetime string
+  updated_at: string; // ISO datetime string
+};
+
+export type SptResponse = {
+  status: number;
+  message: string;
+  data: SptData[];
 };

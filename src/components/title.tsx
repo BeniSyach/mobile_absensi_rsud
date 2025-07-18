@@ -5,12 +5,15 @@ import { Text, View } from '@/components/ui';
 type Props = {
   text: string;
   className?: string;
+  textColor?: string;
 };
-export const Title = ({ text, className }: Props) => {
+export const Title = ({ text, className, textColor }: Props) => {
   return (
     <View className="flex-row items-center justify-center px-4 py-2">
       <View className={`h-[2px] flex-1 ${className}`} />
-      <Text className="dark:text-dark mx-2 text-xl font-bold tracking-tight">
+      <Text
+        className={`dark:text-dark mx-2 text-xl font-bold tracking-tight ${textColor}`}
+      >
         {text}
       </Text>
       <View className={`h-[2px] flex-1 ${className}`} />

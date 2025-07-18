@@ -1,33 +1,17 @@
-type Hari = {
-  created_at: string;
+export interface ShiftWaktu {
   id: number;
-  nama_hari: string;
-  updated_at: string;
-};
-
-type Shift = {
-  created_at: string;
-  id: number;
-  nama_shift: string;
-  opd_id: string;
-  updated_at: string;
-};
-
-type Jadwal = {
-  created_at: string;
-  hari: Hari;
   hari_id: number;
-  id: number;
-  jam_mulai: string;
-  jam_selesai: string;
-  shift: Shift;
+  nama_hari: string;
   shift_id: number;
-  updated_at: string;
-};
+  nama_shift: string;
+  jam_mulai: string; // format ISO string: "1970-01-01T08:15:00.000Z"
+  jam_selesai: string; // format ISO string: "1970-01-01T16:00:00.000Z"
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+}
 
-export type HariKerjaResponse = {
-  status: 'success' | 'error';
-  data: {
-    data: Jadwal[];
-  };
-};
+export interface ShiftWaktuResponse {
+  status: number;
+  message: string;
+  data: ShiftWaktu[];
+}

@@ -4,10 +4,10 @@ import { createQuery } from 'react-query-kit';
 import { getMessage } from '@/lib/message-storage';
 
 import { client } from '../common';
-import type { HariKerjaResponse } from './types';
+import type { ShiftWaktuResponse } from './types';
 
 export const useGetWaktuKerjaByShiftAndOPD = createQuery<
-  HariKerjaResponse,
+  ShiftWaktuResponse,
   void,
   AxiosError
 >({
@@ -15,10 +15,9 @@ export const useGetWaktuKerjaByShiftAndOPD = createQuery<
   fetcher: async () => {
     const storedMessage = getMessage();
     const response = await client({
-      url: `/secured/absen-waktu-kerja`,
+      url: `/aggregation/waktu-kerja/shift/${storedMessage?.shift_absen_id}`,
       method: 'GET',
       params: {
-        shift_id: storedMessage?.data.shift_absen_id,
         _t: Date.now(),
       },
     });

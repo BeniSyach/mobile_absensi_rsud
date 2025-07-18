@@ -3,17 +3,23 @@
 import React from 'react';
 import { StatusBar } from 'react-native';
 
-import { GetUser } from '@/api';
+import { useGetUser } from '@/api/users/get-users';
 import ProfileCard from '@/components/profile/profile';
 import { ActionButtons } from '@/components/settings/action-buttons';
 import { Item } from '@/components/settings/item';
 import { ItemsContainer } from '@/components/settings/items-container';
 import { SafeAreaView, ScrollView, Text, View } from '@/components/ui';
 import { useAuth } from '@/lib';
+import { getMessage } from '@/lib';
 
 export default function Settings() {
+  const storedMessage = getMessage();
   const signOut = useAuth.use.signOut();
-  const { data: user, isLoading, isError } = GetUser();
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useGetUser(storedMessage?.nik ?? '');
 
   if (isLoading) return <Text>Loading...</Text>;
   if (isError || !user) return <Text>Error loading user data</Text>;

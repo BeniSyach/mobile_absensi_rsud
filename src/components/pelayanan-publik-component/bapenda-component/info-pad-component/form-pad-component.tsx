@@ -47,7 +47,6 @@ export default function FormPadComponent() {
         setData([]);
       } else {
         setData(result[0].data);
-        console.log('data', result[0].data);
       }
     } catch (error) {
       const errorMessage = axios.isAxiosError(error)

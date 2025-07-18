@@ -26,15 +26,12 @@ export const ProfileDetails = ({ message }: { message: ApiResponse }) => (
       )}
       {renderField(
         'Unit Kerja',
-        message.data.unit_kerja.nama_unit_kerja.length > 15
-          ? `${message.data.unit_kerja.nama_unit_kerja.substring(0, 15)}...`
-          : message.data.unit_kerja.nama_unit_kerja
+        message.data.nama_unit_kerja.length > 15
+          ? `${message.data.nama_unit_kerja.substring(0, 15)}...`
+          : message.data.nama_unit_kerja
       )}
       {renderField('Jenis Kelamin', message.data.jenis_kelamin)}
-      {renderField(
-        'Status Pegawai',
-        message.data.jenis_pegawai.nama_jenis_pegawai
-      )}
+      {renderField('Status Pegawai', message.data.nama_jenis_pegawai)}
     </View>
   </>
 );

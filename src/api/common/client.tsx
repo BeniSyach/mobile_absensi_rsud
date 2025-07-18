@@ -9,13 +9,13 @@ import { type TokenType } from '@/lib/auth/utils';
 // Fungsi untuk refresh token
 const refreshToken = async (currentToken: TokenType): Promise<TokenType> => {
   try {
-    const response = await axios.post(`${Env.API_URL}/auth/refresh`, {
+    const response = await axios.post(`${Env.API_URL}/auth-mobile/refresh`, {
       refresh_token: currentToken.refresh,
     });
 
     return {
-      access: response.data.data.access_token,
-      refresh: response.data.data.refresh_token,
+      access: response.data.access_token,
+      refresh: currentToken.refresh,
     };
   } catch (error) {
     throw error;

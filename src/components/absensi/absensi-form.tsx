@@ -215,7 +215,6 @@ const FormFields = React.memo<FormFieldsProps>(
       setShowCamera(false);
     };
 
-    console.log(errors);
     return (
       <>
         <SelectFields
@@ -272,9 +271,9 @@ export const AbsensiForm = React.memo<AbsensiFormProps>(
     return (
       <FormContainer onSubmit={handleSubmit(onSubmit)} isPending={isPending}>
         <Maps
-          selectedLatitude={parseFloat(user.data.unit_kerja.latitude)}
-          selectedLongitude={parseFloat(user.data.unit_kerja.longitude)}
-          radius={user.data.unit_kerja.radius}
+          selectedLatitude={parseFloat(user.data.latitude_unit_kerja)}
+          selectedLongitude={parseFloat(user.data.longitude_unit_kerja)}
+          radius={Number(user?.data?.radius_unit_kerja ?? 0)}
           onLocationUpdate={handleLocationUpdate}
         />
         <FormFields {...formFieldProps} />

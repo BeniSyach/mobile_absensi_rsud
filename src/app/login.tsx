@@ -23,7 +23,6 @@ const getPersistentDeviceId = async () => {
     await setItem('deviceId', deviceId);
   }
 
-  console.log('Device Persistent ID:', deviceId);
   return deviceId;
 };
 
@@ -79,7 +78,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView className="flex-1 bg-transparent">
       <ImageBackground
         source={require('../../assets/background/background_login.png')}
         resizeMode="cover"

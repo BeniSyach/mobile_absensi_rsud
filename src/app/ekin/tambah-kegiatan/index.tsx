@@ -24,8 +24,14 @@ export default function TambahKegiatan() {
         resizeMode="cover"
         className="flex-1"
       >
-        <NavbarTambahKegiatan />
-        <LogoTambahKegiatan />
+        <ImageBackground
+          source={require('../../../../assets/image/header_background_ekin.png')}
+          resizeMode="cover"
+          className="h-40 w-full"
+        >
+          <NavbarTambahKegiatan />
+          <LogoTambahKegiatan />
+        </ImageBackground>
         <FormTambahKegiatan />
       </ImageBackground>
     </SafeAreaView>

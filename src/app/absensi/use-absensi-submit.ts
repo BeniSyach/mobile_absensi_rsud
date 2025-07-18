@@ -10,8 +10,8 @@ export default function useAbsensiSubmit(
 
     const commonPayload = {
       ...data,
-      user_id: userData?.data.nik,
-      kode_unit_kerja: userData?.data.unit_kerja_id,
+      user_id: userData?.nik,
+      kode_unit_kerja: userData?.kode_unit_kerja,
     };
 
     if (data.tipe_absensi === '0') {

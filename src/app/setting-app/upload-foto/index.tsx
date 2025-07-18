@@ -40,7 +40,6 @@ export default function UploadFoto() {
       showErrorMessage('Upload Failed');
     }
   };
-  console.log('image', image);
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

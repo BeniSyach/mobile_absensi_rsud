@@ -11,7 +11,6 @@ export default function MenuSeriDeli() {
   const [data, setData] = useState<Permohonan>();
 
   const handleDataFromChild = (data: Permohonan) => {
-    console.log('Data dari child:', data);
     setData(data);
   };
   return (

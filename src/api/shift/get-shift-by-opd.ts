@@ -11,10 +11,10 @@ export const GetShiftsByOpd = createQuery<ShiftResponse, void, AxiosError>({
   fetcher: async () => {
     const storedMessage = getMessage();
     return client({
-      url: '/secured/absen-shift',
+      url: '/aggregation/shift-absen',
       method: 'GET',
       params: {
-        opd_id: storedMessage?.data.unit_kerja_id,
+        opd_id: storedMessage?.kode_unit_kerja,
         _t: Date.now(),
       },
     }).then((response) => response.data);
