@@ -29,7 +29,7 @@ export default function Ekin() {
         className="flex-1"
       >
         <NavbarEkin data={storedMessage} />
-        <ScrollView className="flex-1">
+        <ScrollView className="z-0 flex-1">
           <MenuKegiatanHarianSaya />
           <MenuKegiatanHarianBawahan />
           <MenuUtama />

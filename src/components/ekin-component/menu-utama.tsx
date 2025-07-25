@@ -24,14 +24,14 @@ const menuItems = [
     title: 'Beri Nilai Bawahan',
   },
   {
-    href: '/ekin/indikator-kinerja',
-    image: require('../../../assets/image/indikator_kinerja.png'),
-    title: 'Indikator Kinerja',
-  },
-  {
-    href: '/ekin/rencana-hasil-kinerja',
+    href: '/ekin/rencana-hasil-kerja',
     image: require('../../../assets/image/rencana_hasil_kerja.png'),
     title: 'Rencana Hasil Kinerja',
+  },
+  {
+    href: '/ekin/pegawai-ekin',
+    image: require('../../../assets/image/icon_pegawai_ekin.png'),
+    title: 'Data Pegawai',
   },
 ];
 

@@ -17,7 +17,7 @@ export default function NavbarEkin({ data }: NavbarEkinProps) {
     <ImageBackground
       source={require('../../../assets/image/header_background_ekin.png')}
       resizeMode="cover"
-      className="h-40 w-full"
+      className="h-[19%] w-full"
     >
       <View className="flex-row items-center justify-between px-4">
         <Image
@@ -42,7 +42,7 @@ export default function NavbarEkin({ data }: NavbarEkinProps) {
         </View>
       </View>
       <View className="px-4">
-        <Text className="mt-3 text-lg font-bold text-white">
+        <Text className="mt-5 text-lg font-bold text-white">
           Hallo, {data.nama}
         </Text>
         <Text className="text-sm font-bold text-white">

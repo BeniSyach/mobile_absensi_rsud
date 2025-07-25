@@ -14,6 +14,7 @@ export * from './modal';
 export * from './progress-bar';
 export * from './select';
 export * from './text';
+export * from './time-input-ori';
 export * from './utils';
 export * from './year-picker';
 

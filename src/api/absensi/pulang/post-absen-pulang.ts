@@ -13,6 +13,11 @@ export const PostAbsenPulang = createMutation<
 >({
   mutationFn: async (variables) => {
     try {
+      const file = {
+        uri: variables.photo.uri,
+        type: variables.photo.type ?? 'image/jpeg',
+        name: variables.photo.name ?? `photo_${Date.now()}.jpg`,
+      };
       const formData = new FormData();
       // Menambahkan field ke FormData secara manual
       formData.append('absen_masuk_id', String(variables.absen_masuk_id));
@@ -25,9 +30,9 @@ export const PostAbsenPulang = createMutation<
 
       if (Platform.OS === 'ios') {
         // For iOS, the URI might need to be prefixed with 'file://'
-        formData.append('photo', variables.photo);
+        formData.append('photo', file as any);
       } else {
-        formData.append('photo', variables.photo);
+        formData.append('photo', file as any);
       }
 
       // Mengirim request ke server

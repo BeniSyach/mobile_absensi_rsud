@@ -61,7 +61,7 @@ export default function ListKegiatan() {
         <ImageBackground
           source={require('../../../../assets/image/header_background_ekin.png')}
           resizeMode="cover"
-          className="h-40 w-full"
+          className="h-[19%] w-full"
         >
           <NavbarListKegiatan />
           <LogoListKegiatan />

@@ -29,31 +29,45 @@ export const TimeInput = ({
         control={control}
         name={name}
         defaultValue=""
-        render={({ field: { onChange, value } }) => (
-          <>
-            <Pressable
-              onPress={() => setShow(true)}
-              className={`border p-3 ${
-                error ? 'border-red-500' : 'border-gray-300'
-              } rounded-lg bg-white`}
-            >
-              <Text className="text-gray-700">{value || placeholder}</Text>
-            </Pressable>
-            {show && (
-              <DateTimePicker
-                value={value ? new Date(`1970-01-01T${value}`) : new Date()}
-                mode="time"
-                display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                onChange={(_event, date) => {
-                  setShow(Platform.OS === 'ios');
-                  if (date) {
-                    onChange(date.toTimeString().split(' ')[0]);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
+        render={({ field: { onChange, value } }) => {
+          let initialDate = new Date();
+          if (value) {
+            const [hours, minutes] = value.split(':').map(Number);
+            initialDate.setHours(hours);
+            initialDate.setMinutes(minutes);
+          }
+
+          return (
+            <>
+              <Pressable
+                onPress={() => setShow(true)}
+                className={`border p-3 ${
+                  error ? 'border-red-500' : 'border-gray-300'
+                } rounded-lg bg-white`}
+              >
+                <Text className="text-gray-700">{value || placeholder}</Text>
+              </Pressable>
+              {show && (
+                <DateTimePicker
+                  value={initialDate}
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  onChange={(_event, date) => {
+                    setShow(Platform.OS === 'ios');
+                    if (date) {
+                      const hours = date.getHours().toString().padStart(2, '0');
+                      const minutes = date
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, '0');
+                      onChange(`${hours}:${minutes}`);
+                    }
+                  }}
+                />
+              )}
+            </>
+          );
+        }}
       />
       {error && <Text className="mt-1 text-sm text-red-500">{error}</Text>}
     </View>

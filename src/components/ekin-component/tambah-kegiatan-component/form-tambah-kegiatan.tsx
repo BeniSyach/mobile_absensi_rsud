@@ -1,13 +1,24 @@
 /* eslint-disable max-lines-per-function */
-import { Save } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { ArrowLeft, Save } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, TextInput } from 'react-native';
 
 import { AlertModal } from '@/components/title-second';
-import { Button, Text, View } from '@/components/ui';
+import {
+  Button,
+  DateInputOriginal,
+  Select,
+  Text,
+  TimeInputOri,
+  View,
+} from '@/components/ui';
 
 export default function FormTambahKegiatan() {
+  const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [lamaWaktu, setLamaWaktu] = useState('');
+  const [tanggal, setTanggal] = useState('');
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
@@ -29,46 +40,56 @@ export default function FormTambahKegiatan() {
             className="mb-2 rounded-lg border p-2 py-4"
             placeholder="Uraian Tugas"
           />
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Lama Waktu
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Lama Waktu (menit)"
-          />
+          <View>
+            <Text className="mb-2 text-lg font-semibold text-black">
+              Lama Waktu
+            </Text>
+            <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+              <TextInput
+                className="flex-1 p-2 text-black"
+                placeholder="Lama waktu"
+                keyboardType="number-pad"
+              />
+              <Text className="ml-2 text-gray-500">menit</Text>
+            </View>
+          </View>
           <Text className="mb-2 text-lg font-semibold text-black">
             Jumlah Capaian Kegiatan
           </Text>
           <TextInput
             className="mb-2 rounded-lg border p-2 py-4"
             placeholder="Jumlah Capaian Kegiatan"
+            keyboardType="number-pad"
           />
-          <View className="flex-row justify-between">
+          <View className="flex-row justify-between gap-2">
             <View className="mr-1 flex-1">
-              <Text className="mb-2 text-lg font-semibold text-black">
-                Tanggal
-              </Text>
-              <TextInput className="mb-2 rounded-lg border p-2 py-4" />
+              <DateInputOriginal
+                label="Tanggal"
+                placeholder="Pilih tanggal"
+                value={tanggal}
+                onChange={setTanggal}
+              />
             </View>
-            <View className="mx-2 bg-white"></View>
             <View className="ml-1 flex-1">
-              <Text className="mb-2 text-lg font-semibold text-black">Jam</Text>
-              <TextInput className="mb-2 rounded-lg border p-2 py-4" />
+              <TimeInputOri
+                label="Jam"
+                placeholder="Pilih waktu (HH:MM)"
+                value={lamaWaktu}
+                onChange={setLamaWaktu}
+              />
             </View>
           </View>
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Rencana Hasil Kerja
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Rencana Hasil Kerja"
+          <Select
+            label="Rencana Hasil Kerja"
+            placeholder="Pilih rencana hasil kerja"
+            options={[]}
+            onSelect={() => {}}
           />
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Indikator
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Indikator"
+          <Select
+            label="Indikator"
+            placeholder="Pilih Indikator"
+            options={[]}
+            onSelect={() => {}}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">
@@ -83,6 +104,8 @@ export default function FormTambahKegiatan() {
             label="Batal"
             className="m-2 rounded-lg bg-[#C9DEFE] font-bold text-black"
             variant="secondary"
+            onPress={() => router.back()}
+            icon={<ArrowLeft size={20} color="black" />}
           />
         </View>
       </View>

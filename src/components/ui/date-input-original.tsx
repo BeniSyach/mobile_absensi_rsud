@@ -29,10 +29,10 @@ export const DateInputOriginal = ({
 
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-lg text-black ">{label}</Text>
+      <Text className="mb-1 mt-2 text-lg text-black ">{label}</Text>
       <Pressable
         onPress={() => setShow(true)}
-        className={`border p-3 ${
+        className={`border p-2 py-4 ${
           error ? 'border-red-500' : 'border-gray-300'
         } rounded-lg bg-white`}
       >

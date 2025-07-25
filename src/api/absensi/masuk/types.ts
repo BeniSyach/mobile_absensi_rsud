@@ -6,7 +6,11 @@ export type AbsenMasukVariables = {
   waktu_kerja_id: number;
   longitude: string;
   latitude: string;
-  photo: string;
+  photo: {
+    uri: string;
+    type: string;
+    name: string;
+  };
   mimeType: string;
   name: string;
   kode_unit_kerja: string;

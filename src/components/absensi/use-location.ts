@@ -120,14 +120,14 @@ const handleDistanceAndZoom = ({
     }
   );
 
-  if (currentDistance > radius) {
-    Alert.alert(
-      'Peringatan',
-      ALERT_MESSAGES.RADIUS_EXCEEDED(radius),
-      [{ text: 'OK', onPress: () => router.back() }],
-      { cancelable: false }
-    );
-  }
+  // if (currentDistance > radius) {
+  //   Alert.alert(
+  //     'Peringatan',
+  //     ALERT_MESSAGES.RADIUS_EXCEEDED(radius),
+  //     [{ text: 'OK', onPress: () => router.back() }],
+  //     { cancelable: false }
+  //   );
+  // }
 
   return { currentDistance };
 };

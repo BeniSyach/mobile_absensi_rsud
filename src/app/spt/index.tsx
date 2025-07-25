@@ -13,6 +13,7 @@ export default function Spt() {
   const { mutateAsync, isPending, isError } = PostSPT();
 
   const onSubmit: SptFormProps['onSubmit'] = async (data) => {
+    console.log('data SPT', data);
     const userData = getMessage();
 
     const formData = {

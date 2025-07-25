@@ -5,7 +5,11 @@ export type AbsenPulangVariables = {
   waktu_kerja_id: number;
   longitude: number;
   latitude: number;
-  photo: string;
+  photo: {
+    uri: string;
+    type: string;
+    name: string;
+  };
   name: string;
   mimeType: string;
   kode_unit_kerja: string;

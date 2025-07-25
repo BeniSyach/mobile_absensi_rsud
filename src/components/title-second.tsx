@@ -100,7 +100,7 @@ const ModalContent = ({
     </TouchableOpacity>
     <Text className="text-2xl font-bold text-[#0B3880]">Update Data</Text>
     {renderForm()}
-    <View className="mt-4 flex-row justify-start">
+    <View className="flex-row justify-start">
       <Button
         label="Simpan"
         size="default"
@@ -159,6 +159,7 @@ const UpdateModal = ({
       onRequestClose={onClose}
     >
       <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
         style={{
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
         }}

@@ -59,6 +59,7 @@ export default function Absensi() {
       });
       router.back();
     } catch (error: any) {
+      console.log(error);
       showErrorMessage(
         error?.response?.data?.error || error?.message || 'Terjadi kesalahan'
       );
