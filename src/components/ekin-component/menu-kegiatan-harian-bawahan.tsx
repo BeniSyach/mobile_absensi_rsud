@@ -1,10 +1,15 @@
 import { Link } from 'expo-router';
 
+import { type RekapStatusResponse } from '@/api';
 import { Image, Pressable, Text, View } from '@/components/ui';
 
 import { Title } from '../title';
 
-export default function MenuKegiatanHarianBawahan() {
+interface Props {
+  data: RekapStatusResponse | undefined;
+}
+
+export default function MenuKegiatanHarianBawahan({ data }: Props) {
   return (
     <View className="bg-whites mx-2 my-5 rounded-2xl bg-white shadow-lg">
       <Title
@@ -24,7 +29,9 @@ export default function MenuKegiatanHarianBawahan() {
             <Text className="text-md text-center font-bold text-blue-700">
               Pending
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-bold">
+              {data?.harian.pending}
+            </Text>
           </Pressable>
         </Link>
         <Link href="/ekin" asChild>
@@ -38,7 +45,10 @@ export default function MenuKegiatanHarianBawahan() {
             <Text className="text-md text-center font-bold text-blue-700">
               Diterima
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-bold">
+              {' '}
+              {data?.harian.setuju}
+            </Text>
           </Pressable>
         </Link>
         <Link href="/ekin" asChild>
@@ -52,7 +62,10 @@ export default function MenuKegiatanHarianBawahan() {
             <Text className="text-md text-center font-bold text-blue-700">
               Ditolak
             </Text>
-            <Text className="text-md text-center font-bold">2000</Text>
+            <Text className="text-md text-center font-bold">
+              {' '}
+              {data?.harian.tolak}
+            </Text>
           </Pressable>
         </Link>
       </View>

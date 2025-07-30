@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ImageBackground, ScrollView, StatusBar } from 'react-native';
 
+import { GetDashboardPegawai, GetDashboardPegawaiBawahan } from '@/api';
 import MenuKegiatanHarianBawahan from '@/components/ekin-component/menu-kegiatan-harian-bawahan';
 import MenuKegiatanHarianSaya from '@/components/ekin-component/menu-kegiatan-harian-saya';
 import MenuUtama from '@/components/ekin-component/menu-utama';
@@ -11,7 +12,8 @@ import { getMessage } from '@/lib';
 
 export default function Ekin() {
   const storedMessage = getMessage();
-
+  const { data: dashboardPegawai } = GetDashboardPegawai();
+  const { data: dashboardPegawaiBawahan } = GetDashboardPegawaiBawahan();
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
       <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
@@ -30,8 +32,8 @@ export default function Ekin() {
       >
         <NavbarEkin data={storedMessage} />
         <ScrollView className="z-0 flex-1">
-          <MenuKegiatanHarianSaya />
-          <MenuKegiatanHarianBawahan />
+          <MenuKegiatanHarianSaya data={dashboardPegawai} />
+          <MenuKegiatanHarianBawahan data={dashboardPegawaiBawahan} />
           <MenuUtama />
         </ScrollView>
       </ImageBackground>

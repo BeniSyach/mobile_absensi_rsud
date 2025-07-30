@@ -25,10 +25,10 @@ import { Text } from './text';
 const selectTv = tv({
   slots: {
     container: 'mb-4',
-    label: 'mb-1 text-lg text-black',
+    label: 'mb-1 text-lg text-black dark:text-white',
     input:
       'border-grey-50 mt-0 flex-row items-center justify-center rounded-xl border-[0.5px] p-3  dark:border-neutral-500 dark:bg-neutral-800',
-    inputValue: 'dark:text-neutral-100',
+    inputValue: 'text-black dark:text-white',
   },
 
   variants: {
@@ -40,13 +40,13 @@ const selectTv = tv({
     error: {
       true: {
         input: 'border-danger-600',
-        label: 'text-danger-600 dark:text-danger-600',
-        inputValue: 'text-danger-600',
+        label: 'text-danger-600 dark:text-danger-400',
+        inputValue: 'text-danger-600 dark:text-danger-400',
       },
     },
     disabled: {
       true: {
-        input: 'bg-neutral-200',
+        input: 'bg-neutral-200 dark:bg-neutral-700',
       },
     },
   },
@@ -98,6 +98,7 @@ export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
         snapPoints={snapPoints}
         backgroundStyle={{
           backgroundColor: isDark ? colors.neutral[800] : colors.white,
+          zIndex: 1001,
         }}
       >
         <List
@@ -123,10 +124,21 @@ const Option = React.memo(
   }) => {
     return (
       <Pressable
-        className="flex-row items-center border-b border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-800"
+        className={`flex-row items-center border-b border-neutral-300 px-3 py-2 
+          dark:border-neutral-700 
+          ${selected ? 'bg-neutral-100 dark:bg-neutral-700' : 'bg-white dark:bg-neutral-800'}
+        `}
         {...props}
       >
-        <Text className="flex-1 dark:text-neutral-100 ">{label}</Text>
+        <Text
+          className={`flex-1 ${
+            selected
+              ? 'font-semibold text-black dark:text-white'
+              : 'text-neutral-700 dark:text-gray-400'
+          }`}
+        >
+          {label}
+        </Text>
         {selected && <Check />}
       </Pressable>
     );
@@ -177,18 +189,22 @@ export const Select = (props: SelectProps) => {
     [error, disabled]
   );
 
-  const textValue = React.useMemo(
-    () =>
-      value !== undefined
-        ? (options?.filter((t) => t.value === value)?.[0]?.label ?? placeholder)
-        : placeholder,
-    [value, options, placeholder]
-  );
-
-  // const matchedOption = options.find((t) => t.value === value);
-  // if (!matchedOption) {
-  //   console.warn(`Value ${value} tidak ditemukan di options`, options);
-  // }
+  const textValue = React.useMemo(() => {
+    const matchedLabel =
+      options?.find((t) => t.value === value)?.label ?? placeholder;
+    const isPlaceholder = value === undefined;
+    return (
+      <Text
+        className={`${styles.inputValue()} ${
+          isPlaceholder
+            ? 'text-neutral-400 dark:text-neutral-500'
+            : 'text-black dark:text-white'
+        }`}
+      >
+        {matchedLabel}
+      </Text>
+    );
+  }, [value, options, placeholder, styles]);
 
   return (
     <>
@@ -207,15 +223,13 @@ export const Select = (props: SelectProps) => {
           onPress={modal.present}
           testID={testID ? `${testID}-trigger` : undefined}
         >
-          <View className="flex-1">
-            <Text className={styles.inputValue()}>{textValue}</Text>
-          </View>
+          <View className="flex-1">{textValue}</View>
           <CaretDown />
         </Pressable>
         {error && (
           <Text
             testID={`${testID}-error`}
-            className="text-sm text-danger-300 dark:text-danger-600"
+            className="text-sm text-danger-300 dark:text-danger-400"
           >
             {error}
           </Text>
@@ -226,12 +240,12 @@ export const Select = (props: SelectProps) => {
         ref={modal.ref}
         options={options}
         onSelect={onSelectOption}
+        value={value}
       />
     </>
   );
 };
 
-// only used with react-hook-form
 export function ControlledSelect<T extends FieldValues>(
   props: ControlledSelectProps<T>
 ) {

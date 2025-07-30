@@ -206,7 +206,7 @@ export interface AbsenMasuk {
   absen_pulang: AbsenPulang[];
 }
 
-export interface Pagination {
+export interface PaginationAbsenMasuk {
   total: number;
   page: number;
   limit: number;
@@ -217,5 +217,5 @@ export interface AbsenResponse {
   status: number;
   message: string;
   data: AbsenMasuk[];
-  pagination: Pagination;
+  pagination: PaginationAbsenMasuk;
 }

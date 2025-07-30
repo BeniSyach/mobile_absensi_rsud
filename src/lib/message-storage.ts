@@ -1,14 +1,14 @@
-import { type User } from '@/api';
+import { type User, type UserPegawai } from '@/api';
 
 import { storage } from './storage'; // Import MMKV storage yang sudah Anda buat
 
 const MESSAGE_KEY = 'message'; // Kunci untuk menyimpan pesan
 
 // Fungsi untuk mendapatkan pesan dari storage
-export function getMessage(): User | null {
+export function getMessage(): UserPegawai | null {
   const value = storage.getString(MESSAGE_KEY);
   try {
-    return value ? (JSON.parse(value) as User) : null;
+    return value ? (JSON.parse(value) as UserPegawai) : null;
   } catch {
     return null;
   }

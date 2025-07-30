@@ -1,40 +1,50 @@
 import { StyleSheet } from 'react-native';
 
-import { type Tagihan } from '@/api/bapenda';
+import { type KegiatanHarianbynik } from '@/api';
 import { Text, View } from '@/components/ui';
+import { formatTanggalWIB } from '@/utils/format-days';
 
 interface CardProps {
-  dataTagihan: Tagihan;
+  dataHarian: KegiatanHarianbynik;
 }
 
-export default function CardListKomponent({ dataTagihan }: CardProps) {
-  console.log(dataTagihan);
+export default function CardListKomponent({ dataHarian }: CardProps) {
+  const statusMap = {
+    0: { label: 'Pending', color: '#D97706' }, // Amber-600
+    1: { label: 'Disetujui', color: '#065F46' }, // Green-800
+    2: { label: 'Ditolak', color: '#991B1B' }, // Red-800
+  };
+
+  const { label, color } = statusMap[dataHarian.status] || {
+    label: 'Unknown',
+    color: '#6B7280', // Gray-500
+  };
   return (
     <View style={styles.card}>
       {/* Tanggal dan Waktu */}
-      <Text style={styles.dateText}>Senin, 17 Agustus 2025 | 12.00 Wib</Text>
+      <Text style={styles.dateText}>
+        {formatTanggalWIB(dataHarian.created_at)}
+      </Text>
 
       {/* Judul */}
-      <Text style={styles.title}>
-        Memverifikasi Berkas serta menolak gratifikasi
-      </Text>
+      <Text style={styles.title}>{dataHarian.uraian_tugas}</Text>
 
       {/* RHK */}
       <Text style={styles.meta}>
-        <Text style={styles.metaLabel}>RHK: </Text> Terlaksananya Tindakan
-        Khusus..........
+        <Text style={styles.metaLabel}>RHK: </Text>{' '}
+        {dataHarian.rhk_staff?.uraian}
       </Text>
 
       {/* Indikator */}
       <Text style={styles.meta}>
-        <Text style={styles.metaLabel}>Indikator: </Text>
-        Jumlah Berkas yang di proses..........
+        <Text style={styles.metaLabel}>Indikator: </Text>{' '}
+        {dataHarian.rhk_staff?.indikator}
       </Text>
 
       {/* Status */}
       <View style={styles.statusContainer}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Sudah Disetujui</Text>
+        <View style={[styles.badge, { backgroundColor: color }]}>
+          <Text style={styles.badgeText}>{label}</Text>
         </View>
       </View>
     </View>
@@ -81,7 +91,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   badge: {
-    backgroundColor: '#065F46', // tailwind bg-green-800
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,

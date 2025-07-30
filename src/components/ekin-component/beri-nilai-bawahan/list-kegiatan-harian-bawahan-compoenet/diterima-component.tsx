@@ -1,36 +1,50 @@
 import { FlashList } from '@shopify/flash-list';
 import React from 'react';
 
-import { type Tagihan } from '@/api/bapenda';
+import { type DetailKegiatan } from '@/api';
 import { EmptyListEkin } from '@/components/ui';
 
 import CardListKegiatanHarianBawahan from './card-list-kegiatan-harian-bawahan';
 
 interface dataListKegiatan {
-  dataTagihan: Tagihan[];
+  dataDisetujui: DetailKegiatan[];
   Pending: boolean;
+  onLoadMore: () => void;
+  hasNextPage: boolean;
+  onRefresh: () => void;
+  refreshing: boolean;
 }
 
 export default function DiterimaComponent({
-  dataTagihan,
+  dataDisetujui,
   Pending,
+  onLoadMore,
+  hasNextPage,
+  onRefresh,
+  refreshing,
 }: dataListKegiatan) {
   const renderItem = React.useCallback(
-    ({ item }: { item: Tagihan }) => (
-      <CardListKegiatanHarianBawahan dataTagihan={item} />
+    ({ item }: { item: DetailKegiatan }) => (
+      <CardListKegiatanHarianBawahan dataCard={item} />
     ),
     []
   );
-
+  const handleLoadMore = React.useCallback(() => {
+    if (!Pending && hasNextPage) {
+      onLoadMore();
+    }
+  }, [Pending, hasNextPage, onLoadMore]);
   return (
     <FlashList
-      data={dataTagihan}
+      data={dataDisetujui}
       renderItem={renderItem}
       keyExtractor={(_, index) => `item-${index}`}
       ListEmptyComponent={<EmptyListEkin isLoading={Pending} />}
       estimatedItemSize={300}
-      onEndReached={() => {}}
+      onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

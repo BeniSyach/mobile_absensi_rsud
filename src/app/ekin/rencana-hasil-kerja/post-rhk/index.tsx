@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import FormAddRHK from '@/components/ekin-component/rencana-hasil-kerja-component/post/form-add-rhk';
@@ -6,6 +6,7 @@ import LogoAddRHK from '@/components/ekin-component/rencana-hasil-kerja-componen
 import NavbarAddRHK from '@/components/ekin-component/rencana-hasil-kerja-component/post/navbar-add-rhk';
 
 export default function PostRHK() {
+  const { atasan } = useLocalSearchParams();
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
       <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
@@ -29,7 +30,7 @@ export default function PostRHK() {
           <NavbarAddRHK />
           <LogoAddRHK />
         </ImageBackground>
-        <FormAddRHK />
+        <FormAddRHK dataAtasan={atasan as string} />
       </ImageBackground>
     </SafeAreaView>
   );

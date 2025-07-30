@@ -1,27 +1,31 @@
 import React from 'react';
-import WebView from 'react-native-webview';
+import { Dimensions } from 'react-native';
+import Pdf from 'react-native-pdf';
 
 import { View } from '@/components/ui';
 
-export default function ViewTPP() {
-  // const source = {
-  //   uri: 'https://morth.nic.in/sites/default/files/dd12-13_0.pdf',
-  //   cache: true,
-  // };
+type ViewTPPProps = {
+  uri: string;
+};
 
+export default function ViewTPP({ uri }: ViewTPPProps) {
   return (
-    <View className="flex-1 bg-white">
-      <WebView
-        source={{
-          uri: 'https://morth.nic.in/sites/default/files/dd12-13_0.pdf',
+    <View style={{ flex: 1, margin: 10 }}>
+      <Pdf
+        source={{ uri }}
+        style={{
+          flex: 1,
+          width: Dimensions.get('window').width - 20,
+          height: Dimensions.get('window').height * 0.6,
         }}
-        style={{ flex: 1 }}
+        trustAllCerts={true}
+        onLoadComplete={(numberOfPages) => {
+          console.log(`PDF Loaded: ${numberOfPages} pages`);
+        }}
+        onError={(error) => {
+          console.error('PDF Error:', error);
+        }}
       />
-      {/* <Pdf
-        source={source}
-        style={{ flex: 1, width: Dimensions.get('window').width }}
-        onError={(error) => console.log('PDF error:', error)}
-      /> */}
     </View>
   );
 }

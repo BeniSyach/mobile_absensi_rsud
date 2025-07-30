@@ -19,6 +19,11 @@ const menuItems = [
     title: 'Export TPP',
   },
   {
+    href: '/ekin/export-tpp-atasan',
+    image: require('../../../assets/image/export_tpp.png'),
+    title: 'Export TPP Atasan',
+  },
+  {
     href: '/ekin/beri-nilai-bawahan',
     image: require('../../../assets/image/beri_nilai_bawahan.png'),
     title: 'Beri Nilai Bawahan',
@@ -27,6 +32,11 @@ const menuItems = [
     href: '/ekin/rencana-hasil-kerja',
     image: require('../../../assets/image/rencana_hasil_kerja.png'),
     title: 'Rencana Hasil Kinerja',
+  },
+  {
+    href: '/ekin/rencana-hasil-kerja-atasan',
+    image: require('../../../assets/image/rencana_hasil_kerja.png'),
+    title: 'Rencana Hasil Kinerja Atasan',
   },
   {
     href: '/ekin/pegawai-ekin',

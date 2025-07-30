@@ -3,7 +3,12 @@ import { TextInput } from 'react-native';
 
 import { View } from '@/components/ui';
 
-export default function FormNilaiBawahan() {
+interface Props {
+  search: string;
+  onSearchChange: (val: string) => void;
+}
+
+export default function FormNilaiBawahan({ search, onSearchChange }: Props) {
   return (
     <View className="m-5 mt-7">
       {/* Baris 1 */}
@@ -12,6 +17,8 @@ export default function FormNilaiBawahan() {
         <TextInput
           className="flex-1 bg-[#D8D8D8] py-2"
           placeholder="Cari Nama Bawahan"
+          value={search}
+          onChangeText={onSearchChange}
         />
       </View>
     </View>

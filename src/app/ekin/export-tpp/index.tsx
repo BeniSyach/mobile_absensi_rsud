@@ -1,13 +1,16 @@
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 
 import FormExportTPP from '@/components/ekin-component/export-tpp/form-export-tpp';
 import LogoExportTPP from '@/components/ekin-component/export-tpp/logo-export-tpp';
 import NavbarExportTPP from '@/components/ekin-component/export-tpp/navbar-export-tpp';
+import ViewTPP from '@/components/ekin-component/export-tpp/view-tpp';
 import { SafeAreaView } from '@/components/ui';
 
 export default function ExportTpp() {
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
       <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
@@ -32,8 +35,9 @@ export default function ExportTpp() {
           <NavbarExportTPP />
           <LogoExportTPP />
         </ImageBackground>
-        <FormExportTPP />
-        {/* <ViewTPP /> */}
+        <FormExportTPP onPreview={(uri) => setPreviewUri(uri)} />
+
+        {previewUri && <ViewTPP uri={previewUri} />}
       </ImageBackground>
     </SafeAreaView>
   );

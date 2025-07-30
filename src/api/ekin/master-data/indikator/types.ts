@@ -15,7 +15,7 @@ export type UnitKerjaIndikator = {
 export type Indikator = {
   id: number;
   uraian: string;
-  id_unit_kerja: number;
+  kode_unit_kerja: number;
   unit_kerja: UnitKerjaIndikator;
 };
 

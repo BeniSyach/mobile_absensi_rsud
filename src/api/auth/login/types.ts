@@ -4,7 +4,7 @@ export type LoginVariables = {
   password: string;
   device_token: string | null;
 };
-export interface User {
+export interface UserPegawai {
   id: number;
   nik: string;
   nip: string;
@@ -21,5 +21,5 @@ export interface User {
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
-  user: User;
+  user: UserPegawai;
 }

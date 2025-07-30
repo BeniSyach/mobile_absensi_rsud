@@ -6,8 +6,10 @@ import FormTambahKegiatan from '@/components/ekin-component/tambah-kegiatan-comp
 import LogoTambahKegiatan from '@/components/ekin-component/tambah-kegiatan-component/logo-tambah-kegiatan';
 import NavbarTambahKegiatan from '@/components/ekin-component/tambah-kegiatan-component/navbar-tambah-kegiatan';
 import { SafeAreaView } from '@/components/ui';
+import { getMessage } from '@/lib';
 
 export default function TambahKegiatan() {
+  const storedMessage = getMessage();
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
       <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
@@ -32,7 +34,7 @@ export default function TambahKegiatan() {
           <NavbarTambahKegiatan />
           <LogoTambahKegiatan />
         </ImageBackground>
-        <FormTambahKegiatan />
+        <FormTambahKegiatan dataUserLogin={storedMessage} />
       </ImageBackground>
     </SafeAreaView>
   );

@@ -5,7 +5,10 @@ import { client } from '../../../common';
 import type { IndikatorResponse } from './types';
 
 type Variables = {
-  id_unit_kerja: number;
+  kode_unit_kerja: string;
+  page?: number;
+  limit?: number;
+  search?: string;
 };
 
 export const GetIndikatorByUnitKerja = createQuery<
@@ -14,11 +17,11 @@ export const GetIndikatorByUnitKerja = createQuery<
   AxiosError
 >({
   queryKey: ['getIndikatorByUnitKerja'] as const,
-  fetcher: async ({ id_unit_kerja }) => {
+  fetcher: async (variables) => {
     const response = await client({
       url: '/ekinerja/indikator/by-unit-kerja',
       method: 'GET',
-      params: { id_unit_kerja },
+      params: variables,
     });
     return response.data;
   },

@@ -15,10 +15,10 @@ export const LogoutUser = createMutation<LogoutResponse, void, AxiosError>({
       url: `${Env.API_URL}/auth-mobile/logout`,
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token.access}`,
+        Authorization: `Bearer ${token?.access}`,
       },
       data: {
-        refreshToken: token.refresh, // dikirim di body
+        refreshToken: token?.refresh, // dikirim di body
       },
     }).catch((error) => {
       console.error('Logout API error 1:', error);

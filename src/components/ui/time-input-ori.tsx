@@ -1,4 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Clock } from 'lucide-react-native'; // ⏰ pastikan lucide-react-native sudah terinstall
 import React, { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
@@ -34,14 +35,19 @@ export const TimeInputOri = ({
       <Text className="mb-1 mt-2 text-lg text-gray-700 dark:text-neutral-200">
         {label}
       </Text>
+
       <Pressable
         onPress={() => setShow(true)}
-        className={`border p-2 py-4 ${
+        className={`flex-row items-center gap-2 rounded-lg border p-3 ${
           error ? 'border-red-500' : 'border-gray-300'
-        } rounded-lg bg-white`}
+        } bg-white`}
       >
-        <Text className="text-gray-700">{value || placeholder}</Text>
+        <Clock size={20} color="black" strokeWidth={2.5} />
+        <Text className={`text-base ${value ? 'text-black' : 'text-gray-500'}`}>
+          {value || placeholder}
+        </Text>
       </Pressable>
+
       {show && (
         <DateTimePicker
           value={getInitialDate()}
@@ -60,6 +66,7 @@ export const TimeInputOri = ({
           }}
         />
       )}
+
       {error && <Text className="mt-1 text-sm text-red-500">{error}</Text>}
     </View>
   );

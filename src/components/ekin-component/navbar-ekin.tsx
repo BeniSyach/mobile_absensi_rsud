@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import { ImageBackground, Pressable } from 'react-native';
 
-import { type User } from '@/api';
+import { type UserPegawai } from '@/api';
 import { Image, Text, View } from '@/components/ui';
 
 interface NavbarEkinProps {
-  data: User | null;
+  data: UserPegawai | null;
 }
 
 export default function NavbarEkin({ data }: NavbarEkinProps) {

@@ -1,39 +1,56 @@
-import { CalendarDays, Search } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 import { TextInput } from 'react-native';
 
-import { View } from '@/components/ui';
+import { DateInputOriginal, View } from '@/components/ui';
 
-export default function FormListKegiatan() {
+interface Props {
+  search: string;
+  tanggalAwal: string;
+  tanggalAkhir: string;
+  onSearchChange: (val: string) => void;
+  onTanggalAwalChange: (val: string) => void;
+  onTanggalAkhirChange: (val: string) => void;
+}
+
+export default function FormListKegiatan({
+  search,
+  tanggalAwal,
+  tanggalAkhir,
+  onSearchChange,
+  onTanggalAwalChange,
+  onTanggalAkhirChange,
+}: Props) {
   return (
-    <View className="m-5 mt-7">
-      {/* Baris 1 */}
-      <View className="mb-2 flex-row items-center rounded-lg border bg-[#D8D8D8] p-2">
-        <Search className="mr-2 size-6" color="black" strokeWidth={2.5} />
-        <TextInput className="flex-1 bg-[#D8D8D8] py-2" placeholder="Cari" />
+    <View className="px-4 pt-6">
+      {/* Search Bar */}
+      <View className="mb-4 flex-row items-center rounded-xl border border-gray-300 bg-gray-200 px-4 py-3 shadow-sm">
+        <Search className="mr-3 size-5" color="black" strokeWidth={2.5} />
+        <TextInput
+          className="flex-1 text-base text-black"
+          placeholder="Cari"
+          placeholderTextColor="#6B7280"
+          value={search}
+          onChangeText={onSearchChange}
+        />
       </View>
 
-      <View className="flex-row gap-4">
-        <View className="flex-1 flex-row items-center rounded-lg border bg-[#D8D8D8] p-2">
-          <CalendarDays
-            className="mr-2 size-6"
-            color="black"
-            strokeWidth={2.5}
-          />
-          <TextInput
-            className="flex-1 bg-[#D8D8D8] py-2"
-            placeholder="Tanggal Awal"
+      {/* Tanggal Picker */}
+      <View className="flex-row gap-3">
+        <View className="flex-1">
+          <DateInputOriginal
+            label="Tanggal Awal"
+            placeholder="Pilih tanggal awal"
+            value={tanggalAwal}
+            onChange={onTanggalAwalChange}
           />
         </View>
 
-        <View className="flex-1 flex-row items-center rounded-lg border bg-[#D8D8D8] p-2">
-          <CalendarDays
-            className="mr-2 size-6"
-            color="black"
-            strokeWidth={2.5}
-          />
-          <TextInput
-            className="flex-1 bg-[#D8D8D8] py-2"
-            placeholder="Tanggal Akhir"
+        <View className="flex-1">
+          <DateInputOriginal
+            label="Tanggal Akhir"
+            placeholder="Pilih tanggal akhir"
+            value={tanggalAkhir}
+            onChange={onTanggalAkhirChange}
           />
         </View>
       </View>

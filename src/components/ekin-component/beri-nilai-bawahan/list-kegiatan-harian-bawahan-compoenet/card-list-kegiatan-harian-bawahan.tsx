@@ -1,63 +1,165 @@
 /* eslint-disable max-lines-per-function */
 import { CircleCheckBig, Eye, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 
-import { type Tagihan } from '@/api/bapenda';
+import { type DetailKegiatan, PutKegiatanHarian } from '@/api';
 import { AlertModal } from '@/components/title-second';
-import { Button, Text, View } from '@/components/ui';
+import { Button, showErrorMessage, Text, View } from '@/components/ui';
+import { formatTanggalWIB } from '@/utils/format-days';
 
 interface CardProps {
-  dataTagihan: Tagihan;
+  dataCard: DetailKegiatan;
 }
 
-export default function CardListKegiatanHarianBawahan({
-  dataTagihan,
-}: CardProps) {
-  console.log(dataTagihan);
+export default function CardListKegiatanHarianBawahan({ dataCard }: CardProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const { mutateAsync: putDetailKegiatan, isPending: isPut } =
+    PutKegiatanHarian();
 
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowConfirmModal(false);
     setModalVisible(false);
     console.log('✅ Data disetujui secara final');
+
+    try {
+      const response = await putDetailKegiatan({
+        id: dataCard?.id?.toString() ?? '-',
+        status: 1,
+      });
+      console.log('✅ Data berhasil dikirim:', response);
+
+      showMessage({
+        message: 'Kegiatan harian berhasil disimpan.',
+        type: 'success',
+        duration: 7000,
+      });
+    } catch (error: any) {
+      console.error('Error submitting EKIN:', error);
+
+      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
+
+      if (error?.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 413) {
+          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
+        } else if (status === 422) {
+          errorMessage =
+            'Data tidak valid. Silakan periksa kembali input Anda.';
+        } else if (status === 500) {
+          errorMessage =
+            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
+        }
+
+        if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (data?.error) {
+          errorMessage = data.error;
+        } else if (data?.messages) {
+          errorMessage = data.messages;
+        } else if (data?.error) {
+          errorMessage = data.error;
+        }
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+
+      showErrorMessage(errorMessage);
+    }
   };
 
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
 
-  const handleTolak = () => {
-    console.log('❌ Ditolak:', dataTagihan);
+  const handleTolak = async () => {
+    console.log('❌ Ditolak:', dataCard);
     setModalVisible(false);
+
+    try {
+      const response = await putDetailKegiatan({
+        id: dataCard?.id?.toString() ?? '-',
+        status: 2,
+      });
+      console.log('✅ Data berhasil dikirim:', response);
+
+      showMessage({
+        message: 'Kegiatan harian berhasil disimpan.',
+        type: 'success',
+        duration: 7000,
+      });
+    } catch (error: any) {
+      console.error('Error submitting EKIN:', error);
+
+      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
+
+      if (error?.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 413) {
+          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
+        } else if (status === 422) {
+          errorMessage =
+            'Data tidak valid. Silakan periksa kembali input Anda.';
+        } else if (status === 500) {
+          errorMessage =
+            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
+        }
+
+        if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (data?.error) {
+          errorMessage = data.error;
+        } else if (data?.messages) {
+          errorMessage = data.messages;
+        } else if (data?.error) {
+          errorMessage = data.error;
+        }
+      } else if (error?.error) {
+        errorMessage = error.error;
+      }
+
+      showErrorMessage(errorMessage);
+    }
   };
 
   return (
     <>
       <View style={styles.card}>
         {/* Tanggal dan Waktu */}
-        <Text style={styles.dateText}>Senin, 17 Agustus 2025 | 12.00 Wib</Text>
+        <Text style={styles.dateText}>
+          {' '}
+          {formatTanggalWIB(dataCard?.tgl_kinerja)}
+        </Text>
 
         {/* Judul */}
-        <Text style={styles.title}>
-          Memverifikasi Berkas serta menolak gratifikasi
-        </Text>
+        <Text style={styles.title}>{dataCard?.uraian_tugas ?? '-'}</Text>
 
         {/* RHK */}
         <Text style={styles.meta}>
-          <Text style={styles.metaLabel}>RHK: </Text> Terlaksananya Tindakan
-          Khusus..........
+          <Text style={styles.metaLabel}>RHK: </Text>{' '}
+          {dataCard?.rhk_staff?.uraian ?? '-'}
         </Text>
 
         {/* Indikator */}
         <Text style={styles.meta}>
           <Text style={styles.metaLabel}>Indikator: </Text>
-          Jumlah Berkas yang di proses..........
+          {dataCard?.rhk_staff?.indikator ?? '-'}
         </Text>
 
         {/* Status */}
@@ -74,49 +176,101 @@ export default function CardListKegiatanHarianBawahan({
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
+            {/* Tombol Close */}
+            <View className="items-end">
+              <Pressable
+                onPress={() => setModalVisible(false)}
+                className="p-2"
+                hitSlop={10}
+              >
+                <X size={24} color="black" />
+              </Pressable>
+            </View>
+
             <Text style={styles.modalTitle}>Detail Kegiatan</Text>
 
             <View style={styles.formGroup}>
-              <Text style={styles.metaLabel}>Judul:</Text>
-              <TextInput
-                value={dataTagihan?.J_TEMPO ?? ''}
-                style={styles.textInput}
-              />
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Uraian Tugas :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  value={dataCard?.uraian_tugas ?? '-'}
+                  editable={false}
+                />
+              </View>
+            </View>
+
+            <View>
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Lama Waktu :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  keyboardType="number-pad"
+                  value={dataCard?.waktu_kinerja?.toString() ?? '-'}
+                  editable={false}
+                />
+                <Text className="ml-2 text-gray-500">Menit</Text>
+              </View>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.metaLabel}>Tahun Pajak:</Text>
-              <TextInput
-                value={dataTagihan?.THN_PAJAK_SPPT ?? ''}
-                style={styles.textInput}
-              />
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Jumlah Capaian Kegiatan :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  value={dataCard?.nilai?.toString() ?? '-'}
+                  editable={false}
+                />
+              </View>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.metaLabel}>Pokok:</Text>
-              <TextInput
-                value={String(dataTagihan?.POKOK ?? '')}
-                keyboardType="numeric"
-                style={styles.textInput}
-              />
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Tangal Mulai Kegaitan :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  value={dataCard?.tgl_kinerja ?? '-'}
+                  editable={false}
+                />
+              </View>
             </View>
 
-            <View style={styles.formGroup}>
-              <Text style={styles.metaLabel}>Denda:</Text>
-              <TextInput
-                value={String(dataTagihan?.DENDA ?? '')}
-                keyboardType="numeric"
-                style={styles.textInput}
-              />
+            <View>
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Jam Mulai Kegiatan :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  keyboardType="number-pad"
+                  value={dataCard?.waktu_kinerja?.toString() ?? '-'}
+                  editable={false}
+                />
+                <Text className="ml-2 text-gray-500">Wib</Text>
+              </View>
             </View>
 
-            <View style={styles.formGroup}>
-              <Text style={styles.metaLabel}>Total:</Text>
-              <TextInput
-                value={String(dataTagihan?.TOTAL ?? '')}
-                keyboardType="numeric"
-                style={styles.textInput}
-              />
+            <View>
+              <Text className="mb-2 text-lg font-semibold text-black">
+                Jam Selesai Kegiatan :
+              </Text>
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  keyboardType="number-pad"
+                  value={dataCard?.waktu_kinerja?.toString() ?? '-'}
+                  editable={false}
+                />
+                <Text className="ml-2 text-gray-500">Wib</Text>
+              </View>
             </View>
 
             <View style={styles.modalButtonGroup} className="gap-2">
@@ -132,6 +286,7 @@ export default function CardListKegiatanHarianBawahan({
                   />
                 }
                 onPress={handleSetujui}
+                disabled={isPut}
               />
 
               <Button
@@ -140,6 +295,7 @@ export default function CardListKegiatanHarianBawahan({
                 className="bg-[#C9DEFE]"
                 icon={<X size={24} color="black" />}
                 onPress={handleTolak}
+                disabled={isPut}
               />
             </View>
           </View>
@@ -214,7 +370,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
   },

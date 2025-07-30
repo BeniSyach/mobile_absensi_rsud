@@ -55,7 +55,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#2E3C4B',
     },
     package: Env.PACKAGE,
-    permissions: ['CAMERA', 'ACCESS_FINE_LOCATION'],
+    permissions: [
+      'CAMERA',
+      'ACCESS_FINE_LOCATION',
+      'WRITE_EXTERNAL_STORAGE',
+      'READ_EXTERNAL_STORAGE',
+    ],
   },
   web: {
     favicon: './assets/favicon.png',
@@ -107,6 +112,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera',
         microphonePermission: 'Allow $(PRODUCT_NAME) to access your microphone',
         recordAudioAndroid: true,
+      },
+    ],
+    [
+      'expo-media-library',
+      {
+        photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
+        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save photos.',
+        isAccessMediaLocationEnabled: true,
       },
     ],
   ],

@@ -18,7 +18,7 @@ export type IndikatorRhkStaff = {
   updated_at: string;
 };
 
-export type RhkPejabat = {
+export type RhkPejabatByRhkStaff = {
   id: number;
   id_jabatan: number;
   id_unit_kerja: number;
@@ -34,7 +34,7 @@ export type RhkStaff = {
   unit_kerja: UnitKerjaRhkStaff;
   indikator: IndikatorRhkStaff;
   id_rhk_pejabat: number;
-  rhk_pejabat: RhkPejabat;
+  rhk_pejabat: RhkPejabatByRhkStaff;
   uraian: string;
   nilai: number;
   tahun: string;

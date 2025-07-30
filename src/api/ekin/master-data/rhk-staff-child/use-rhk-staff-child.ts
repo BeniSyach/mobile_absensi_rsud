@@ -8,6 +8,7 @@ type Variables = {
   page?: number;
   limit?: number;
   search?: string;
+  nik?: string;
 };
 
 export const GetRhkStaffChild = createQuery<
@@ -18,7 +19,7 @@ export const GetRhkStaffChild = createQuery<
   queryKey: ['getRhkStaffChild'] as const,
   fetcher: async (variables) => {
     const response = await client({
-      url: '/ekinerja/rhk-staff-child',
+      url: `/ekinerja/rhk-staff-child/nik/${variables.nik}`,
       method: 'GET',
       params: variables,
     });

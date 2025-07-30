@@ -73,6 +73,57 @@ export const AlertModal = ({
   </Modal>
 );
 
+export const AlertPostModal = ({
+  visible,
+  onConfirm,
+  onCancel,
+}: {
+  visible: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) => (
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    className="rounded-xl"
+  >
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      }}
+    >
+      <View className="w-80 rounded-lg bg-white p-6">
+        <Image
+          source={require('../../assets/image/warning.png')}
+          className="mb-4 size-16 self-center"
+          contentFit="contain"
+        />
+        <Text className="mb-4 text-center text-base font-semibold">
+          Apakah Anda yakin mengirim data ini?
+        </Text>
+        <View className="flex-row justify-center space-x-4">
+          <TouchableOpacity
+            className="mx-2 rounded-xl bg-[#0B3880] px-4 py-2"
+            onPress={onConfirm}
+          >
+            <Text className="font-bold text-white">Simpan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="mx-2 rounded-xl bg-[#C9DEFE] px-4 py-2"
+            onPress={onCancel}
+          >
+            <Text className="font-bold">Tidak</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
 const ModalContent = ({
   onClose,
   renderForm,
