@@ -1,4 +1,7 @@
-import * as WebBrowser from 'expo-web-browser';
+/* eslint-disable max-lines-per-function */
+import { Buffer } from 'buffer';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { Eye, FileText } from 'lucide-react-native';
 import { Alert } from 'react-native';
 
@@ -22,18 +25,32 @@ export const CardSPT = ({ dataSPT }: CardProps) => {
 
   const handleViewPDF = async () => {
     try {
-      const { data: result } = await refetch();
-
-      // Misalnya result.url adalah URL file PDF dari server
-      const pdfUri = `${result?.url}`; // atau bisa juga pakai result.url kalau tersedia
-      if (pdfUri) {
-        await WebBrowser.openBrowserAsync(pdfUri);
-      } else {
-        Alert.alert('Error', 'PDF not found');
+      const { data: buffer } = await refetch();
+      if (!buffer) {
+        Alert.alert('Error', 'Data PDF tidak ditemukan');
+        return;
       }
+
+      const base64 = Buffer.from(buffer).toString('base64');
+      const fileUri = `${FileSystem.cacheDirectory}temp-spt-${Date.now()}.pdf`;
+
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const available = await Sharing.isAvailableAsync();
+      if (!available) {
+        Alert.alert('Error', 'Fitur berbagi tidak tersedia di perangkat ini');
+        return;
+      }
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Buka atau bagikan file PDF',
+      });
     } catch (error) {
       console.error('Error opening PDF:', error);
-      Alert.alert('Error', 'Failed to open PDF');
+      Alert.alert('Error', 'Gagal membuka PDF');
     }
   };
 

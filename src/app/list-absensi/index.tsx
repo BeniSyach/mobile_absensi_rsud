@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 
 import { type AbsenMasuk } from '@/api';
 import { Card } from '@/components/list-absensi-component/card';
@@ -28,6 +28,7 @@ export default function ListAbsensi() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <ListContent
         data={data}
         isPending={isPending}

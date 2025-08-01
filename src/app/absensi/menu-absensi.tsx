@@ -22,9 +22,8 @@ export default function MenuAbsensi() {
           headerShown: false,
         }}
       />
-      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <View className="h-64 rounded-b-3xl bg-[#0B3880]">
-        <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
         <NavbarAbsensi />
         <View className="mt-10 px-4">
           <Header data={storedMessage} />

@@ -13,7 +13,7 @@ export default function OrangTua() {
   const { data: orangTua, isLoading: isLoadingOrangTua } = GetOrangTua();
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#CBDFFF" barStyle="light-content" />
+      <StatusBar backgroundColor="#CBDFFF" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Orang Tua Simpeg',

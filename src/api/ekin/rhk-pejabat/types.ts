@@ -8,7 +8,7 @@ export interface RhkPejabatRHKPejabat {
   uraian: string;
   jabatan: string | null;
   unit_kerja: string | null;
-  indikator: IndikatorRHKPejabat[];
+  indikator: string;
 }
 
 export interface DataItemRHKPejabat {
@@ -67,6 +67,7 @@ export interface CreateRHKPejabatPayload {
   kode_unit_kerja: string;
   uraian: string;
   nik: string;
+  indikator: string;
 }
 
 export interface UpdateRHKPejabatPayload {
@@ -75,4 +76,5 @@ export interface UpdateRHKPejabatPayload {
   kode_unit_kerja: string;
   uraian: string;
   id: number;
+  indikator: string;
 }

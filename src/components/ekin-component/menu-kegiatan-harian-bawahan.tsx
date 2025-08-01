@@ -30,7 +30,7 @@ export default function MenuKegiatanHarianBawahan({ data }: Props) {
               Pending
             </Text>
             <Text className="text-md text-center font-bold">
-              {data?.harian.pending}
+              {data?.bulanan.pending}
             </Text>
           </Pressable>
         </Link>
@@ -47,7 +47,7 @@ export default function MenuKegiatanHarianBawahan({ data }: Props) {
             </Text>
             <Text className="text-md text-center font-bold">
               {' '}
-              {data?.harian.setuju}
+              {data?.bulanan.setuju}
             </Text>
           </Pressable>
         </Link>
@@ -64,7 +64,7 @@ export default function MenuKegiatanHarianBawahan({ data }: Props) {
             </Text>
             <Text className="text-md text-center font-bold">
               {' '}
-              {data?.harian.tolak}
+              {data?.bulanan.tolak}
             </Text>
           </Pressable>
         </Link>

@@ -13,7 +13,7 @@ export default function Keluarga() {
   const { data: keluarga, isLoading: isLoadingKeluarga } = GetKeluarga();
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#CBDFFF" barStyle="light-content" />
+      <StatusBar backgroundColor="#CBDFFF" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Keluarga Simpeg',

@@ -7,7 +7,7 @@ import { Text, View } from '@/components/ui';
 export default function MenuSpbe() {
   return (
     <SafeAreaView className="flex-1 bg-[#2400A4]">
-      <StatusBar backgroundColor="#2400A4" barStyle="light-content" />
+      <StatusBar backgroundColor="#2400A4" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'SPBE',

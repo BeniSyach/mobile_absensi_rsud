@@ -295,7 +295,7 @@ export default function EditDataPegawaiEkin({
           <Button
             label="Save"
             className="m-2 rounded-lg bg-[#C9DEFE] font-bold text-black"
-            variant="outline"
+            variant="secondary"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
             disabled={isPosting}

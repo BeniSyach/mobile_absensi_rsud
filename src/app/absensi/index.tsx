@@ -85,7 +85,7 @@ export default function Absensi() {
           headerBackTitle: 'Absensi',
         }}
       />
-      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
 
       <AbsensiForm
         isPending={submitLoading || isAddingMasuk || isAddingPulang}

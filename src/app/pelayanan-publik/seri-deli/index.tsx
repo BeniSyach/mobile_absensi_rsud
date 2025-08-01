@@ -15,7 +15,7 @@ export default function MenuSeriDeli() {
   };
   return (
     <SafeAreaView className="flex-1 bg-[#2563EB]">
-      <StatusBar backgroundColor="#2563EB" barStyle="light-content" />
+      <StatusBar backgroundColor="#2563EB" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Seri Deli',

@@ -9,7 +9,7 @@ export default function PostRHK() {
   const { atasan } = useLocalSearchParams();
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
-      <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
+      <StatusBar backgroundColor="#287BDC" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Tambah RHK',

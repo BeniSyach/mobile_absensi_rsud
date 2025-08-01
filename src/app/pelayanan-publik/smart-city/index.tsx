@@ -6,7 +6,7 @@ import { WebView } from 'react-native-webview';
 export default function MenuSmartCity() {
   return (
     <SafeAreaView className="flex-1 bg-[#2400A4]">
-      <StatusBar backgroundColor="#2400A4" barStyle="light-content" />
+      <StatusBar backgroundColor="#2400A4" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Smart City',

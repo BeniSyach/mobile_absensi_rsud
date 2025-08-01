@@ -32,6 +32,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
   const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [rhkStaff, setRhkStaff] = useState('');
+  const [indikator, setindikator] = useState('');
   const { mutateAsync: putRHK, isPending: isPosting } = PutRHKPejabat();
 
   const handleSetujui = () => {
@@ -47,6 +48,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
       uraian: rhkStaff,
       kode_jabatan: data?.detail_pegawai.data.jabatan_id ?? '',
       kode_pangkat: data?.detail_pegawai.data.pangkat_id ?? '',
+      indikator,
     };
 
     try {
@@ -101,6 +103,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
   useEffect(() => {
     if (dataEdit?.id) {
       setRhkStaff(dataEdit.uraian);
+      setindikator(dataEdit.indikator);
     }
   }, [dataEdit?.id]);
   return (
@@ -115,6 +118,15 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={rhkStaff}
             onChangeText={setRhkStaff}
+          />
+          <Text className="mb-2 text-lg font-semibold text-black">
+            Indikator
+          </Text>
+          <TextInput
+            className="mb-2 rounded-lg border p-2 py-4"
+            placeholder="Rencana Hasil Kerja"
+            value={indikator}
+            onChangeText={setindikator}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

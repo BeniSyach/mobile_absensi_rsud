@@ -90,7 +90,7 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
       <Text className="mb-1 text-lg font-bold text-gray-700">INDIKATOR</Text>
       <View className="mb-3 rounded-md bg-gray-100 p-2">
         <Text className="text-base text-gray-800">
-          {dataRHKItems?.rhk_pejabat?.indikator?.[0]?.uraian ?? '-'}
+          {dataRHKItems?.rhk_pejabat?.indikator ?? '-'}
         </Text>
       </View>
 
@@ -109,8 +109,7 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
               pathname: '/ekin/rencana-hasil-kerja-atasan/edit-rhk',
               params: {
                 uraian: dataRHKItems?.rhk_pejabat?.uraian ?? null,
-                indikator:
-                  dataRHKItems?.rhk_pejabat?.indikator?.[0]?.uraian ?? null,
+                indikator: dataRHKItems?.rhk_pejabat?.indikator ?? null,
                 id_rhk_pejabat: dataRHKItems?.id_rhk_pejabat ?? null,
                 id: dataRHKItems?.id ?? null,
               },

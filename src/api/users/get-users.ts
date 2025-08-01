@@ -11,6 +11,12 @@ export const useGetUser = (nik: string) =>
       client({
         url: `/aggregation/pegawai/${nik}`,
         method: 'GET',
+        params: {
+          _t: Date.now(),
+        },
       }).then((res) => res.data),
-    enabled: !!nik, // hanya jalankan jika nik tersedia
+    enabled: !!nik,
+    staleTime: 0, // selalu dianggap stale
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });

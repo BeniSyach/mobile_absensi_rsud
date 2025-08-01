@@ -161,7 +161,7 @@ export default function ListKegiatanHarianBawahan() {
   }
   return (
     <SafeAreaView className="flex-1 bg-[#287BDC]">
-      <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
+      <StatusBar backgroundColor="#287BDC" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'List Kegiatan ekin',

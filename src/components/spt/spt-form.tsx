@@ -23,7 +23,7 @@ const schema = z.object({
     .string({
       required_error: 'Waktu SPT diperlukan',
     })
-    .regex(/^\d{2}:\d{2}:\d{2}$/, 'Format waktu harus HH:mm:ss'),
+    .regex(/^\d{2}:\d{2}$/, 'Format waktu harus HH:mm'),
   lama_acara: z.string({
     required_error: 'Lama acara diperlukan',
   }),

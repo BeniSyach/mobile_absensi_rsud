@@ -109,6 +109,8 @@ const handleDistanceAndZoom = ({
   radius: number;
   router: ReturnType<typeof useRouter>;
 }) => {
+  console.log('lokasi sekarang', loc.coords.latitude);
+  console.log('lokasi tujuan / opd', selectedLatitude);
   const currentDistance = getDistance(
     {
       latitude: loc.coords.latitude,
@@ -120,14 +122,14 @@ const handleDistanceAndZoom = ({
     }
   );
 
-  // if (currentDistance > radius) {
-  //   Alert.alert(
-  //     'Peringatan',
-  //     ALERT_MESSAGES.RADIUS_EXCEEDED(radius),
-  //     [{ text: 'OK', onPress: () => router.back() }],
-  //     { cancelable: false }
-  //   );
-  // }
+  if (currentDistance > radius) {
+    Alert.alert(
+      'Peringatan',
+      ALERT_MESSAGES.RADIUS_EXCEEDED(radius),
+      [{ text: 'OK', onPress: () => router.back() }],
+      { cancelable: false }
+    );
+  }
 
   return { currentDistance };
 };

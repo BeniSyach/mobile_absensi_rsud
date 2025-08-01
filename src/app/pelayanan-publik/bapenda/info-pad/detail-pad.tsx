@@ -18,7 +18,7 @@ export default function DetailPad() {
   }
   return (
     <SafeAreaView className="flex-1 bg-[#2B1DAC]">
-      <StatusBar backgroundColor="#2B1DAC" barStyle="light-content" />
+      <StatusBar backgroundColor="#2B1DAC" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Info Detail PAD',

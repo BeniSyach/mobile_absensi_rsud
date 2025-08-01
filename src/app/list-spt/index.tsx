@@ -1,4 +1,5 @@
 import React from 'react';
+import { StatusBar } from 'react-native';
 
 import { type SptData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
@@ -26,6 +27,7 @@ export default function ListSPT() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <ListContent
         data={data}
         isPending={isPending}

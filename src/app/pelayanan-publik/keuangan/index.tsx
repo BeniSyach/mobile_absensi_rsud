@@ -15,7 +15,7 @@ export default function KeuanganSp2d() {
   };
   return (
     <SafeAreaView className="flex-1 bg-[#53B175]">
-      <StatusBar backgroundColor="#53B175" barStyle="light-content" />
+      <StatusBar backgroundColor="#53B175" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Keuangan SP2D',

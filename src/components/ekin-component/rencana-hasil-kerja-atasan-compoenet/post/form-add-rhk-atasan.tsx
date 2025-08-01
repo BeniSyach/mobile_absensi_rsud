@@ -18,7 +18,7 @@ import {
 import { getMessage } from '@/lib';
 
 interface Props {
-  data: UserDataEkin;
+  data: UserDataEkin | undefined;
 }
 
 export default function FormAddRHKAtasan({ data }: Props) {
@@ -26,6 +26,7 @@ export default function FormAddRHKAtasan({ data }: Props) {
   const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [rhkStaff, setRhkStaff] = useState('');
+  const [indikator, setindikator] = useState('');
 
   const { mutateAsync: postRHK, isPending: isPosting } = PostRHKPejabat();
 
@@ -36,11 +37,12 @@ export default function FormAddRHKAtasan({ data }: Props) {
     setShowConfirmModal(false);
     console.log('✅ Data disetujui secara final');
     const payload: CreateRHKPejabatPayload = {
-      kode_jabatan: data.detail_pegawai.data.jabatan_id,
-      kode_pangkat: data.detail_pegawai.data.pangkat_id,
+      kode_jabatan: data?.detail_pegawai?.data?.jabatan_id ?? '',
+      kode_pangkat: data?.detail_pegawai?.data?.pangkat_id ?? '',
       kode_unit_kerja: storedMessage?.kode_unit_kerja ?? '',
       uraian: rhkStaff,
       nik: storedMessage?.nik ?? '',
+      indikator,
     };
 
     try {
@@ -53,6 +55,7 @@ export default function FormAddRHKAtasan({ data }: Props) {
         duration: 7000,
       });
       setRhkStaff('');
+      setindikator('');
     } catch (error: any) {
       console.error('Error submitting EKIN:', error);
 
@@ -103,6 +106,16 @@ export default function FormAddRHKAtasan({ data }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={rhkStaff}
             onChangeText={setRhkStaff}
+          />
+
+          <Text className="mb-2 text-lg font-semibold text-black">
+            Indikator
+          </Text>
+          <TextInput
+            className="mb-2 rounded-lg border p-2 py-4"
+            placeholder="Rencana Hasil Kerja"
+            value={indikator}
+            onChangeText={setindikator}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

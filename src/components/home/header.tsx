@@ -1,10 +1,10 @@
 import { Env } from '@env';
 import { Link } from 'expo-router';
 
-import { type User } from '@/api';
+import { type UserPegawai } from '@/api';
 import { Image, Text, View } from '@/components/ui';
 
-export default function Header({ data }: { data: User | null }) {
+export default function Header({ data }: { data: UserPegawai | null }) {
   if (!data) {
     return null;
   }

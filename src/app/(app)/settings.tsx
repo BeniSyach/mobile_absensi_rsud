@@ -26,7 +26,7 @@ export default function Settings() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
 
       <ScrollView className="flex-1">
         <View className="flex-1 px-4">

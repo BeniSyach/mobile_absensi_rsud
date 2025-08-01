@@ -10,7 +10,7 @@ import { SafeAreaView, ScrollView, Text, View } from '@/components/ui';
 export default function PelayananPublik() {
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <Stack.Screen
         options={{
           title: 'Pelayanan-Publik',

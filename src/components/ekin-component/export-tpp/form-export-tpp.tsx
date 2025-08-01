@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 import { Buffer } from 'buffer';
 import * as FileSystem from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -78,42 +78,41 @@ export default function FormExportTPP({ onPreview }: FormExportTPPProps) {
 
   const handleExport = async () => {
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Izin diperlukan',
-          'Akses penyimpanan diperlukan untuk mengunduh file.'
-        );
-        return;
-      }
-
+      // 1. Fetch data dalam bentuk ArrayBuffer
       const response = await ExportTPPPegawai.fetcher({
         nik: storedMessage?.nik ?? '',
         bulan: parseInt(bulan, 10),
         tahun: new Date().getFullYear(),
       });
 
+      // 2. Ubah ke base64
       const base64Data = Buffer.from(response).toString('base64');
 
-      const fileName = `export-tpp-${Date.now()}.pdf`;
-      const fileUri = `${FileSystem.documentDirectory}${fileName}`; // ⬅️ Ubah ke documentDirectory
+      // 3. Simpan sementara ke file cache
+      const fileUri = `${FileSystem.cacheDirectory}temp-spt-${Date.now()}.pdf`;
 
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      const info = await FileSystem.getInfoAsync(fileUri);
-      if (!info.exists) {
-        throw new Error('File tidak ditemukan.');
+      // 4. Cek apakah fitur sharing tersedia
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(
+          'Tidak tersedia',
+          'Fitur membuka file tidak tersedia di perangkat ini'
+        );
+        return;
       }
 
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
-      await MediaLibrary.createAlbumAsync('Download', asset, false);
-
-      Alert.alert('Sukses', 'File berhasil diunduh dan disimpan ke galeri.');
+      // 5. Buka file PDF melalui sharing (akan tampil pilihan aplikasi PDF viewer)
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Buka file PDF',
+      });
     } catch (err) {
-      console.error('Export error detail:', err); // ⬅️ log detail error
-      Alert.alert('Gagal', 'Terjadi kesalahan saat mengunduh file.');
+      console.error('Gagal membuka PDF:', err);
+      Alert.alert('Gagal', 'Terjadi kesalahan saat membuka file PDF');
     }
   };
   return (

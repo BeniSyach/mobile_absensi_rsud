@@ -11,8 +11,8 @@ export default function Feed() {
   const storedMessage = getMessage();
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
+      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <View className="h-48 rounded-b-3xl bg-[#0B3880]">
-        <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
         <Navbar />
         <View className="items-center justify-center">
           <Image
