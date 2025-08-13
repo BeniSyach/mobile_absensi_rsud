@@ -10,5 +10,6 @@ export const UseProfileEkin = createQuery<UserDataEkin, void, AxiosError>({
     client({
       url: '/ekinerja/profile',
       method: 'GET',
+      params: { _t: Date.now() },
     }).then((response) => response.data),
 });

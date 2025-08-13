@@ -12,6 +12,8 @@ export default function PegawaiEkin() {
   const storedMessage = getMessage();
   const { data: dataProfile, error } = UseProfileEkin();
 
+  console.log('data pegawai', dataProfile);
+
   if (error) {
     return (
       <Text className="text-red-500">

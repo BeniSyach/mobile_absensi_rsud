@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 export const schema = z.object({
   tipe_absensi: z.string({ required_error: 'Tipe Absensi Tidak Boleh Kosong' }),
-  shift_id: z.string({ required_error: 'Shift Tidak Boleh Kosong' }),
+  shift_id: z.union([
+    z.string({ required_error: 'Shift Tidak Boleh Kosong' }),
+    z.number(),
+  ]),
   waktu_kerja_id: z.string({ required_error: 'Hari Kerja Tidak Boleh Kosong' }),
   photo: z.object(
     {

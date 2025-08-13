@@ -6,6 +6,7 @@ export interface PutRhkStaffVariables {
   uraian: string;
   nilai: number;
   tahun: number;
+  id_satuan: number;
 }
 
 export type PutRhkStaff = {

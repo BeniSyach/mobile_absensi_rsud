@@ -34,7 +34,7 @@ export default function Ekin() {
         <ScrollView className="z-0 flex-1">
           <MenuKegiatanHarianSaya data={dashboardPegawai} />
           <MenuKegiatanHarianBawahan data={dashboardPegawaiBawahan} />
-          <MenuUtama />
+          <MenuUtama data={storedMessage} />
         </ScrollView>
       </ImageBackground>
     </SafeAreaView>

@@ -18,7 +18,9 @@ import {
 import { AlertModal } from '@/components/title-second';
 import {
   Button,
+  type OptionType,
   ScrollView,
+  Select,
   showErrorMessage,
   Text,
   View,
@@ -37,6 +39,17 @@ interface Props {
   };
 }
 
+const currentYear = new Date().getFullYear();
+
+// Buat array tahun dari -3 sampai +3 dari tahun sekarang
+const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
+  const year = currentYear - 3 + i;
+  return {
+    label: year.toString(),
+    value: year.toString(),
+  };
+});
+
 export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
   const router = useRouter();
   const storedMessage = getMessage();
@@ -46,7 +59,7 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
   const [rhkStaff, setRhkStaff] = useState('');
   const [indikator, setIndikator] = useState('');
   const [target, setTarget] = useState('');
-  const tahunSekarang = new Date().getFullYear();
+  const [tahun, setTahun] = useState<string>(currentYear.toString());
   const { mutateAsync: putRHK, isPending: isPosting } = PutRHKStaff();
   const fetchOptionOPDsWithQuery = async (page: number) => {
     try {
@@ -100,7 +113,8 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
       indikator: indikator,
       uraian: rhkStaff,
       nilai: Number(target),
-      tahun: Number(tahunSekarang),
+      tahun: Number(tahun),
+      id_satuan: Number(satuan),
     };
 
     try {
@@ -209,6 +223,13 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
             placeholder="Pilih Satuan..."
             debounceMs={400}
             fetchOptions={fetchOptionSatuansWithQuery}
+          />
+          <Select
+            label="Tahun"
+            placeholder="Pilih Tahun"
+            options={tahunOptions}
+            value={tahun}
+            onSelect={(value) => setTahun(String(value))}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

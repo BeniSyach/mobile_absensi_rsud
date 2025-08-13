@@ -8,6 +8,7 @@ type Variables = {
   page?: number;
   limit?: number;
   nik?: string;
+  search?: string;
 };
 
 export const useRhkPejabatChildByNik = createQuery<

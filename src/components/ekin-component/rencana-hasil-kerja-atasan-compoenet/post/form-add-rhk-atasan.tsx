@@ -5,21 +5,40 @@ import { useState } from 'react';
 import { TextInput } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
-import { type CreateRHKPejabatPayload, type UserDataEkin } from '@/api';
+import {
+  type CreateRHKPejabatPayload,
+  GetSatuanEkin,
+  type Satuan,
+  type UserDataEkin,
+} from '@/api';
 import { PostRHKPejabat } from '@/api/ekin/rhk-pejabat/post-rhk-pejabat';
 import { AlertModal } from '@/components/title-second';
 import {
   Button,
+  type OptionType,
   ScrollView,
+  Select,
   showErrorMessage,
   Text,
   View,
 } from '@/components/ui';
+import { RemoteSelect } from '@/components/ui/remote-select';
 import { getMessage } from '@/lib';
 
 interface Props {
   data: UserDataEkin | undefined;
 }
+
+const currentYear = new Date().getFullYear();
+
+// Buat array tahun dari -3 sampai +3 dari tahun sekarang
+const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
+  const year = currentYear - 3 + i;
+  return {
+    label: year.toString(),
+    value: year.toString(),
+  };
+});
 
 export default function FormAddRHKAtasan({ data }: Props) {
   const router = useRouter();
@@ -27,8 +46,29 @@ export default function FormAddRHKAtasan({ data }: Props) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [rhkStaff, setRhkStaff] = useState('');
   const [indikator, setindikator] = useState('');
-
+  const [nilai, setNilai] = useState('');
+  const [tahun, setTahun] = useState<string>(currentYear.toString());
+  const [idSatuan, setIdSatuan] = useState<string>('');
   const { mutateAsync: postRHK, isPending: isPosting } = PostRHKPejabat();
+
+  const fetchOptionSatuansWithQuery = async (page: number, search: string) => {
+    try {
+      const data = await GetSatuanEkin.fetcher({
+        page,
+        limit: 20,
+        search: search || undefined,
+      });
+      return (
+        data.data?.map((item: Satuan) => ({
+          label: item.satuan || '',
+          value: item.id,
+        })) || []
+      );
+    } catch (error) {
+      console.error('Error fetching RHK staff:', error);
+      return [];
+    }
+  };
 
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
@@ -43,6 +83,9 @@ export default function FormAddRHKAtasan({ data }: Props) {
       uraian: rhkStaff,
       nik: storedMessage?.nik ?? '',
       indikator,
+      nilai: Number(nilai),
+      tahun: Number(tahun),
+      id_satuan: Number(idSatuan),
     };
 
     try {
@@ -116,6 +159,30 @@ export default function FormAddRHKAtasan({ data }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={indikator}
             onChangeText={setindikator}
+          />
+
+          <Text className="mb-2 text-lg font-semibold text-black">Target</Text>
+          <TextInput
+            className="mb-2 rounded-lg border p-2 py-4"
+            placeholder="Target Rencana Hasil Kerja"
+            value={nilai}
+            onChangeText={setNilai}
+            keyboardType="number-pad"
+          />
+          <RemoteSelect
+            label="Satuan"
+            value={idSatuan}
+            onSelect={(val) => setIdSatuan(val as string)}
+            placeholder="Pilih Satuan..."
+            debounceMs={400}
+            fetchOptions={fetchOptionSatuansWithQuery}
+          />
+          <Select
+            label="Tahun"
+            placeholder="Pilih Tahun"
+            options={tahunOptions}
+            value={tahun}
+            onSelect={(value) => setTahun(String(value))}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

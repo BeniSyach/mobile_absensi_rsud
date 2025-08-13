@@ -42,7 +42,6 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
       if (error?.response) {
         const status = error.response.status;
         const data = error.response.data;
-
         if (status === 413) {
           errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
         } else if (status === 422) {
@@ -57,13 +56,13 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
           errorMessage = data;
         } else if (data?.error) {
           errorMessage = data.error;
-        } else if (data?.messages) {
+        } else if (data?.message) {
           errorMessage = data.messages;
         } else if (data?.error) {
           errorMessage = data.error;
         }
-      } else if (error?.error) {
-        errorMessage = error.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
 
       showErrorMessage(errorMessage);

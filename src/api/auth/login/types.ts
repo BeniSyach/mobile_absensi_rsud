@@ -16,6 +16,8 @@ export interface UserPegawai {
   kode_jenis_pegawai: string;
   nama_jenis_pegawai: string;
   shift_absen_id: number;
+  kode_eselon: string;
+  nama_eselon: string;
 }
 
 export interface LoginResponse {

@@ -6,6 +6,7 @@ export interface PostRhkStaffVariables {
   nilai: number;
   tahun: number;
   nik: string;
+  id_satuan: number;
 }
 
 export type PostRhkStaff = {

@@ -1,6 +1,8 @@
+/* eslint-disable max-lines-per-function */
 import React from 'react';
 import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
+// import VersionCheck from 'react-native-version-check';
 import Footer from '@/components/home/footer';
 import MenuUtama from '@/components/home/menu-utama';
 import Navbar from '@/components/home/navbar';
@@ -9,6 +11,41 @@ import { getMessage } from '@/lib';
 
 export default function Feed() {
   const storedMessage = getMessage();
+  // useEffect(() => {
+  //   const checkForUpdate = async () => {
+  //     try {
+  //       const currentVersion = VersionCheck.getCurrentVersion(); // versi dari app lokal
+  //       const latestVersion = await VersionCheck.getLatestVersion(); // versi dari Play Store
+  //       console.log('currentVersion', currentVersion);
+  //       console.log('latestVersion', latestVersion);
+  //       const updateNeeded = await VersionCheck.needUpdate({
+  //         currentVersion,
+  //         latestVersion,
+  //       });
+  //       console.log('updateNeeded', updateNeeded);
+  //       if (updateNeeded?.isNeeded) {
+  //         Alert.alert(
+  //           'Update Tersedia',
+  //           'Versi baru tersedia. Perbarui aplikasi dari Play Store untuk melanjutkan.',
+  //           [
+  //             {
+  //               text: 'Perbarui Sekarang',
+  //               onPress: () => Linking.openURL(updateNeeded.storeUrl),
+  //             },
+  //             {
+  //               text: 'Nanti Saja',
+  //               style: 'cancel',
+  //             },
+  //           ]
+  //         );
+  //       }
+  //     } catch (err) {
+  //       console.warn('Gagal memeriksa versi:', err);
+  //     }
+  //   };
+
+  //   checkForUpdate();
+  // }, []);
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
       <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />

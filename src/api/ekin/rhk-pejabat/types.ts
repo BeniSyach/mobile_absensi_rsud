@@ -68,6 +68,9 @@ export interface CreateRHKPejabatPayload {
   uraian: string;
   nik: string;
   indikator: string;
+  nilai: number;
+  tahun: number;
+  id_satuan: number;
 }
 
 export interface UpdateRHKPejabatPayload {
@@ -77,4 +80,7 @@ export interface UpdateRHKPejabatPayload {
   uraian: string;
   id: number;
   indikator: string;
+  nilai: number;
+  tahun: number;
+  id_satuan: number;
 }

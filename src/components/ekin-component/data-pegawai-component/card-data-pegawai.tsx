@@ -59,6 +59,7 @@ export default function CardDataPegawaiComponent({
                     pangkat: dataProfileEkin?.detail_pegawai.data.pangkat_id,
                     golongan:
                       dataProfileEkin?.detail_pegawai.data.golongan_ruang_id,
+                    eselon: dataProfileEkin?.detail_pegawai.data.nama_eselon,
                     atasan: dataProfileEkin?.atasan.nik,
                   },
                 })
@@ -91,6 +92,10 @@ export default function CardDataPegawaiComponent({
           {renderField('Jabatan', dataProfileEkin?.jabatan)}
           {renderField('Pangkat', dataProfileEkin?.pangkat)}
           {renderField('Golongan', dataProfileEkin?.golongan)}
+          {renderField(
+            'Eselon',
+            dataProfileEkin?.detail_pegawai.data.nama_eselon
+          )}
           {renderField('Atasan', dataProfileEkin?.atasan.nama)}
           {renderField('Status Pegawai', user.data.nama_jenis_pegawai)}
         </View>

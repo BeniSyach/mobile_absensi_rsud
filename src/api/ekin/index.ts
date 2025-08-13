@@ -1,4 +1,5 @@
 export * from './add-kegiatan';
+export * from './add-kegiatan-pejabat';
 export * from './dashboard';
 export * from './delete-rhk-staff';
 export * from './edit-atasan';

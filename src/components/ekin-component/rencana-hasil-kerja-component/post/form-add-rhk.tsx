@@ -6,17 +6,22 @@ import { TextInput } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import {
+  GetRhkStaffChild,
   GetSatuanEkin,
   PostRHKStaff,
   type PostRhkStaffVariables,
   type RhkPejabatItem,
+  type RhkStaffChildItem,
   type Satuan,
+  useGetUser,
   useRhkPejabatChildByNik,
 } from '@/api';
 import { AlertModal } from '@/components/title-second';
 import {
   Button,
+  type OptionType,
   ScrollView,
+  Select,
   showErrorMessage,
   Text,
   View,
@@ -28,7 +33,19 @@ interface Props {
   dataAtasan: string;
 }
 
+const currentYear = new Date().getFullYear();
+
+// Buat array tahun dari -3 sampai +3 dari tahun sekarang
+const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
+  const year = currentYear - 3 + i;
+  return {
+    label: year.toString(),
+    value: year.toString(),
+  };
+});
+
 export default function FormAddRHK({ dataAtasan }: Props) {
+  const { data: user } = useGetUser(dataAtasan ?? '');
   const router = useRouter();
   const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -37,25 +54,45 @@ export default function FormAddRHK({ dataAtasan }: Props) {
   const [rhkStaff, setRhkStaff] = useState('');
   const [indikator, setIndikator] = useState('');
   const [target, setTarget] = useState('');
-  const tahunSekarang = new Date().getFullYear();
-
+  const [tahun, setTahun] = useState<string>(currentYear.toString());
   const { mutateAsync: postRHK, isPending: isPosting } = PostRHKStaff();
 
-  const fetchOptionOPDsWithQuery = async (page: number) => {
+  const isSekda =
+    user?.data?.nama_eselon === 'II.a' || user?.data?.nama_eselon === 'II/a';
+  const isKadis =
+    user?.data?.nama_eselon === 'II.b' || user?.data?.nama_eselon === 'II/b';
+
+  const fetchOptionRHKsWithQuery = async (page: number) => {
     try {
-      const data = await useRhkPejabatChildByNik.fetcher({
-        page,
-        limit: 20,
-        nik: dataAtasan,
-      });
-      return (
-        data.data?.map((item: RhkPejabatItem) => ({
-          label: item.rhk_pejabat.uraian,
-          value: item.id_rhk_pejabat,
-        })) || []
-      );
+      if (isSekda || isKadis) {
+        const data = await useRhkPejabatChildByNik.fetcher({
+          page,
+          limit: 20,
+          nik: dataAtasan,
+        });
+
+        return (
+          data.data?.map((item: RhkPejabatItem) => ({
+            label: item.rhk_pejabat.uraian || '',
+            value: item.id_rhk_pejabat,
+          })) || []
+        );
+      } else {
+        const data = await GetRhkStaffChild.fetcher({
+          page,
+          limit: 20,
+          nik: dataAtasan,
+        });
+
+        return (
+          data.data?.map((item: RhkStaffChildItem) => ({
+            label: item.rhk_staff.uraian || '',
+            value: item.id_rhk_staff,
+          })) || []
+        );
+      }
     } catch (error) {
-      console.error('Error fetching RHK staff:', error);
+      console.error('Error fetching RHK:', error);
       return [];
     }
   };
@@ -92,7 +129,8 @@ export default function FormAddRHK({ dataAtasan }: Props) {
       indikator: indikator,
       uraian: rhkStaff,
       nilai: Number(target),
-      tahun: Number(tahunSekarang),
+      tahun: Number(tahun),
+      id_satuan: Number(satuan),
     };
 
     try {
@@ -157,7 +195,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             onSelect={(val) => setRhkAtasan(val as string)}
             placeholder="Pilih Rencana Hasil Kerja Atasan..."
             debounceMs={400}
-            fetchOptions={fetchOptionOPDsWithQuery}
+            fetchOptions={fetchOptionRHKsWithQuery}
           />
           <Text className="mb-2 text-lg font-semibold text-black">
             Rencana Hasil Kerja
@@ -192,6 +230,13 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             placeholder="Pilih Satuan..."
             debounceMs={400}
             fetchOptions={fetchOptionSatuansWithQuery}
+          />
+          <Select
+            label="Tahun"
+            placeholder="Pilih Tahun"
+            options={tahunOptions}
+            value={tahun}
+            onSelect={(value) => setTahun(String(value))}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

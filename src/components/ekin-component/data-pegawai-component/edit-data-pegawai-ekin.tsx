@@ -6,10 +6,13 @@ import { TextInput, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import {
+  type Eselon,
   type GolonganRuangSimpeg,
   type JabatanSimpeg,
   type PangkatSimpeg,
   type Pegawai,
+  PutPegawai,
+  type PutPegawaiVariables,
   type UnitKerjaSimpeg,
   UpdateAtasanUser,
   type UpdateAtasanVariables,
@@ -19,6 +22,7 @@ import {
   usePegawaiSimpeg,
   useUnitKerjaSimpeg,
 } from '@/api';
+import { useEselonSimpeg } from '@/api';
 import { AlertModal } from '@/components/title-second';
 import { Button, ScrollView, showErrorMessage, Text } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
@@ -42,6 +46,7 @@ interface EditDataPegawaiProps {
 export default function EditDataPegawaiEkin({
   dataProfileEdit,
 }: EditDataPegawaiProps) {
+  console.log('data profile', dataProfileEdit);
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [namaLengkap, setNamaLengkap] = useState('');
@@ -52,9 +57,13 @@ export default function EditDataPegawaiEkin({
   const [pangkat, setPangkat] = useState('');
   const [golongan, setGolongan] = useState('');
   const [atasan, setAtasan] = useState('');
+  const [eselon, setEselon] = useState('');
 
   const { mutateAsync: updateAtasan, isPending: isPosting } =
     UpdateAtasanUser();
+
+  const { mutateAsync: updatePegawai, isPending: isPostingPegawai } =
+    PutPegawai();
 
   useEffect(() => {
     if (dataProfileEdit?.nama) {
@@ -126,6 +135,25 @@ export default function EditDataPegawaiEkin({
     }
   };
 
+  const fetchOptionEselonsWithQuery = async (page: number, search: string) => {
+    try {
+      const data = await useEselonSimpeg.fetcher({
+        page,
+        limit: 20,
+        search: search,
+      });
+      return (
+        data.data?.map((item: Eselon) => ({
+          label: item.nama_eselon,
+          value: item.kode_eselon,
+        })) || []
+      );
+    } catch (error) {
+      console.error('Error fetching RHK staff:', error);
+      return [];
+    }
+  };
+
   const fetchOptionAtasansWithQuery = async (page: number, search: string) => {
     try {
       const data = await usePegawaiSimpeg.fetcher({
@@ -179,8 +207,23 @@ export default function EditDataPegawaiEkin({
       nik_atasan: atasan,
     };
     try {
-      const response = await updateAtasan(payload);
-      console.log('✅ Data berhasil dikirim:', response);
+      // 1️⃣ Update Atasan
+      const responseAtasan = await updateAtasan(payload);
+      console.log('✅ Data atasan berhasil dikirim:', responseAtasan);
+
+      // 2️⃣ Jika sukses, lanjut update pegawai
+      const payloadPegawai: PutPegawaiVariables = {
+        nama: dataProfileEdit?.nama ?? '',
+        nip: dataProfileEdit?.nip ?? '',
+        pangkat_id: pangkat ?? '',
+        golongan_ruang_id: golongan ?? '',
+        jabatan_id: jabatan ?? '',
+        eselon_id: eselon ?? '',
+        nik: dataProfileEdit?.nik ?? '',
+      };
+
+      const responsePegawai = await updatePegawai(payloadPegawai);
+      console.log('✅ Data pegawai berhasil dikirim:', responsePegawai);
 
       showMessage({
         message: 'Data Berhasil Di Edit.',
@@ -215,8 +258,8 @@ export default function EditDataPegawaiEkin({
         } else if (data?.error) {
           errorMessage = data.error;
         }
-      } else if (error?.error) {
-        errorMessage = error.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
 
       showErrorMessage(errorMessage);
@@ -284,6 +327,14 @@ export default function EditDataPegawaiEkin({
           fetchOptions={fetchOptionGolongansWithQuery}
         />
         <RemoteSelect
+          label="Eselon"
+          value={eselon}
+          onSelect={(val) => setEselon(val as string)}
+          placeholder="Pilih Eselon..."
+          debounceMs={400}
+          fetchOptions={fetchOptionEselonsWithQuery}
+        />
+        <RemoteSelect
           label="Atasan"
           value={atasan}
           onSelect={(val) => setAtasan(val as string)}
@@ -298,7 +349,7 @@ export default function EditDataPegawaiEkin({
             variant="secondary"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
-            disabled={isPosting}
+            disabled={isPosting || isPostingPegawai}
           />
           <Button
             label="Batal"
