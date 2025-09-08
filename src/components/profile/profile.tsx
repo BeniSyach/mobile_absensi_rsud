@@ -2,8 +2,9 @@
 import { Env } from '@env';
 import * as FileSystem from 'expo-file-system';
 import { useEffect, useState } from 'react';
-import { Modal, TouchableOpacity } from 'react-native';
+import { Modal, Platform, TouchableOpacity } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
 import {
@@ -12,25 +13,24 @@ import {
   queryClient,
   type UseFaceUserResponse,
 } from '@/api';
-import CameraCapture from '@/app/setting-app/upload-foto/camera-capture';
+import FaceRegisterCPU from '@/app/setting-app/upload-foto/camera-capture';
 import { Button, Image, Pressable, Text, View } from '@/components/ui';
 import { useAuth } from '@/lib';
 
 interface Props {
   user?: ApiResponse;
   photo?: UseFaceUserResponse;
-  isloading: boolean; // pakai ini untuk progress
-  isErrorAPI: boolean; // pakai ini untuk fallback foto default
+  isloading: boolean;
+  isErrorAPI: boolean;
 }
 
-// helper: pastikan folder tujuan ada
-async function ensureFilePath(localPath: string) {
-  const folder = localPath.substring(0, localPath.lastIndexOf('/') + 1);
-  const folderInfo = await FileSystem.getInfoAsync(folder);
-  if (!folderInfo.exists) {
-    await FileSystem.makeDirectoryAsync(folder, { intermediates: true });
-  }
-}
+// Inisialisasi MMKV storage
+const storage = new MMKV({
+  id: 'face-auth',
+});
+
+const FACE_URI_KEY = 'face_photo_uri';
+const FACE_EMBED_KEY = 'face_embedding';
 
 export default function ProfileCard({
   user,
@@ -39,10 +39,10 @@ export default function ProfileCard({
   isErrorAPI,
 }: Props) {
   const [showCamera, setShowCamera] = useState(false);
-  const [photos, setPhotos] = useState<string[]>([]);
   const [photoUri, setPhotoUri] = useState<string>(
     'https://dummyimage.com/80x80'
   );
+  const [embedding, setEmbedding] = useState<Float32Array | null>(null);
   const [progress, setProgress] = useState(0);
 
   const { mutateAsync, isPending, isError } = postFaceRecognition();
@@ -60,7 +60,11 @@ export default function ProfileCard({
           'profile-uploads/' +
           `${photo.photo_path}.jpg`;
 
-        await ensureFilePath(localPath);
+        const folder = localPath.substring(0, localPath.lastIndexOf('/') + 1);
+        const folderInfo = await FileSystem.getInfoAsync(folder);
+        if (!folderInfo.exists) {
+          await FileSystem.makeDirectoryAsync(folder, { intermediates: true });
+        }
 
         await FileSystem.downloadAsync(remoteUrl, localPath, {
           headers: { Authorization: `Bearer ${token}` },
@@ -76,17 +80,80 @@ export default function ProfileCard({
     loadProfilePhoto();
   }, [photo?.photo_path, token]);
 
+  // load dari MMKV jika sudah ada
+  useEffect(() => {
+    const savedUri = storage.getString(FACE_URI_KEY);
+    const savedEmbedding = storage.getString(FACE_EMBED_KEY);
+
+    if (savedUri) setPhotoUri(savedUri);
+    if (savedEmbedding) {
+      const arr = JSON.parse(savedEmbedding) as number[];
+      setEmbedding(new Float32Array(arr));
+    }
+  }, []);
+
+  // handle hasil FaceRegisterCPU
+  const handleRegister = async (
+    faceEmbedding: Float32Array | null,
+    capturedUri?: string
+  ) => {
+    if (faceEmbedding && capturedUri) {
+      let localUri = capturedUri;
+
+      // simpan foto di Android secara lokal
+      if (Platform.OS === 'android') {
+        const fileName = `face_${Date.now()}.jpg`;
+        const newPath = `${FileSystem.documentDirectory}${fileName}`;
+        try {
+          await FileSystem.copyAsync({
+            from: capturedUri,
+            to: newPath,
+          });
+          localUri = newPath;
+          console.log('✅ Foto tersimpan di Android:', localUri);
+        } catch (err) {
+          console.error('❌ Gagal simpan foto:', err);
+        }
+      }
+
+      setPhotoUri(localUri);
+      setEmbedding(faceEmbedding);
+      setShowCamera(false);
+
+      // Simpan ke MMKV
+      storage.set(FACE_URI_KEY, localUri);
+      storage.set(FACE_EMBED_KEY, JSON.stringify(Array.from(faceEmbedding)));
+
+      console.log('✅ Embedding wajah tersimpan:', faceEmbedding);
+      showMessage({
+        message: 'Wajah berhasil didaftarkan dan tersimpan lokal',
+        type: 'success',
+        duration: 5000,
+      });
+    } else {
+      console.log('⚠️ Registrasi gagal / tidak senyum');
+      setShowCamera(false);
+      showMessage({
+        message: 'Gagal mendaftar wajah',
+        type: 'danger',
+        duration: 5000,
+      });
+    }
+  };
+
   const handleUpload = async () => {
-    if (photos.length === 0) return;
+    if (!photoUri || !embedding) return;
 
     try {
       await mutateAsync({
         nik: user?.data?.nik ? user.data.nik.toString() : '-',
-        photos: photos.map((uri, idx) => ({
-          uri,
-          type: 'image/jpeg',
-          name: `photo_${idx + 1}.jpg`,
-        })),
+        photos: [
+          {
+            uri: photoUri,
+            type: 'image/jpeg',
+            name: `face_${Date.now()}.jpg`,
+          },
+        ],
       });
       queryClient.invalidateQueries({ queryKey: ['useFaceRecognition'] });
       showMessage({
@@ -121,7 +188,6 @@ export default function ProfileCard({
               }
             }}
           />
-
           {/* Overlay progress */}
           {isloading && (
             <View className="absolute size-32 items-center justify-center rounded-full bg-white/70">
@@ -167,19 +233,13 @@ export default function ProfileCard({
               </Text>
             </TouchableOpacity>
 
-            <CameraCapture
-              onCaptureBatch={(uris) => {
-                setPhotos(uris.map((u) => 'file://' + u));
-                setPhotoUri('file://' + uris[0]);
-                setShowCamera(false);
-              }}
-            />
+            <FaceRegisterCPU onRegister={handleRegister} />
           </View>
         </Modal>
       </View>
 
       {/* Tombol Upload */}
-      {photos.length > 0 && (
+      {photoUri && embedding && (
         <View className="mt-4">
           <Button
             onPress={handleUpload}

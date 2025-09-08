@@ -1,9 +1,16 @@
 /* eslint-disable max-params */
 /* eslint-disable max-lines-per-function */
+import '@tensorflow/tfjs-react-native';
+
+import * as tf from '@tensorflow/tfjs';
+import { decodeJpeg } from '@tensorflow/tfjs-react-native';
+import * as blazeface from '@tensorflow-models/blazeface';
 import { type CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { Camera, CameraIcon, Save } from 'lucide-react-native';
 import * as React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
+import { Alert } from 'react-native';
+import { MMKV } from 'react-native-mmkv';
 
 import { type ApiResponse } from '@/api';
 import { type LastAbsenStatus } from '@/api/absensi/cek-status-absen-user';
@@ -20,6 +27,21 @@ import {
 
 import { type FormType } from './absensi-types';
 import { useAbsensiForm } from './use-absensi-form';
+
+// MMKV storage
+const storage = new MMKV({ id: 'face-auth' });
+const FACE_EMBED_KEY = 'face_embedding';
+
+// Fungsi untuk hitung jarak Euclidean
+function euclideanDistance(a: Float32Array, b: Float32Array) {
+  if (a.length !== b.length) return Infinity;
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) {
+    const diff = a[i] - b[i];
+    sum += diff * diff;
+  }
+  return Math.sqrt(sum);
+}
 
 export type AbsensiFormProps = {
   isPending: boolean;
@@ -50,10 +72,16 @@ interface FormFieldsProps {
   setShowCamera: (show: boolean) => void;
 }
 
-const CameraSection = React.memo<{
+// ===== Camera + Capture Component =====
+interface CameraSectionProps {
   showCamera: boolean;
   handleTakePhoto: (photo: { uri: string; base64: string }) => Promise<void>;
-}>(({ showCamera, handleTakePhoto }) => {
+}
+
+const CameraSectionVerify: React.FC<CameraSectionProps> = ({
+  showCamera,
+  handleTakePhoto,
+}) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing] = React.useState<CameraType>('front');
   const cameraRef = React.useRef<CameraView>(null);
@@ -80,9 +108,9 @@ const CameraSection = React.memo<{
       try {
         const photo = (await cameraRef.current.takePictureAsync({
           base64: true,
-          quality: 0.2, // lebih ringan tapi wajah tetap jelas
+          quality: 0.2,
           exif: false,
-          skipProcessing: true, // bisa bikin capture lebih cepat
+          skipProcessing: true,
         })) as { uri: string; base64: string };
 
         await handleTakePhoto({
@@ -108,8 +136,103 @@ const CameraSection = React.memo<{
       </CameraView>
     </View>
   );
-});
-CameraSection.displayName = 'CameraSection';
+};
+
+interface FaceVerifyScreenProps {
+  showCamera: boolean;
+  handleTakePhoto: (photo: { uri: string; base64: string }) => Promise<void>;
+}
+
+export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
+  showCamera,
+  handleTakePhoto,
+}) => {
+  const [verifying, setVerifying] = React.useState(false);
+  const [blazefaceModel, setBlazefaceModel] =
+    React.useState<blazeface.BlazeFaceModel | null>(null);
+
+  React.useEffect(() => {
+    const loadModel = async () => {
+      await tf.ready();
+      const model = await blazeface.load();
+      setBlazefaceModel(model);
+      console.log('✅ BlazeFace ready');
+    };
+    loadModel();
+  }, []);
+
+  const onVerifyPhoto = async (photo: { uri: string; base64: string }) => {
+    if (!blazefaceModel) return;
+    setVerifying(true);
+    try {
+      const response = await fetch(photo.uri);
+      const buffer = await response.arrayBuffer();
+      const imageTensor = decodeJpeg(new Uint8Array(buffer));
+
+      const predictions = await blazefaceModel.estimateFaces(
+        imageTensor,
+        false
+      );
+      imageTensor.dispose();
+
+      if (!predictions.length) {
+        Alert.alert('Verifikasi gagal', 'Wajah tidak terdeteksi');
+        setVerifying(false);
+        return;
+      }
+
+      const topLeft = predictions[0].topLeft as [number, number];
+      const bottomRight = predictions[0].bottomRight as [number, number];
+      const newEmbedding = new Float32Array([...topLeft, ...bottomRight]);
+
+      const savedStr = storage.getString(FACE_EMBED_KEY);
+      if (!savedStr) {
+        Alert.alert('Verifikasi gagal', 'Belum ada wajah tersimpan');
+        setVerifying(false);
+        return;
+      }
+
+      const savedEmbedding = new Float32Array(JSON.parse(savedStr));
+      const distance = euclideanDistance(newEmbedding, savedEmbedding);
+      const THRESHOLD = 10;
+
+      if (distance <= THRESHOLD) {
+        Alert.alert('Verifikasi sukses', 'Wajah sesuai');
+      } else {
+        Alert.alert('Verifikasi gagal', 'Wajah tidak cocok');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Verifikasi gagal', 'Terjadi kesalahan');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <View className="flex-1">
+      {showCamera && !verifying && (
+        <CameraSectionVerify
+          showCamera={showCamera}
+          handleTakePhoto={async (photo) => {
+            await handleTakePhoto(photo); // dari parent
+            await onVerifyPhoto(photo); // proses verifikasi di sini
+          }}
+        />
+      )}
+      {verifying && (
+        <View className="flex-1 items-center justify-center">
+          <Text>Memverifikasi wajah...</Text>
+        </View>
+      )}
+      {!showCamera && !verifying && (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-xl font-bold">✅ Verifikasi selesai</Text>
+        </View>
+      )}
+    </View>
+  );
+};
 
 // ImagePreview component
 const ImagePreview = React.memo<{
@@ -268,7 +391,7 @@ const FormFields = React.memo<FormFieldsProps>(
           icon={<CameraIcon size={20} color={'white'} />}
           variant="outline"
         />
-        <CameraSection
+        <FaceVerifyScreen
           showCamera={showCamera}
           handleTakePhoto={handleTakePhoto}
         />

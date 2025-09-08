@@ -1,253 +1,191 @@
 /* eslint-disable max-lines-per-function */
+import '@tensorflow/tfjs-react-native';
+
+import * as tf from '@tensorflow/tfjs';
+import { decodeJpeg } from '@tensorflow/tfjs-react-native';
+import * as blazeface from '@tensorflow-models/blazeface';
+import { Camera, CameraView } from 'expo-camera';
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  Camera,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
-import {
-  type Face,
-  type FaceDetectionOptions,
-  useFaceDetector,
-} from 'react-native-vision-camera-face-detector';
-import { useSharedValue, Worklets } from 'react-native-worklets-core';
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-type Step = 'smile' | 'left' | 'right' | 'done';
+interface FaceRegisterProps {
+  onRegister: (embedding: Float32Array | null, photoUri?: string) => void;
+}
 
-export default function CameraCapture({
-  onCaptureBatch,
-}: {
-  onCaptureBatch: (uris: string[]) => void;
-}) {
-  const [captures, setCaptures] = useState<string[]>([]);
-  const [step, setStep] = useState<Step>('smile');
-  const lastProcessed = useSharedValue(0);
-  const stableCounter = useSharedValue(0);
+interface CapturedPhoto {
+  uri: string;
+}
+
+const FaceRegisterCPU: React.FC<FaceRegisterProps> = ({ onRegister }) => {
   const [hasPermission, setHasPermission] = useState(false);
+  const [tfReady, setTfReady] = useState(false);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [captured, setCaptured] = useState<CapturedPhoto | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  const [faceBox, setFaceBox] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    valid: boolean;
-  } | null>(null);
-
-  const faceDetectionOptions = useRef<FaceDetectionOptions>({
-    landmarkMode: 'none',
-    classificationMode: 'all',
-    performanceMode: 'fast',
-  }).current;
-
-  const device = useCameraDevice('front');
-  const camera = useRef<Camera>(null);
-  const MIN_FACE_WIDTH = 80; // sebelumnya 100
-  const MIN_FACE_HEIGHT = 80; // sebelumnya 100
-  const CENTER_TOLERANCE = 0.3; // sebelumnya 0.2
-  const REQUIRED_STABLE_FRAMES = 3; // tetap
-
-  const { detectFaces, stopListeners } = useFaceDetector(faceDetectionOptions);
+  const cameraRef = useRef<CameraView | null>(null);
+  const blazefaceModel = useRef<blazeface.BlazeFaceModel | null>(null);
 
   useEffect(() => {
-    const requestPermission = async () => {
-      const status = await Camera.requestCameraPermission();
-      setHasPermission(status === 'granted');
+    const init = async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setHasPermission(status === 'granted');
+
+        await tf.ready();
+        await tf.setBackend('cpu');
+
+        blazefaceModel.current = await blazeface.load();
+        setModelLoaded(true);
+        setTfReady(true);
+      } catch (e) {
+        console.error('Init error:', e);
+        Alert.alert('Error', 'Gagal inisialisasi kamera / TensorFlow');
+        onRegister(null);
+      }
     };
-    requestPermission();
-    return () => stopListeners();
+    init();
   }, []);
 
-  const isFaceValid = (face: Face, frameWidth: number, frameHeight: number) => {
-    if (!face.bounds) return false;
-    const { width, height, x, y } = face.bounds;
-    if (width < MIN_FACE_WIDTH || height < MIN_FACE_HEIGHT) return false;
+  const detectFaceAndCapture = async (uri: string) => {
+    if (!blazefaceModel.current) return;
 
-    const faceCenterX = x + width / 2;
-    const faceCenterY = y + height / 2;
-    const frameCenterX = frameWidth / 2;
-    const frameCenterY = frameHeight / 2;
-    const toleranceX = frameWidth * CENTER_TOLERANCE;
-    const toleranceY = frameHeight * CENTER_TOLERANCE;
+    try {
+      const response = await fetch(uri);
+      const buffer = await response.arrayBuffer();
+      const imageTensor = decodeJpeg(new Uint8Array(buffer));
 
-    if (
-      Math.abs(faceCenterX - frameCenterX) > toleranceX ||
-      Math.abs(faceCenterY - frameCenterY) > toleranceY
-    )
-      return false;
+      const predictions = await blazefaceModel.current.estimateFaces(
+        imageTensor,
+        false
+      );
+      imageTensor.dispose();
 
-    return true;
+      if (predictions.length > 0) {
+        const topLeft = predictions[0].topLeft as [number, number];
+        const bottomRight = predictions[0].bottomRight as [number, number];
+
+        const embedding = new Float32Array([...topLeft, ...bottomRight]);
+        onRegister(embedding, uri);
+        setCaptured({ uri });
+
+        Alert.alert('Berhasil', 'Foto wajah berhasil diambil!');
+      } else {
+        Alert.alert('Gagal', 'Tidak ada wajah terdeteksi, coba lagi.');
+      }
+    } catch (err) {
+      console.error('Detection error:', err);
+      Alert.alert('Error', 'Gagal memproses foto.');
+    }
   };
 
-  const handleDetectedFaces = Worklets.createRunOnJS(
-    (faces: Face[], frameWidth: number, frameHeight: number) => {
-      if (faces.length === 0) {
-        stableCounter.value = 0;
-        setFaceBox(null);
-        return;
-      }
-
-      const face = faces[0];
-      const valid = isFaceValid(face, frameWidth, frameHeight);
-
-      setFaceBox({
-        x: face.bounds?.x ?? 0,
-        y: face.bounds?.y ?? 0,
-        width: face.bounds?.width ?? 0,
-        height: face.bounds?.height ?? 0,
-        valid,
+  const capturePhoto = async () => {
+    if (!cameraRef.current || isCapturing) return;
+    setIsCapturing(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        base64: false,
+        quality: 0.7,
       });
 
-      if (!valid) {
-        stableCounter.value = 0;
+      if (!photo?.uri) {
+        Alert.alert('Gagal', 'Gagal mengambil foto');
+        setIsCapturing(false);
         return;
       }
 
-      stableCounter.value += 1;
-      if (stableCounter.value < REQUIRED_STABLE_FRAMES) return;
-
-      // step detection
-      if (step === 'smile' && (face.smilingProbability ?? 0) > 0.7) {
-        autoCapture('left');
-      } else if (
-        step === 'left' &&
-        face.yawAngle !== undefined &&
-        face.yawAngle < -20
-      ) {
-        autoCapture('right');
-      } else if (
-        step === 'right' &&
-        face.yawAngle !== undefined &&
-        face.yawAngle > 20
-      ) {
-        autoCapture('done');
-      }
-    }
-  );
-
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
-      'worklet';
-      const now = Date.now();
-      if (now - lastProcessed.value > 400) {
-        lastProcessed.value = now;
-        const faces = detectFaces(frame);
-        handleDetectedFaces(faces, frame.width, frame.height);
-      }
-    },
-    [handleDetectedFaces]
-  );
-
-  const autoCapture = async (nextStep: Step) => {
-    if (!camera.current) return;
-    const photo = await camera.current.takePhoto({
-      flash: 'off',
-      enableShutterSound: true,
-    });
-    const newCaptures = [...captures, photo.path];
-    setCaptures(newCaptures);
-
-    if (newCaptures.length === 3 || nextStep === 'done') {
-      setStep('done'); // pastikan step = done sebelum callback
-      onCaptureBatch(newCaptures); // panggil parent
-    } else {
-      setStep(nextStep);
-    }
-
-    stableCounter.value = 0;
-  };
-
-  const getInstruction = () => {
-    switch (step) {
-      case 'smile':
-        return '🙂 Silakan Senyum';
-      case 'left':
-        return '👉 Hadap Kanan ';
-      case 'right':
-        return '👈 Hadap Kiri';
-      case 'done':
-        return '✅ Selesai! Semua foto terkumpul';
+      await detectFaceAndCapture(photo.uri);
+    } catch (err) {
+      console.error('Capture error:', err);
+      Alert.alert('Error', 'Terjadi kesalahan saat mengambil foto');
+      onRegister(null);
+    } finally {
+      setIsCapturing(false);
     }
   };
 
-  const resetFlow = () => {
-    setStep('smile');
-    setCaptures([]);
-    stableCounter.value = 0;
-    setFaceBox(null);
-  };
-
-  if (!device) return <Text>No Device</Text>;
-  if (!hasPermission)
+  if (!hasPermission) {
     return (
       <View style={styles.center}>
-        <Text>Meminta izin kamera...</Text>
+        <Text style={styles.text}>Meminta izin kamera...</Text>
       </View>
     );
+  }
+
+  if (!tfReady || !modelLoaded) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.text}>Loading Camera...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
-      <Camera
-        ref={camera}
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={step !== 'done' && hasPermission && !!device}
-        photo={true}
-        frameProcessor={frameProcessor}
-      />
-
-      {faceBox && (
-        <View
-          style={{
-            position: 'absolute',
-            left: faceBox.x,
-            top: faceBox.y,
-            width: faceBox.width,
-            height: faceBox.height,
-            borderWidth: 2,
-            borderColor: faceBox.valid ? 'lime' : 'red',
-            borderRadius: 8,
-          }}
+      {!captured ? (
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing="front"
         />
+      ) : (
+        <Image source={{ uri: captured.uri }} style={StyleSheet.absoluteFill} />
       )}
 
       <View style={styles.instructionBox}>
-        <Text style={styles.instructionText}>{getInstruction()}</Text>
-        {step !== 'done' && (
-          <Text style={{ fontSize: 14, marginTop: 4 }}>
-            {captures.length}/3 foto diambil
-          </Text>
-        )}
-
-        {(step === 'done' || captures.length < 3) && (
-          <TouchableOpacity style={styles.resetButton} onPress={resetFlow}>
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>
-              🔄 Ulangi
-            </Text>
+        <Text style={styles.text}>
+          {!captured ? '📷 Siap mengambil foto...' : '✅ Foto diambil!'}
+        </Text>
+        {!captured && (
+          <TouchableOpacity
+            style={[
+              styles.captureButton,
+              isCapturing && { backgroundColor: '#999' },
+            ]}
+            onPress={capturePhoto}
+            disabled={isCapturing}
+          >
+            {isCapturing ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                📸 Ambil Foto
+              </Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  text: { fontSize: 18, color: '#333', textAlign: 'center' },
   instructionBox: {
     position: 'absolute',
     bottom: 60,
     alignSelf: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
-  instructionText: { fontSize: 18, fontWeight: 'bold' },
-  resetButton: {
+  captureButton: {
     marginTop: 10,
     backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 8,
   },
 });
+
+export default FaceRegisterCPU;

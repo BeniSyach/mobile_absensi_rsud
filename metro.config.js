@@ -5,9 +5,15 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
+// Resolver untuk TensorFlow.js
+config.resolver.alias = {
+  ...config.resolver.alias,
+  crypto: 'react-native-crypto-js',
+};
+
 // Tambahan optimisasi release untuk Vision Camera + Worklets + Reanimated
 config.transformer.minifierConfig = {
-  mangle: { toplevel: true },
+  mangle: { toplevel: true, keep_fnames: true },
   compress: {
     unused: true,
     dead_code: true,
@@ -20,6 +26,7 @@ config.transformer.minifierConfig = {
     ascii_only: true,
     comments: false,
   },
+  keep_fnames: true,
 };
 
 // Kalau kamu pakai SVG, aktifkan ini (bisa dihapus kalau tidak pakai SVG)

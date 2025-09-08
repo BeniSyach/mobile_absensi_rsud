@@ -93,7 +93,7 @@ export default function MenuAbsensi() {
           <Button
             label="Absensi"
             variant="outline"
-            className="mx-40 rounded-full bg-[#20A0D8]"
+            className="mx-28 rounded-full bg-[#20A0D8]"
             icon={<Clock size={20} color="white" />}
             size="lg"
             onPress={() =>
