@@ -22,6 +22,7 @@ interface RemoteSelectProps {
   fetchOptions: (page: number, search: string) => Promise<OptionType[]>;
   onSelect: (value: string | number) => void;
   debounceMs?: number;
+  pageSize?: number;
 }
 
 export const RemoteSelect: React.FC<RemoteSelectProps> = ({
@@ -31,6 +32,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
   onSelect,
   placeholder = 'Pilih...',
   debounceMs = 400,
+  pageSize = 20,
 }) => {
   const modal = useModal();
   const { colorScheme } = useColorScheme();
@@ -40,12 +42,14 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
   const [options, setOptions] = React.useState<OptionType[]>([]);
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  const [page, setPage] = React.useState(1);
+  const [currentPage, setCurrentPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
 
   const debounceRef = React.useRef<NodeJS.Timeout>();
   const abortRef = React.useRef<AbortController>();
-  const deferredSearch = React.useDeferredValue(search);
+  const currentSearchRef = React.useRef('');
+  const loadingRef = React.useRef(false);
 
   const selectedLabel = React.useMemo(() => {
     if (!value) return '';
@@ -54,85 +58,149 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
   }, [value, options]);
 
   const cleanup = React.useCallback(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (abortRef.current) abortRef.current.abort();
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = undefined;
+    }
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = undefined;
+    }
+    loadingRef.current = false;
   }, []);
 
   const loadData = React.useCallback(
     async (pageNum: number, searchTerm: string, reset = false) => {
-      if (abortRef.current) abortRef.current.abort();
+      // Prevent multiple simultaneous requests
+      if (loadingRef.current) return;
+
+      // Abort previous request
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
 
       const controller = new AbortController();
       abortRef.current = controller;
+      loadingRef.current = true;
 
       try {
-        setLoading(true);
-        const fetched = await fetchOptions(pageNum, searchTerm);
-
-        if (controller.signal.aborted) return;
-
-        const newOptions = fetched.slice(0, 50); // batas maksimal render
-
         if (reset) {
-          setOptions(newOptions);
-          setPage(2);
+          setLoading(true);
+          setLoadingMore(false);
         } else {
-          setOptions((prev) => [...prev, ...newOptions]);
-          setPage((prev) => prev + 1);
+          setLoadingMore(true);
         }
 
-        setHasMore(newOptions.length >= 20);
+        console.log(
+          'Fetching data - Page:',
+          pageNum,
+          'Search:',
+          searchTerm,
+          'Reset:',
+          reset
+        );
+        const fetched = await fetchOptions(pageNum, searchTerm);
+
+        // Check if request was aborted
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.log('Fetched data:', fetched.length, 'items for page', pageNum);
+
+        if (reset) {
+          setOptions(fetched);
+          setCurrentPage(2); // Next page will be 2
+          setHasMore(fetched.length >= pageSize);
+          console.log('Reset complete, next page will be: 2');
+        } else {
+          setOptions((prev) => {
+            // Avoid duplicates
+            const newOptions = fetched.filter(
+              (newOption) =>
+                !prev.some((prevOption) => prevOption.value === newOption.value)
+            );
+            console.log(
+              'Adding new options:',
+              newOptions.length,
+              'filtered from',
+              fetched.length
+            );
+            return [...prev, ...newOptions];
+          });
+          const nextPage = pageNum + 1;
+          setCurrentPage(nextPage);
+          setHasMore(fetched.length >= pageSize);
+          console.log('Pagination complete, next page will be:', nextPage);
+        }
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error('Load options error:', error);
           setHasMore(false);
         }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setLoadingMore(false);
+          loadingRef.current = false;
+        }
       }
     },
-    [fetchOptions]
+    [fetchOptions, pageSize]
   );
 
+  // Debounced search effect
   React.useEffect(() => {
     if (!isVisible) return;
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Clear previous timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Skip if search hasn't changed
+    // if (currentSearchRef.current === search) return;
+
+    // currentSearchRef.current = search;
 
     debounceRef.current = setTimeout(() => {
-      setPage(1);
+      if (currentSearchRef.current === search) return; // cek di sini
+      currentSearchRef.current = search; // update setelah confirm jalan
       setHasMore(true);
-      loadData(1, deferredSearch, true);
+      setOptions([]);
+      setCurrentPage(1);
+      loadData(1, search, true);
     }, debounceMs);
 
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
     };
-  }, [deferredSearch, isVisible, debounceMs, loadData]);
+  }, [search, isVisible, debounceMs, loadData]);
+
+  // Initial load when modal opens
+  React.useEffect(() => {
+    if (isVisible && options.length === 0 && !loading) {
+      loadData(1, '', true);
+    }
+  }, [isVisible, options.length, loading, loadData]);
 
   const handleOpen = React.useCallback(() => {
     setIsVisible(true);
     setSearch('');
     setOptions([]);
-    setPage(1);
+    setCurrentPage(1);
     setHasMore(true);
-    setLoading(true);
+    currentSearchRef.current = '';
     modal.present();
-
-    setTimeout(() => {
-      loadData(1, '', true);
-    }, 100);
-  }, [modal, loadData]);
+  }, [modal]);
 
   const handleClose = React.useCallback(() => {
     setIsVisible(false);
     cleanup();
     modal.dismiss();
   }, [modal, cleanup]);
-
-  const handleSearchChange = (text: string) => {
-    setSearch(text);
-  };
 
   const handleSelect = React.useCallback(
     (option: OptionType) => {
@@ -160,19 +228,51 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
   );
 
   const handleEndReached = React.useCallback(() => {
-    if (!loading && hasMore && options.length > 0) {
-      loadData(page, search, false);
-    }
-  }, [loading, hasMore, options.length, page, loadData, search]);
+    console.log('handleEndReached called', {
+      hasMore,
+      loadingMore,
+      loading,
+      optionsLength: options.length,
+      currentPage,
+      search,
+    });
 
-  // const LoadingFooter = loading && options.length > 0 && (
-  //   <View className="py-4">
-  //     <ActivityIndicator color={colors.primary?.[600]} />
-  //   </View>
-  // );
+    // Only trigger if we're near the end and have more data
+    if (!hasMore || loadingMore || loading || options.length === 0) {
+      console.log('Skipping load more:', {
+        hasMore,
+        loadingMore,
+        loading,
+        optionsLength: options.length,
+      });
+      return;
+    }
+
+    console.log('Triggering load more for page:', currentPage);
+    loadData(currentPage, search, false);
+  }, [
+    hasMore,
+    loadingMore,
+    loading,
+    options.length,
+    currentPage,
+    search,
+    loadData,
+  ]);
+
+  const LoadingFooter = React.useMemo(() => {
+    if (loadingMore && options.length > 0) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator color={colors.primary?.[600]} />
+        </View>
+      );
+    }
+    return null;
+  }, [loadingMore, options.length]);
 
   const EmptyComponent = React.useMemo(() => {
-    if (loading) {
+    if (loading && options.length === 0) {
       return (
         <View className="items-center justify-center p-8">
           <ActivityIndicator color={colors.primary?.[600]} />
@@ -183,7 +283,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
       );
     }
 
-    if (!loading && options.length === 0) {
+    if (!loading && !loadingMore && options.length === 0) {
       return (
         <View className="items-center justify-center p-8">
           <Text className="text-gray-500 dark:text-gray-400">
@@ -194,20 +294,18 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
         </View>
       );
     }
-
     return null;
-  }, [loading, search, options.length]);
+  }, [loading, loadingMore, search, options.length]);
 
-  React.useEffect(() => cleanup, [cleanup]);
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
 
   return (
     <>
       <View className="mb-4">
-        {label && (
-          <Text className="mb-1 text-lg text-black dark:text-white">
-            {label}
-          </Text>
-        )}
+        {label && <Text className="mb-1 text-lg text-black">{label}</Text>}
         <Pressable
           onPress={handleOpen}
           className="rounded-xl border border-gray-300 bg-white p-3 dark:border-neutral-500 dark:bg-neutral-800"
@@ -227,6 +325,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
         }}
       >
         <View className="flex-1 p-3">
+          {/* Input Search */}
           <View className="mb-3 flex-row items-center rounded-lg border border-gray-300 bg-white p-2 dark:border-neutral-600 dark:bg-neutral-700">
             <Search
               className="mr-2 size-6"
@@ -236,7 +335,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
             <TextInput
               placeholder="Cari..."
               value={search}
-              onChangeText={handleSearchChange}
+              onChangeText={setSearch}
               className="flex-1 text-black dark:text-white"
               placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
               returnKeyType="search"
@@ -246,20 +345,22 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
             />
           </View>
 
+          {/* List Data */}
           <BottomSheetFlatList
             data={options}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
             onEndReached={handleEndReached}
-            onEndReachedThreshold={0.5}
-            // ListFooterComponent={LoadingFooter}
+            onEndReachedThreshold={0}
+            ListFooterComponent={LoadingFooter}
             ListEmptyComponent={EmptyComponent}
             keyboardShouldPersistTaps="handled"
-            removeClippedSubviews
-            maxToRenderPerBatch={10}
-            updateCellsBatchingPeriod={50}
-            initialNumToRender={15}
-            windowSize={10}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: 20,
+            }}
+            style={{ flex: 1 }}
           />
         </View>
       </Modal>

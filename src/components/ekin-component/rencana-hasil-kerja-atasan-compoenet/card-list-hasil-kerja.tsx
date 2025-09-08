@@ -4,7 +4,7 @@ import { Edit, Trash } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { showMessage } from 'react-native-flash-message';
 
-import { type DataItemRHKPejabat } from '@/api';
+import { type DataItemRHKPejabat, queryClient } from '@/api';
 import { DeleteRHKPejabat } from '@/api/ekin/rhk-pejabat/delete-rhk-pejabat';
 import { AlertModal } from '@/components/title-second';
 import { Pressable, showErrorMessage, Text, View } from '@/components/ui';
@@ -27,8 +27,9 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
     console.log('✅ Data disetujui secara final');
 
     try {
-      const response = await deleteRHK({ id: dataRHKItems.id });
+      const response = await deleteRHK({ id: dataRHKItems.id_rhk_pejabat });
       console.log('✅ Data berhasil dikirim:', response);
+      queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
       showMessage({
         message: 'RHK berhasil dihapus.',
         type: 'success',

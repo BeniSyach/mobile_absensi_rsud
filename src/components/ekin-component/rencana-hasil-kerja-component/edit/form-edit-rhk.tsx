@@ -6,9 +6,13 @@ import { TextInput } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import {
+  GetRhkStaffChild,
   GetSatuanEkin,
-  type RhkPejabatItem,
+  queryClient,
+  type RhkPejabatDataItem,
+  type RhkStaffChildItem,
   type Satuan,
+  useGetUser,
   useRhkPejabatChildByNik,
 } from '@/api';
 import {
@@ -51,6 +55,7 @@ const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
 });
 
 export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
+  const { data: user } = useGetUser(dataAtasan ?? '');
   const router = useRouter();
   const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -61,21 +66,43 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
   const [target, setTarget] = useState('');
   const [tahun, setTahun] = useState<string>(currentYear.toString());
   const { mutateAsync: putRHK, isPending: isPosting } = PutRHKStaff();
+
+  const isSekda =
+    user?.data?.nama_eselon === 'II.a' || user?.data?.nama_eselon === 'II/a';
+  const isKadis =
+    user?.data?.nama_eselon === 'II.b' || user?.data?.nama_eselon === 'II/b';
+
   const fetchOptionOPDsWithQuery = async (page: number) => {
     try {
-      const data = await useRhkPejabatChildByNik.fetcher({
-        page,
-        limit: 20,
-        nik: dataAtasan,
-      });
-      return (
-        data.data?.map((item: RhkPejabatItem) => ({
-          label: item.rhk_pejabat.uraian,
-          value: item.id_rhk_pejabat,
-        })) || []
-      );
+      if (isSekda || isKadis) {
+        const data = await useRhkPejabatChildByNik.fetcher({
+          page,
+          limit: 20,
+          nik: dataAtasan,
+        });
+
+        return (
+          data.data?.map((item: RhkPejabatDataItem) => ({
+            label: item.rhk_pejabat.uraian || '',
+            value: item.id_rhk_pejabat,
+          })) || []
+        );
+      } else {
+        const data = await GetRhkStaffChild.fetcher({
+          page,
+          limit: 100,
+          nik: dataAtasan,
+        });
+
+        return (
+          data.data?.map((item: RhkStaffChildItem) => ({
+            label: item.rhk_staff.uraian || '',
+            value: item.id_rhk_staff,
+          })) || []
+        );
+      }
     } catch (error) {
-      console.error('Error fetching RHK staff:', error);
+      console.error('Error fetching RHK:', error);
       return [];
     }
   };
@@ -120,7 +147,7 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
     try {
       const response = await putRHK(payload);
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
       showMessage({
         message: 'RHK berhasil disimpan.',
         type: 'success',
@@ -188,6 +215,7 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
             onSelect={(val) => setRhkAtasan(val as number)}
             placeholder="Pilih Rencana Hasil Kerja Atasan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionOPDsWithQuery}
           />
           <Text className="mb-2 text-lg font-semibold text-black">
@@ -198,6 +226,8 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={rhkStaff}
             onChangeText={setRhkStaff}
+            multiline
+            textAlignVertical="top"
           />
           <Text className="mb-2 text-lg font-semibold text-black">
             Indikator
@@ -207,6 +237,8 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
             placeholder="Indikator"
             value={indikator}
             onChangeText={setIndikator}
+            multiline
+            textAlignVertical="top"
           />
           <Text className="mb-2 text-lg font-semibold text-black">Target</Text>
           <TextInput
@@ -222,6 +254,7 @@ export default function FormEditRHK({ dataAtasan, dataEdit }: Props) {
             onSelect={(val) => setSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <Select

@@ -1,27 +1,14 @@
+/* eslint-disable max-params */
 /* eslint-disable max-lines-per-function */
-
+import { type CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import { Camera, CameraIcon, Save } from 'lucide-react-native';
 import * as React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
-import { Platform, StyleSheet } from 'react-native';
-import { runOnJS } from 'react-native-reanimated';
-import {
-  Camera,
-  runAsync,
-  useCameraDevice,
-  useFrameProcessor,
-} from 'react-native-vision-camera';
-import {
-  type Face,
-  type FaceDetectionOptions,
-  useFaceDetector,
-} from 'react-native-vision-camera-face-detector';
-import { Worklets } from 'react-native-worklets-core';
 
 import { type ApiResponse } from '@/api';
 import { type LastAbsenStatus } from '@/api/absensi/cek-status-absen-user';
 import Maps from '@/components/absensi/maps';
 import {
-  ActivityIndicator,
   Button,
   Image,
   type OptionType,
@@ -63,226 +50,65 @@ interface FormFieldsProps {
   setShowCamera: (show: boolean) => void;
 }
 
-const ACTIONS = [
-  { label: 'Kedipkan mata', key: 'blink' },
-  { label: 'Tersenyum', key: 'smile' },
-  { label: 'Buka mata lebar-lebar', key: 'open_eyes' },
-];
-
-interface CameraSectionProps {
+const CameraSection = React.memo<{
   showCamera: boolean;
-  handleTakePhoto: (photo: {
-    uri: string;
-    base64: string;
-  }) => Promise<void> | void;
-  initialAction?: 'blink' | 'smile' | 'open_eyes';
-  overlayColor?: string;
-}
-
-export default function CameraSection({
-  showCamera,
-  handleTakePhoto,
-  initialAction,
-  overlayColor = 'rgba(0,0,0,0.6)',
-}: CameraSectionProps) {
-  const device = useCameraDevice('front');
-  const cameraRef = React.useRef<Camera>(null);
-
-  const [permission, setPermission] = React.useState(false);
-  const [currentAction, setCurrentAction] = React.useState(() => {
-    if (initialAction)
-      return ACTIONS.find((a) => a.key === initialAction) || ACTIONS[0];
-    return ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
-  });
-
-  const [faceData, setFaceData] = React.useState({
-    leftEyeOpen: true,
-    rightEyeOpen: true,
-    smiling: false,
-    gazeDirection: 'Depan',
-  });
-  console.log('data', faceData);
-
-  const [countdown, setCountdown] = React.useState<number | null>(null);
-  const lastActionTime = React.useRef(0);
-
-  // Hook face detector di level atas komponen
-  const faceDetectionOptions: FaceDetectionOptions = {
-    performanceMode: 'fast',
-    landmarkMode: 'all',
-    classificationMode: 'all',
-  };
-  const { detectFaces, stopListeners } = useFaceDetector(faceDetectionOptions);
-
-  // Hentikan listener saat unmount
-  React.useEffect(() => {
-    return () => {
-      if (Platform.OS === 'android') stopListeners();
-    };
-  }, []);
-
-  // Request permission kamera
-  React.useEffect(() => {
-    (async () => {
-      const status: string = await Camera.requestCameraPermission();
-      setPermission(status === 'granted');
-    })();
-  }, []);
-
-  const startCountdownAndCapture = React.useCallback(() => {
-    setCountdown(3);
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev && prev > 1) return prev - 1;
-        clearInterval(interval);
-        takePhoto();
-        return null;
-      });
-    }, 1000);
-  }, []);
-
-  const checkFaceAction = React.useCallback(
-    (leftClosed: boolean, rightClosed: boolean, smiling: boolean) => {
-      switch (currentAction.key) {
-        case 'blink':
-          return leftClosed || rightClosed;
-        case 'smile':
-          return smiling;
-        case 'open_eyes':
-          return !leftClosed && !rightClosed;
-        default:
-          return false;
-      }
-    },
-    [currentAction]
-  );
-
-  const handleDetectedFaces = Worklets.createRunOnJS((faces: Face[]) => {
-    if (faces.length === 0) return;
-    const face = faces[0];
-
-    const leftEyeOpen = (face.leftEyeOpenProbability ?? 1) > 0.5;
-    const rightEyeOpen = (face.rightEyeOpenProbability ?? 1) > 0.5;
-    const smiling = (face.smilingProbability ?? 0) > 0.7;
-
-    let gaze = 'Depan';
-    if (face.yawAngle != null) {
-      if (face.yawAngle > 10) gaze = 'Kanan';
-      else if (face.yawAngle < -10) gaze = 'Kiri';
-    }
-
-    runOnJS(setFaceData)({
-      leftEyeOpen,
-      rightEyeOpen,
-      smiling,
-      gazeDirection: gaze,
-    });
-
-    const leftClosed = !leftEyeOpen;
-    const rightClosed = !rightEyeOpen;
-    const now = Date.now();
-
-    if (now - lastActionTime.current > 3000) {
-      if (checkFaceAction(leftClosed, rightClosed, smiling)) {
-        lastActionTime.current = now;
-        runOnJS(startCountdownAndCapture)();
-      }
-    }
-  });
-
-  const frameProcessor = useFrameProcessor(
-    (frame) => {
-      'worklet';
-      runAsync(frame, () => {
-        'worklet';
-        const faces = detectFaces(frame);
-        handleDetectedFaces(faces);
-      });
-    },
-    [handleDetectedFaces]
-  );
-
-  const takePhoto = async () => {
-    if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePhoto();
-    await handleTakePhoto({ uri: `file://${photo.path}`, base64: '' });
-    setCurrentAction(ACTIONS[Math.floor(Math.random() * ACTIONS.length)]);
-  };
+  handleTakePhoto: (photo: { uri: string; base64: string }) => Promise<void>;
+}>(({ showCamera, handleTakePhoto }) => {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [facing] = React.useState<CameraType>('front');
+  const cameraRef = React.useRef<CameraView>(null);
 
   if (!showCamera) return null;
-  if (!device)
+
+  if (!permission) {
+    return <View />;
+  }
+
+  if (!permission.granted) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View className="mt-2 items-center">
+        <Text className="mb-2 text-gray-400">
+          Aplikasi Membutuhkan Izin Akses Kamera
+        </Text>
+        <Button label="Izinkan Akses Kamera" onPress={requestPermission} />
       </View>
     );
-  if (!permission)
-    return (
-      <View style={styles.center}>
-        <Text>Izin kamera belum diberikan</Text>
-        <Button
-          label="Minta Akses Kamera"
-          onPress={async () => {
-            const result = await Camera.requestCameraPermission();
-            if (result === 'granted') {
-              // ✅ gunakan 'granted', bukan 'authorized'
-              setPermission(true);
-            }
-          }}
-        />
-      </View>
-    );
+  }
+
+  const onTakePhoto = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = (await cameraRef.current.takePictureAsync({
+          base64: true,
+          quality: 0.2, // lebih ringan tapi wajah tetap jelas
+          exif: false,
+          skipProcessing: true, // bisa bikin capture lebih cepat
+        })) as { uri: string; base64: string };
+
+        await handleTakePhoto({
+          uri: photo.uri,
+          base64: photo.base64 || '',
+        });
+      } catch (error) {
+        console.error('Failed to take photo:', error);
+      }
+    }
+  };
 
   return (
-    <View style={{ flex: 1, height: 300 }}>
-      <Camera
-        ref={cameraRef}
-        style={{ flex: 1, borderWidth: 2, borderColor: 'red' }}
-        device={device}
-        isActive
-        photo
-        frameProcessor={frameProcessor}
-      />
-
-      <View
-        style={{
-          position: 'absolute',
-          top: 20,
-          alignSelf: 'center',
-          backgroundColor: overlayColor,
-          padding: 10,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ color: 'white', fontSize: 16 }}>
-          {currentAction.label}
-        </Text>
-      </View>
-
-      {/* <View style={styles.statusContainer}>
-        <Text style={styles.statusText}>
-          👁 Kiri: {faceData.leftEyeOpen ? 'Terbuka' : 'Tertutup'}
-        </Text>
-        <Text style={styles.statusText}>
-          👁 Kanan: {faceData.rightEyeOpen ? 'Terbuka' : 'Tertutup'}
-        </Text>
-        <Text style={styles.statusText}>
-          😀 Senyum: {faceData.smiling ? 'Ya' : 'Tidak'}
-        </Text>
-        <Text style={styles.statusText}>
-          👀 Pandangan: {faceData.gazeDirection}
-        </Text>
-      </View> */}
-
-      {countdown !== null && (
-        <View style={styles.countdown}>
-          <Text style={styles.countdownText}>{countdown}</Text>
+    <View className="flex-1">
+      <CameraView ref={cameraRef} className="flex-1" facing={facing}>
+        <View className="h-96 w-full flex-1 items-end justify-end bg-transparent px-4 pb-4">
+          <Button
+            label="Ambil Foto"
+            onPress={onTakePhoto}
+            icon={<Camera size={20} color={'white'} />}
+          />
         </View>
-      )}
+      </CameraView>
     </View>
   );
-}
-
+});
 CameraSection.displayName = 'CameraSection';
 
 // ImagePreview component
@@ -292,7 +118,6 @@ const ImagePreview = React.memo<{
   errors: any;
 }>(({ image, showCamera, errors }) => {
   const [hasError, setHasError] = React.useState(false);
-
   if (!image || showCamera) {
     return errors.photo ? (
       <View className="mb-2">
@@ -308,7 +133,7 @@ const ImagePreview = React.memo<{
           source={{ uri: image.uri }}
           className="h-44 w-full"
           style={{ width: 300, height: 300 }}
-          resizeMode="cover"
+          contentFit="cover"
           onError={(error) => {
             console.log('Image error:', error);
             setHasError(true);
@@ -344,34 +169,56 @@ const SelectFields = React.memo<{
     onHariKerjaSelect,
     errors,
   }) => (
-    <>
-      <Select
-        label="Tipe Absensi"
-        options={tipe_absensi}
-        value={tipe_absensi_value}
-        onSelect={onTipeAbsensiSelect}
-        placeholder="Pilih Tipe Absensi"
-        error={errors.tipe_absensi?.message}
-        disabled={true}
-      />
-      <Select
-        label="Tipe Shift"
-        options={shiftOptions}
-        value={shift_value}
-        onSelect={onShiftSelect}
-        placeholder="Pilih Tipe Shift"
-        error={errors.shift_id?.message}
-        disabled={true}
-      />
-      <Select
-        label="Shift/Hari Kerja"
-        options={hariKerjaOptions}
-        value={hari_kerja_value}
-        onSelect={onHariKerjaSelect}
-        placeholder="Pilih Hari Kerja"
-        error={errors.waktu_kerja_id?.message}
-      />
-    </>
+    <View className="space-y-4">
+      {/* Baris pertama: dua kolom */}
+      <View className="flex-row">
+        <View className="mr-4" style={{ flex: 1 }}>
+          <Select
+            label="Tipe Absensi"
+            options={tipe_absensi}
+            value={tipe_absensi_value}
+            onSelect={onTipeAbsensiSelect}
+            placeholder="Pilih Tipe Absensi"
+            error={errors.tipe_absensi?.message}
+            disabled={true}
+            size="lg"
+            bg={
+              tipe_absensi_value === '0'
+                ? 'success' // hijau
+                : tipe_absensi_value === '1'
+                  ? 'danger' // merah
+                  : 'primary' // default
+            }
+          />
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Select
+            label="Tipe Shift"
+            options={shiftOptions}
+            value={shift_value}
+            onSelect={onShiftSelect}
+            placeholder="Pilih Tipe Shift"
+            error={errors.shift_id?.message}
+            disabled={true}
+            size="lg"
+            bg="primary"
+          />
+        </View>
+      </View>
+
+      {/* Baris kedua: full width */}
+      <View>
+        <Select
+          label="Shift / Hari Kerja"
+          options={hariKerjaOptions}
+          value={hari_kerja_value}
+          onSelect={onHariKerjaSelect}
+          placeholder="Pilih Hari Kerja"
+          error={errors.waktu_kerja_id?.message}
+        />
+      </View>
+    </View>
   )
 );
 SelectFields.displayName = 'SelectFields';
@@ -416,12 +263,14 @@ const FormFields = React.memo<FormFieldsProps>(
         <Button
           label={showCamera ? 'Tutup Kamera' : 'Ambil Foto Absensi'}
           onPress={() => setShowCamera(!showCamera)}
+          className="mx-10 rounded-full bg-[#20A0D8]"
+          size="default"
+          icon={<CameraIcon size={20} color={'white'} />}
+          variant="outline"
         />
         <CameraSection
           showCamera={showCamera}
           handleTakePhoto={handleTakePhoto}
-          initialAction="smile" // bisa: "smile", "blink", "open_eyes"
-          overlayColor="rgba(0,0,0,0.6)"
         />
         <ImagePreview image={image} showCamera={showCamera} errors={errors} />
       </>
@@ -435,16 +284,17 @@ const FormContainer = React.memo<{
   onSubmit: () => void;
   isPending: boolean;
 }>(({ children, onSubmit, isPending }) => (
-  <ScrollView className="mb-4 flex-1 p-2">
-    <View className="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
+  <ScrollView className="flex-1 p-2">
+    <View className="p-4">
       {children}
       <Button
         label="Absen"
+        variant="outline"
         loading={isPending}
         onPress={onSubmit}
+        className="mx-32 rounded-full bg-[#20A0D8]"
         size="lg"
-        className="mb-20"
-        testID="add-post-button"
+        icon={<Save size={20} color={'white'} />}
       />
     </View>
   </ScrollView>
@@ -468,45 +318,3 @@ export const AbsensiForm = React.memo<AbsensiFormProps>(
     );
   }
 );
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 20,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: 10,
-    borderRadius: 8,
-  },
-  overlayText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  statusContainer: {
-    position: 'absolute',
-    bottom: 80,
-    left: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 8,
-    borderRadius: 8,
-  },
-  statusText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  countdown: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -20 }],
-  },
-  countdownText: {
-    color: 'white',
-    fontSize: 40,
-  },
-});

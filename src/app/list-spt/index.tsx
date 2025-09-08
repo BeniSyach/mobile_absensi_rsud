@@ -1,8 +1,10 @@
+import { Stack } from 'expo-router';
 import React from 'react';
-import { StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
 
 import { type SptData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
+import { Title } from '@/components/title';
 import { SafeAreaView, Text, View } from '@/components/ui';
 
 import ListContent from './list-content';
@@ -26,16 +28,30 @@ export default function ListSPT() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
-      <ListContent
-        data={data}
-        isPending={isPending}
-        handleLoadMore={handleLoadMore}
-        renderItem={renderItem}
-        isRefreshing={isRefreshing}
-        onRefresh={onRefresh}
+    <SafeAreaView className="flex-1">
+      <Stack.Screen
+        options={{
+          title: 'List SPT',
+          headerBackTitle: 'List SPT',
+          headerShown: false,
+        }}
       />
+      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+      <ImageBackground
+        source={require('../../../assets/background/background_absensi.png')}
+        resizeMode="stretch"
+        className="flex-1"
+      >
+        <Title text="Daftar Surat Perintah Tugas" textColor="#20A0D8" />
+        <ListContent
+          data={data}
+          isPending={isPending}
+          handleLoadMore={handleLoadMore}
+          renderItem={renderItem}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
+      </ImageBackground>
     </SafeAreaView>
   );
 }

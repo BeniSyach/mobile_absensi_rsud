@@ -1,8 +1,10 @@
+import { Stack } from 'expo-router';
 import React from 'react';
-import { StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
 
 import { type AbsenMasuk } from '@/api';
 import { Card } from '@/components/list-absensi-component/card';
+import { Title } from '@/components/title';
 import { Text } from '@/components/ui';
 import { SafeAreaView } from '@/components/ui';
 
@@ -27,16 +29,30 @@ export default function ListAbsensi() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
-      <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
-      <ListContent
-        data={data}
-        isPending={isPending}
-        handleLoadMore={handleLoadMore}
-        renderItem={renderItem}
-        isRefreshing={isRefreshing}
-        onRefresh={onRefresh}
+    <SafeAreaView className="flex-1">
+      <Stack.Screen
+        options={{
+          title: 'List Absensi',
+          headerBackTitle: 'List Absensi',
+          headerShown: false,
+        }}
       />
+      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+      <ImageBackground
+        source={require('../../../assets/background/background_absensi.png')}
+        resizeMode="stretch"
+        className="flex-1"
+      >
+        <Title text="Daftar Absensi" textColor="#20A0D8" />
+        <ListContent
+          data={data}
+          isPending={isPending}
+          handleLoadMore={handleLoadMore}
+          renderItem={renderItem}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
+      </ImageBackground>
     </SafeAreaView>
   );
 }

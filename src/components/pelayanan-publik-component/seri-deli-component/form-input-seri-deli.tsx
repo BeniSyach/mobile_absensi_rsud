@@ -64,6 +64,7 @@ export default function FromInputSeriDeli({
           <View className="flex-row items-center rounded-full bg-gray-100 px-4 py-2">
             <TextInput
               placeholder="No. Pendaftaran (00192141011405xxxx)"
+              placeholderTextColor="#9CA3AF"
               className="flex-1 pr-3 text-base text-gray-700"
               keyboardType="number-pad"
               value={nomor}

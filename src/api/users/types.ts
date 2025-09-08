@@ -118,9 +118,7 @@ export type ResetPasswordResponse = {
 };
 
 export type ResetPasswordVariables = {
-  old_password: string; // Password lama
-  new_password: string; // Password baru
-  new_password_confirmation: string; // Konfirmasi password baru
+  no_wa: string; // nomor-wa
 };
 
 // type Pegawai = {

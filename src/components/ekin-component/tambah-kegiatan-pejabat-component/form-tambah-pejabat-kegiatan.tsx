@@ -1,4 +1,8 @@
 /* eslint-disable max-lines-per-function */
+import 'dayjs/locale/id';
+
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -9,7 +13,8 @@ import {
   GetSatuanEkin,
   PostKegiatanHarianPejabat,
   type PostKegiatanHarianPejabatVariables,
-  type RhkPejabatItem,
+  queryClient,
+  type RhkPejabatDataItem,
   type Satuan,
   useRhkPejabatChildByNik,
   type UserPegawai,
@@ -24,7 +29,8 @@ import {
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
-
+dayjs.extend(customParseFormat);
+dayjs.locale('id');
 interface Props {
   dataUserLogin: UserPegawai | null;
 }
@@ -41,7 +47,7 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
   const [satuan, setSatuan] = useState('');
   const [uraian_tugas, setUraianTugas] = useState('');
   const [jumlah_capaian, setJumlahCapaian] = useState('');
-  const [rhkMap, setRhkMap] = useState<Record<string, RhkPejabatItem>>({});
+  const [rhkMap, setRhkMap] = useState<Record<string, RhkPejabatDataItem>>({});
 
   const { mutateAsync: postKegiatanPejabat, isPending: isPosting } =
     PostKegiatanHarianPejabat();
@@ -54,13 +60,13 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
         search: search || undefined,
         nik: dataUserLogin?.nik ?? '',
       });
-      const newMap: Record<string, RhkPejabatItem> = {};
-      data.data?.forEach((item: RhkPejabatItem) => {
+      const newMap: Record<string, RhkPejabatDataItem> = {};
+      data.data?.forEach((item: RhkPejabatDataItem) => {
         newMap[item.id_rhk_pejabat] = item;
       });
       setRhkMap((prev) => ({ ...prev, ...newMap }));
       return (
-        data.data?.map((item: RhkPejabatItem) => ({
+        data.data?.map((item: RhkPejabatDataItem) => ({
           label: item.rhk_pejabat.uraian || '',
           value: item.id_rhk_pejabat,
         })) || []
@@ -119,7 +125,12 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
     setShowConfirmModal(false);
     console.log('✅ Data disetujui secara final');
 
-    const tgl_kinerja = `${tanggal}T${waktu_tanggal}:00`;
+    // const tgl_kinerja = `${tanggal}T${waktu_tanggal}:00`;
+
+    const tgl_kinerja = dayjs(
+      `${tanggal} ${waktu_tanggal}`,
+      'DD MMMM YYYY HH:mm'
+    ).format('YYYY-MM-DDTHH:mm:ss');
 
     const payload: PostKegiatanHarianPejabatVariables = {
       waktu_kinerja: lamaWaktu,
@@ -136,7 +147,9 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
     try {
       const response = await postKegiatanPejabat(payload);
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({
+        queryKey: ['useGetKegiatanHarianPejabatByUser'],
+      });
       showMessage({
         message: 'Kegiatan harian berhasil disimpan.',
         type: 'success',
@@ -193,8 +206,7 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
   // Saat selectedrhk berubah, update selectedIndikator
   useEffect(() => {
     if (selectedrhk && rhkMap[selectedrhk]) {
-      const indikatorText =
-        rhkMap[selectedrhk]?.rhk_pejabat?.indikator[0]?.uraian;
+      const indikatorText = rhkMap[selectedrhk]?.rhk_pejabat?.indikator;
       setSelectedIndikator(indikatorText);
     } else {
       setSelectedIndikator('');
@@ -244,6 +256,7 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
             onSelect={(val) => setSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <View className="flex-row justify-between gap-2">
@@ -270,6 +283,7 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
             onSelect={(val) => setSelectedrhk(val as string)}
             placeholder="Pilih RHK..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionRHKsWithQuery}
           />
           {/* <RemoteSelect
@@ -284,11 +298,13 @@ export default function FormTambahKegiatanPejabat({ dataUserLogin }: Props) {
             Indikator
           </Text>
           <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+            className="mb-2 rounded-lg border p-2"
             placeholder="Indikator"
             onChangeText={setSelectedIndikator}
             value={selectedIndikator}
             editable={false}
+            multiline
+            textAlignVertical="top" // biar rapih di atas
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

@@ -1,12 +1,16 @@
+import 'dayjs/locale/id'; // gunakan bahasa Indonesia
+
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { CalendarDays } from 'lucide-react-native'; // pastikan sudah install dan import
+import dayjs from 'dayjs';
+import { CalendarDays } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
+dayjs.locale('id');
 
 interface DateInputProps {
   label: string;
   placeholder: string;
-  value?: string; // ISO format: 'YYYY-MM-DD'
+  value?: string; // format: 'DD MMMM YYYY'
   onChange: (date: string) => void;
   error?: string;
 }
@@ -20,11 +24,15 @@ export const DateInputOriginal = ({
 }: DateInputProps) => {
   const [show, setShow] = useState(false);
 
-  const handleDateChange = (_event: any, selectedDate?: Date) => {
-    setShow(Platform.OS === 'ios'); // iOS tetap tampil, Android langsung hilang
-    if (selectedDate) {
-      const isoDate = selectedDate.toISOString().split('T')[0];
-      onChange(isoDate);
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShow(false); // Android: picker selalu ditutup setelah pilih/cancel
+    }
+
+    if (event.type === 'set' && selectedDate) {
+      // Format dd MMMM YYYY → contoh: 02 September 2025
+      const formatted = dayjs(selectedDate).format('DD MMMM YYYY');
+      onChange(formatted);
     }
   };
 
@@ -46,7 +54,7 @@ export const DateInputOriginal = ({
 
       {show && (
         <DateTimePicker
-          value={value ? new Date(value) : new Date()}
+          value={value ? dayjs(value, 'DD MMMM YYYY').toDate() : new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
           onChange={handleDateChange}

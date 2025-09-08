@@ -26,7 +26,28 @@ export default function TabLayout() {
     return <Redirect href="/onboarding" />;
   }
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          position: 'absolute',
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          height: 70,
+          paddingBottom: 10,
+          paddingTop: 5,
+          borderTopWidth: 0,
+          elevation: 12, // Android shadow makin tinggi
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 }, // makin tinggi shadow ke atas
+          shadowOpacity: 0.25, // lebih gelap
+          shadowRadius: 12, // lebih blur
+        },
+        tabBarActiveTintColor: '#0B3880',
+        tabBarInactiveTintColor: '#888888',
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{

@@ -1,4 +1,6 @@
+/* eslint-disable max-lines-per-function */
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Clock } from 'lucide-react-native'; // icon jam
 import React, { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { Platform, Pressable, Text, View } from 'react-native';
@@ -22,9 +24,7 @@ export const TimeInput = ({
 
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-lg text-gray-700 dark:text-neutral-200">
-        {label}
-      </Text>
+      <Text className="mb-1 text-lg text-gray-700">{label}</Text>
       <Controller
         control={control}
         name={name}
@@ -41,18 +41,27 @@ export const TimeInput = ({
             <>
               <Pressable
                 onPress={() => setShow(true)}
-                className={`border p-3 ${
+                className={`flex-row items-center justify-between rounded-lg border bg-white px-2 py-3 ${
                   error ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg bg-white`}
+                }`}
               >
                 <Text className="text-gray-700">{value || placeholder}</Text>
+                <Clock size={20} color="#6b7280" />
               </Pressable>
+
               {show && (
                 <DateTimePicker
                   value={initialDate}
                   mode="time"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(_event, date) => {
+                  display="spinner"
+                  is24Hour={true}
+                  onChange={(event, date) => {
+                    // kalau user cancel (dismiss)
+                    if (event.type === 'dismissed') {
+                      setShow(false);
+                      return;
+                    }
+
                     setShow(Platform.OS === 'ios');
                     if (date) {
                       const hours = date.getHours().toString().padStart(2, '0');

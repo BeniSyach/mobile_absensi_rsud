@@ -1,27 +1,21 @@
-// utils/formatDate.ts
 import 'dayjs/locale/id';
 
 import dayjs from 'dayjs';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
 
-dayjs.extend(localizedFormat);
 dayjs.locale('id');
 
-/**
- * Format tanggal ISO menjadi: "Senin, 28 Juli 2025 | 11.13 Wib"
- * @param isoDate - Tanggal dalam format ISO string (UTC)
- * @returns Tanggal dalam format lokal Indonesia, atau "-" jika tidak valid
- */
 export function formatTanggalWIB(isoDate?: string | null): string {
   if (!isoDate) return '-';
 
-  const parsedDate = dayjs(isoDate);
-  if (!parsedDate.isValid()) return '-';
+  // Date bawaan JS → otomatis parse UTC dari string Z
+  const jsDate = new Date(isoDate);
 
-  const date = parsedDate.add(7, 'hour'); // Jika dari UTC, tambahkan 7 jam
-  const hari = date.format('dddd'); // Senin, Selasa, ...
-  const tanggal = date.format('D MMMM YYYY'); // 28 Juli 2025
-  const jam = date.format('HH.mm'); // 11.13
+  // lalu bungkus ke dayjs, anggap sudah WIB
+  const parsedDate = dayjs(jsDate).locale('id');
 
-  return `${hari}, ${tanggal} | ${jam} Wib`;
+  const hari = parsedDate.format('dddd'); // Selasa
+  const tanggal = parsedDate.format('D MMMM YYYY'); // 2 September 2025
+  const jam = parsedDate.format('HH.mm'); // 10.19
+
+  return `${hari}, ${tanggal} | ${jam} WIB`;
 }

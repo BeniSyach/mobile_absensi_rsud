@@ -31,7 +31,7 @@ export default function ListKegiatanPejabat() {
   const queryParams = {
     userId: storedMessage?.nik ?? '',
     page,
-    limit: 10,
+    limit: 30,
     tanggal_awal: tanggalAwal,
     tanggal_akhir: tanggalAkhir,
     search,

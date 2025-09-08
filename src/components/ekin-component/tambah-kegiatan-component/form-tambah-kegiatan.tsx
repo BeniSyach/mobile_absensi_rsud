@@ -1,4 +1,8 @@
 /* eslint-disable max-lines-per-function */
+import 'dayjs/locale/id';
+
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -10,6 +14,7 @@ import {
   GetSatuanEkin,
   PostKegiatanHarian,
   type PostKegiatanHarianVariables,
+  queryClient,
   type RhkStaffChildItem,
   type Satuan,
   type UserPegawai,
@@ -24,6 +29,8 @@ import {
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
+dayjs.extend(customParseFormat);
+dayjs.locale('id');
 
 interface Props {
   dataUserLogin: UserPegawai | null;
@@ -48,17 +55,22 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
 
   const fetchOptionRHKsWithQuery = async (page: number, search: string) => {
     try {
+      console.log('API Call - Page:', page, 'Search:', search); // Debug log
       const data = await GetRhkStaffChild.fetcher({
         page,
-        limit: 20,
+        limit: 20, // Sesuaikan dengan pageSize di RemoteSelect
         search: search || undefined,
         nik: dataUserLogin?.nik ?? '',
       });
+
+      console.log('API Response:', data.data?.length, 'items'); // Debug log
+
       const newMap: Record<string, RhkStaffChildItem> = {};
       data.data?.forEach((item: RhkStaffChildItem) => {
         newMap[item.id_rhk_staff] = item;
       });
       setRhkMap((prev) => ({ ...prev, ...newMap }));
+
       return (
         data.data?.map((item: RhkStaffChildItem) => ({
           label: item.rhk_staff.uraian || '',
@@ -119,7 +131,12 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
     setShowConfirmModal(false);
     console.log('✅ Data disetujui secara final');
 
-    const tgl_kinerja = `${tanggal}T${waktu_tanggal}:00`;
+    // const tgl_kinerja = `${tanggal}T${waktu_tanggal}:00`;
+
+    const tgl_kinerja = dayjs(
+      `${tanggal} ${waktu_tanggal}`,
+      'DD MMMM YYYY HH:mm'
+    ).format('YYYY-MM-DDTHH:mm:ss');
 
     const payload: PostKegiatanHarianVariables = {
       waktu_kinerja: lamaWaktu,
@@ -136,7 +153,7 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
     try {
       const response = await postKegiatan(payload);
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({ queryKey: ['getKegiatanHarianByUser'] });
       showMessage({
         message: 'Kegiatan harian berhasil disimpan.',
         type: 'success',
@@ -243,6 +260,7 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
             onSelect={(val) => setSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <View className="flex-row justify-between gap-2">
@@ -269,6 +287,7 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
             onSelect={(val) => setSelectedrhk(val as string)}
             placeholder="Pilih RHK..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionRHKsWithQuery}
           />
           {/* <RemoteSelect
@@ -283,11 +302,13 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
             Indikator
           </Text>
           <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+            className="mb-2 rounded-lg border p-2"
             placeholder="Indikator"
             onChangeText={setSelectedIndikator}
             value={selectedIndikator}
             editable={false}
+            multiline
+            textAlignVertical="top" // biar rapih di atas
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">

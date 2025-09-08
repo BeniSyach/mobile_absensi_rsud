@@ -52,6 +52,7 @@ export interface NInputProps extends TextInputProps {
   disabled?: boolean;
   error?: string;
   rightIcon?: React.ReactNode;
+  rightText?: React.ReactNode;
 }
 
 type TRule<T extends FieldValues> =
@@ -73,7 +74,7 @@ interface ControlledInputProps<T extends FieldValues>
     InputControllerType<T> {}
 
 export const Input = React.forwardRef<NTextInput, NInputProps>((props, ref) => {
-  const { label, error, testID, rightIcon, ...inputProps } = props;
+  const { label, error, testID, rightIcon, rightText, ...inputProps } = props;
   const [isFocussed, setIsFocussed] = React.useState(false);
   const onBlur = React.useCallback(() => setIsFocussed(false), []);
   const onFocus = React.useCallback(() => setIsFocussed(true), []);
@@ -113,7 +114,7 @@ export const Input = React.forwardRef<NTextInput, NInputProps>((props, ref) => {
             inputProps.style,
           ])}
         />
-        {rightIcon && (
+        {(rightIcon || rightText) && (
           <View
             style={{
               position: 'absolute',
@@ -123,6 +124,11 @@ export const Input = React.forwardRef<NTextInput, NInputProps>((props, ref) => {
             }}
           >
             {rightIcon}
+            {rightText && (
+              <Text className="text-gray-600 dark:text-neutral-300">
+                {rightText}
+              </Text>
+            )}
           </View>
         )}
       </View>

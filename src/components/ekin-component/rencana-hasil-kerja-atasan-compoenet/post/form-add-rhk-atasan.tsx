@@ -8,6 +8,7 @@ import { showMessage } from 'react-native-flash-message';
 import {
   type CreateRHKPejabatPayload,
   GetSatuanEkin,
+  queryClient,
   type Satuan,
   type UserDataEkin,
 } from '@/api';
@@ -91,6 +92,7 @@ export default function FormAddRHKAtasan({ data }: Props) {
     try {
       const response = await postRHK(payload);
       console.log('✅ Data berhasil dikirim:', response);
+      queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
 
       showMessage({
         message: 'RHK berhasil disimpan.',
@@ -175,6 +177,7 @@ export default function FormAddRHKAtasan({ data }: Props) {
             onSelect={(val) => setIdSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <Select

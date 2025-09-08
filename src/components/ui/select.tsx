@@ -27,8 +27,8 @@ const selectTv = tv({
     container: 'mb-4',
     label: 'mb-1 text-lg text-black',
     input:
-      'border-grey-50 mt-0 flex-row items-center justify-center rounded-xl border-[0.5px] p-3  dark:border-neutral-500 dark:bg-neutral-800',
-    inputValue: 'dark:text-neutral-100',
+      'border-grey-50 mt-0 flex-row items-center justify-center rounded-xl border-[0.5px] p-3  dark:border-neutral-500 ',
+    inputValue: 'text-lg dark:text-white',
   },
 
   variants: {
@@ -49,10 +49,45 @@ const selectTv = tv({
         input: 'bg-neutral-200',
       },
     },
+    size: {
+      sm: {
+        input: 'p-2 text-sm',
+        label: 'text-sm',
+      },
+      md: {
+        input: 'p-3 text-base',
+        label: 'text-base',
+      },
+      lg: {
+        input: 'p-4 text-lg',
+        label: 'text-lg',
+      },
+    },
+    bg: {
+      white: {
+        input: 'bg-white dark:bg-neutral-800',
+      },
+      primary: {
+        input: 'bg-blue-100 dark:bg-blue-800',
+      },
+      neutral: {
+        input: 'bg-neutral-100 dark:bg-neutral-700',
+      },
+      success: {
+        input: 'border border-green-900 bg-green-900',
+        inputValue: 'text-green-700',
+      },
+      danger: {
+        input: 'border border-red-500 bg-red-100',
+        inputValue: 'text-red-700',
+      },
+    },
   },
   defaultVariants: {
     error: false,
     disabled: false,
+    size: 'md',
+    bg: 'white',
   },
 });
 
@@ -65,6 +100,7 @@ type OptionsProps = {
   onSelect: (option: OptionType) => void;
   value?: string | number;
   testID?: string;
+  size?: 'sm' | 'md' | 'lg';
 };
 
 function keyExtractor(item: OptionType) {
@@ -72,7 +108,7 @@ function keyExtractor(item: OptionType) {
 }
 
 export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
-  ({ options, onSelect, value, testID }, ref) => {
+  ({ options, onSelect, value, testID, size }, ref) => {
     const height = options.length * 70 + 100;
     const snapPoints = React.useMemo(() => [height], [height]);
     const { colorScheme } = useColorScheme();
@@ -85,10 +121,11 @@ export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
           label={item.label}
           selected={value === item.value}
           onPress={() => onSelect(item)}
+          size={size}
           testID={testID ? `${testID}-item-${item.value}` : undefined}
         />
       ),
-      [onSelect, value, testID]
+      [onSelect, value, testID, size]
     );
 
     return (
@@ -116,17 +153,27 @@ const Option = React.memo(
   ({
     label,
     selected = false,
+    size = 'md',
     ...props
   }: PressableProps & {
     selected?: boolean;
     label: string;
+    size?: 'sm' | 'md' | 'lg';
   }) => {
+    const textSize =
+      size === 'sm'
+        ? 'text-sm'
+        : size === 'lg'
+          ? 'text-lg font-semibold'
+          : 'text-base';
     return (
       <Pressable
         className="flex-row items-center border-b border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-800"
         {...props}
       >
-        <Text className="flex-1 dark:text-neutral-100 ">{label}</Text>
+        <Text className={`flex-1 ${textSize} dark:text-neutral-100`}>
+          {label}
+        </Text>
         {selected && <Check />}
       </Pressable>
     );
@@ -142,6 +189,8 @@ export interface SelectProps {
   onSelect?: (value: string | number) => void;
   placeholder?: string;
   testID?: string;
+  size?: 'sm' | 'md' | 'lg'; // ukuran input
+  bg?: 'white' | 'primary' | 'neutral' | 'success' | 'danger'; // warna background
 }
 interface ControlledSelectProps<T extends FieldValues>
   extends SelectProps,
@@ -157,6 +206,8 @@ export const Select = (props: SelectProps) => {
     disabled = false,
     onSelect,
     testID,
+    size = 'md',
+    bg = 'white',
   } = props;
   const modal = useModal();
 
@@ -173,8 +224,10 @@ export const Select = (props: SelectProps) => {
       selectTv({
         error: Boolean(error),
         disabled,
+        size,
+        bg,
       }),
-    [error, disabled]
+    [error, disabled, size, bg]
   );
 
   const textValue = React.useMemo(
@@ -184,6 +237,13 @@ export const Select = (props: SelectProps) => {
         : placeholder,
     [value, options, placeholder]
   );
+
+  const textSize =
+    size === 'sm'
+      ? 'text-sm'
+      : size === 'lg'
+        ? 'text-lg font-semibold'
+        : 'text-base';
 
   // const matchedOption = options.find((t) => t.value === value);
   // if (!matchedOption) {
@@ -208,7 +268,9 @@ export const Select = (props: SelectProps) => {
           testID={testID ? `${testID}-trigger` : undefined}
         >
           <View className="flex-1">
-            <Text className={styles.inputValue()}>{textValue}</Text>
+            <Text className={`${styles.inputValue()} ${textSize}`}>
+              {textValue}
+            </Text>
           </View>
           <CaretDown />
         </Pressable>
@@ -225,6 +287,7 @@ export const Select = (props: SelectProps) => {
         testID={testID}
         ref={modal.ref}
         options={options}
+        size={size}
         onSelect={onSelectOption}
       />
     </>

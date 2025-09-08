@@ -10,7 +10,8 @@ import {
   GetSatuanEkin,
   PostRHKStaff,
   type PostRhkStaffVariables,
-  type RhkPejabatItem,
+  queryClient,
+  type RhkPejabatDataItem,
   type RhkStaffChildItem,
   type Satuan,
   useGetUser,
@@ -72,7 +73,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
         });
 
         return (
-          data.data?.map((item: RhkPejabatItem) => ({
+          data.data?.map((item: RhkPejabatDataItem) => ({
             label: item.rhk_pejabat.uraian || '',
             value: item.id_rhk_pejabat,
           })) || []
@@ -80,7 +81,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
       } else {
         const data = await GetRhkStaffChild.fetcher({
           page,
-          limit: 20,
+          limit: 100,
           nik: dataAtasan,
         });
 
@@ -136,7 +137,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
     try {
       const response = await postRHK(payload);
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
       showMessage({
         message: 'RHK berhasil disimpan.',
         type: 'success',
@@ -195,6 +196,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             onSelect={(val) => setRhkAtasan(val as string)}
             placeholder="Pilih Rencana Hasil Kerja Atasan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionRHKsWithQuery}
           />
           <Text className="mb-2 text-lg font-semibold text-black">
@@ -205,6 +207,8 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={rhkStaff}
             onChangeText={setRhkStaff}
+            multiline
+            textAlignVertical="top"
           />
           <Text className="mb-2 text-lg font-semibold text-black">
             Indikator
@@ -214,6 +218,8 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             placeholder="Indikator"
             value={indikator}
             onChangeText={setIndikator}
+            multiline
+            textAlignVertical="top"
           />
           <Text className="mb-2 text-lg font-semibold text-black">Target</Text>
           <TextInput
@@ -229,6 +235,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             onSelect={(val) => setSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <Select

@@ -7,6 +7,7 @@ import { showMessage } from 'react-native-flash-message';
 
 import {
   GetSatuanEkin,
+  queryClient,
   type Satuan,
   type UpdateRHKPejabatPayload,
   type UserDataEkin,
@@ -98,7 +99,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
     try {
       const response = await putRHK(payload);
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
       showMessage({
         message: 'RHK berhasil disimpan.',
         type: 'success',
@@ -171,6 +172,8 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
             placeholder="Rencana Hasil Kerja"
             value={indikator}
             onChangeText={setindikator}
+            multiline
+            textAlignVertical="top"
           />
           <Text className="mb-2 text-lg font-semibold text-black">Nilai</Text>
           <TextInput
@@ -187,6 +190,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
             onSelect={(val) => setIdSatuan(val as string)}
             placeholder="Pilih Satuan..."
             debounceMs={400}
+            pageSize={10}
             fetchOptions={fetchOptionSatuansWithQuery}
           />
           <Select

@@ -1,7 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { SquareCheckBig, SquareX } from 'lucide-react-native';
 import React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
+import { Alert } from 'react-native';
 import * as z from 'zod';
 
 import { Button, ControlledInput, Text, View } from '@/components/ui';
@@ -11,14 +14,9 @@ import { FileUploadInput } from '../ui/file-upload-input';
 import { TimeInput } from '../ui/time-input';
 
 const schema = z.object({
-  tanggal_spt: z
-    .string({
-      required_error: 'Tanggal SPT diperlukan',
-    })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD')
-    .refine((date) => !isNaN(Date.parse(date)), {
-      message: 'Tanggal tidak valid',
-    }),
+  tanggal_spt: z.string({
+    required_error: 'Tanggal SPT diperlukan',
+  }),
   waktu_spt: z
     .string({
       required_error: 'Waktu SPT diperlukan',
@@ -58,21 +56,23 @@ const FormFields = ({ control, errors }: { control: any; errors: any }) => {
         control={control}
         name="tanggal_spt"
         label="Tanggal SPT"
-        placeholder="YYYY-MM-DD"
+        placeholder="Tanggal Bulan Tahun"
         error={errors.tanggal_spt?.message}
       />
       <TimeInput
         control={control}
         name="waktu_spt"
         label="Waktu SPT"
-        placeholder="HH:mm:ss"
+        placeholder="HH:mm"
         error={errors.waktu_spt?.message}
       />
       <ControlledInput
         control={control}
         name="lama_acara"
         label="Lama Acara /hari"
-        keyboardType="numeric"
+        keyboardType="number-pad"
+        rightText="hari"
+        placeholder="Ketik berapa Hari SPT"
         error={errors.lama_acara?.message}
       />
       <ControlledInput
@@ -102,23 +102,48 @@ export default function SptForm({
     control,
     formState: { errors },
     handleSubmit,
+    getValues,
   } = useForm<FormType>({ resolver: zodResolver(schema) });
-
+  const router = useRouter();
   return (
-    <View className="m-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-gray-600 dark:bg-gray-800">
+    <View className="m-3 rounded-lg border border-gray-200 bg-transparent p-4">
       <FormFields control={control} errors={errors} />
       {isError && (
         <View className="my-2">
           <Text className="text-red-500">Terjadi kesalahan, coba lagi.</Text>
         </View>
       )}
-      <Button
-        label="Submit SPT"
-        onPress={handleSubmit(onSubmit)}
-        loading={isPending}
-        size="lg"
-        testID="submit-spt-button"
-      />
+      <View className="flex-row">
+        <Button
+          label="Submit SPT"
+          onPress={() => {
+            const lamaHari = getValues('lama_acara') || 0;
+            Alert.alert(
+              'Konfirmasi',
+              `Apakah Anda yakin mengajukan SPT untuk ${lamaHari} hari?`,
+              [
+                { text: 'Batal', style: 'cancel' },
+                { text: 'Ya', onPress: () => handleSubmit(onSubmit)() },
+              ]
+            );
+          }}
+          loading={isPending}
+          size="default"
+          variant="outline"
+          icon={<SquareCheckBig size={20} color="white" />}
+          testID="submit-spt-button"
+          className="flex-1 rounded-full bg-[#287BDC]"
+        />
+        <Button
+          label="Kembali"
+          onPress={() => router.back()}
+          size="default"
+          icon={<SquareX size={20} color="black" />}
+          testID="back-spt-button"
+          variant="outline"
+          className="ml-3 flex-1 rounded-full bg-red-500"
+        />
+      </View>
     </View>
   );
 }

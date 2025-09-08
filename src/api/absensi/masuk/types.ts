@@ -192,6 +192,9 @@ export interface AbsenMasuk {
   shift_id: number;
   nama_shift: string;
   waktu_kerja_id: number;
+  nama_hari_waktu_kerja: string;
+  jam_mulai_waktu_kerja: string;
+  jam_selesai_waktu_kerja: string;
   kode_unit_kerja: string;
   nama_unit_kerja: string;
   waktu_masuk: string; // format datetime string

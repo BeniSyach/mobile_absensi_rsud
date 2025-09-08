@@ -16,7 +16,7 @@ export default function FormHasilKerja({ search, onSearchChange }: Props) {
         <Search className="mr-2 size-6" color="black" strokeWidth={2.5} />
         <TextInput
           className="flex-1 bg-[#D8D8D8] py-2"
-          placeholder="Cari Indikator"
+          placeholder="Cari"
           value={search}
           onChangeText={onSearchChange}
         />

@@ -18,7 +18,7 @@ export const LogoutUser = createMutation<LogoutResponse, void, AxiosError>({
         Authorization: `Bearer ${token?.access}`,
       },
       data: {
-        refreshToken: token?.refresh, // dikirim di body
+        refresh_token: token?.refresh, // dikirim di body
       },
     }).catch((error) => {
       console.error('Logout API error 1:', error);

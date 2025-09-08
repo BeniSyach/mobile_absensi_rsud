@@ -31,7 +31,7 @@ export default function ListKegiatan() {
   const queryParams = {
     userId: storedMessage?.nik ?? '',
     page,
-    limit: 10,
+    limit: 30,
     tanggalAwal,
     tanggalAkhir,
     search,

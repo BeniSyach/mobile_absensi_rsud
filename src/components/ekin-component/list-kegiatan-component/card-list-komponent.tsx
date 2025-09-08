@@ -23,7 +23,7 @@ export default function CardListKomponent({ dataHarian }: CardProps) {
     <View style={styles.card}>
       {/* Tanggal dan Waktu */}
       <Text style={styles.dateText}>
-        {formatTanggalWIB(dataHarian.created_at)}
+        {formatTanggalWIB(dataHarian.tgl_kinerja)}
       </Text>
 
       {/* Judul */}

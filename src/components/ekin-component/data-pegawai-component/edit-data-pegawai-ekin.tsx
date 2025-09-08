@@ -13,6 +13,7 @@ import {
   type Pegawai,
   PutPegawai,
   type PutPegawaiVariables,
+  queryClient,
   type UnitKerjaSimpeg,
   UpdateAtasanUser,
   type UpdateAtasanVariables,
@@ -224,7 +225,7 @@ export default function EditDataPegawaiEkin({
 
       const responsePegawai = await updatePegawai(payloadPegawai);
       console.log('✅ Data pegawai berhasil dikirim:', responsePegawai);
-
+      queryClient.invalidateQueries({ queryKey: ['UseProfileEkin'] });
       showMessage({
         message: 'Data Berhasil Di Edit.',
         type: 'success',
@@ -300,6 +301,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setOpd(val as string)}
           placeholder="Pilih OPD/UPT..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionOPDsWithQuery}
         />
         <RemoteSelect
@@ -308,6 +310,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setJabatan(val as string)}
           placeholder="Pilih Jabatan..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionJabatansWithQuery}
         />
         <RemoteSelect
@@ -316,6 +319,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setPangkat(val as string)}
           placeholder="Pilih Pangkat..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionPangkatsWithQuery}
         />
         <RemoteSelect
@@ -324,6 +328,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setGolongan(val as string)}
           placeholder="Pilih Golongan..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionGolongansWithQuery}
         />
         <RemoteSelect
@@ -332,6 +337,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setEselon(val as string)}
           placeholder="Pilih Eselon..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionEselonsWithQuery}
         />
         <RemoteSelect
@@ -340,6 +346,7 @@ export default function EditDataPegawaiEkin({
           onSelect={(val) => setAtasan(val as string)}
           placeholder="Pilih Atasan..."
           debounceMs={400}
+          pageSize={10}
           fetchOptions={fetchOptionAtasansWithQuery}
         />
         <View className="flex-row justify-start px-5 py-2">

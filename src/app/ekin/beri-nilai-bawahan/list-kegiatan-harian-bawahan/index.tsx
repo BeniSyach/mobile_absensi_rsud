@@ -26,7 +26,7 @@ export default function ListKegiatanHarianBawahan() {
   const queryParams = {
     nik,
     page,
-    limit: 10,
+    limit: 30,
     status,
   };
 

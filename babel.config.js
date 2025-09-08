@@ -1,5 +1,8 @@
 module.exports = function (api) {
   api.cache(true);
+
+  const isDev = process.env.NODE_ENV === 'development';
+
   return {
     presets: [
       ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
@@ -24,11 +27,19 @@ module.exports = function (api) {
             '.jsx',
             '.js',
             '.json',
+            '.cjs',
+            '.mjs',
           ],
         },
       ],
-      'react-native-reanimated/plugin',
-      ['react-native-worklets-core/plugin'],
+
+      // Hanya aktifkan async generator transform di dev, jarang dibutuhkan di release
+      ...(isDev ? ['@babel/plugin-transform-async-generator-functions'] : []),
+
+      'react-native-worklets-core/plugin',
+
+      // Harus paling akhir
+      ['react-native-reanimated/plugin', { processNestedWorklets: true }],
     ],
   };
 };

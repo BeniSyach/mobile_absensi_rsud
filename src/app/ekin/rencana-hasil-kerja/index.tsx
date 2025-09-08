@@ -26,7 +26,7 @@ export default function RencanaHasilKinerja() {
   const queryParams = {
     nik: storedMessage?.nik ?? '',
     page,
-    limit: 10,
+    limit: 30,
     search,
   };
 

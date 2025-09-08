@@ -42,9 +42,7 @@ export const FileUploadInput = ({
 
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-lg text-gray-700 dark:text-neutral-200">
-        {label}
-      </Text>
+      <Text className="mb-1 text-lg text-gray-700">{label}</Text>
       <Controller
         control={control}
         name={name}

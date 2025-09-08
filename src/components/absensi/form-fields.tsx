@@ -86,7 +86,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       error={errors.shift_id?.message}
     />
     <Select
-      label="Shift/Hari Kerja"
+      label="Pilih Shift/Hari Kerja"
       options={tipe_hari_kerja}
       value={hari_kerja_value}
       onSelect={onHariKerjaSelect}

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
-import { type DetailKegiatan, PutKegiatanHarian } from '@/api';
+import { type DetailKegiatan, PutKegiatanHarian, queryClient } from '@/api';
 import { AlertModal } from '@/components/title-second';
 import { Button, showErrorMessage, Text, View } from '@/components/ui';
 import { formatTanggalWIB } from '@/utils/format-days';
@@ -40,7 +40,8 @@ export default function CardListKegiatanHarianBawahan({ dataCard }: CardProps) {
         status: 1,
       });
       console.log('✅ Data berhasil dikirim:', response);
-
+      queryClient.invalidateQueries({ queryKey: ['useListDetailKegiatan'] });
+      queryClient.invalidateQueries({ queryKey: ['useListBawahan'] });
       showMessage({
         message: 'Kegiatan harian berhasil disimpan.',
         type: 'success',

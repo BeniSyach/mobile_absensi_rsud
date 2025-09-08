@@ -4,7 +4,7 @@ import { Edit, Trash } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { showMessage } from 'react-native-flash-message';
 
-import { type RhkStaffChildItem } from '@/api';
+import { queryClient, type RhkStaffChildItem } from '@/api';
 import { DeleteRHKStaff } from '@/api/ekin/delete-rhk-staff/delete-rhk-staff';
 import { AlertModal } from '@/components/title-second';
 import { Pressable, showErrorMessage, Text, View } from '@/components/ui';
@@ -28,10 +28,11 @@ export default function CardHasilKerja({ dataRHKItems }: CardProps) {
     console.log('✅ Data disetujui secara final');
 
     try {
-      const response = await deleteRHK({ id: dataRHKItems.id });
+      const response = await deleteRHK({ id: dataRHKItems.id_rhk_staff });
       console.log('✅ Data berhasil dikirim:', response);
+      queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
       showMessage({
-        message: 'RHK berhasil dihapus.',
+        message: response.message,
         type: 'success',
         duration: 7000,
       });

@@ -22,7 +22,7 @@ export default function BeriNilaiBawahan() {
   const queryParams = {
     nik_atasan: storedMessage?.nik ?? '',
     page,
-    limit: 10,
+    limit: 30,
     search,
   };
 

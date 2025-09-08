@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
+import { ImageBackground } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { ResetPasswordUser } from '@/api';
@@ -10,7 +11,7 @@ import { SafeAreaView, showErrorMessage } from '@/components/ui';
 
 export default function ResetPassword() {
   const router = useRouter();
-  const { mutate, isPending, isError } = ResetPasswordUser({
+  const { mutate, isPending } = ResetPasswordUser({
     onSuccess: () => {
       showMessage({
         message: 'Password berhasil direset',
@@ -27,18 +28,21 @@ export default function ResetPassword() {
     mutate(data);
   };
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView className="flex-1">
       <Stack.Screen
         options={{
           title: 'Reset Password',
           headerBackTitle: 'reset-password',
+          headerShown: false,
         }}
       />
-      <FormEditPassword
-        onSubmit={onSubmit}
-        isPending={isPending}
-        isError={isError}
-      />
+      <ImageBackground
+        source={require('../../../../assets/background/background_absensi.png')}
+        resizeMode="cover"
+        className="flex-1 px-4"
+      >
+        <FormEditPassword onSubmit={onSubmit} isPending={isPending} />
+      </ImageBackground>
     </SafeAreaView>
   );
 }
