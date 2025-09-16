@@ -13,19 +13,6 @@
 
 # Add any project specific keep options here:
 
-# Vision Camera
--keep class com.mrousavy.camera.** { *; }
--keep class com.mrousavy.camera.core.** { *; }
--keep class com.mrousavy.camera.frameprocessor.** { *; }
-
-# Face Detector
--keep class com.visioncameraFacedetector.** { *; }
--keep class com.google.mlkit.** { *; }
--keep class com.google.android.gms.** { *; }
-
-# Worklets - SANGAT PENTING
--keep class com.margelo.worklets.** { *; }
-
 # JSI
 -keep class com.facebook.jni.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
@@ -40,14 +27,24 @@
     @com.facebook.proguard.annotations.KeepGettersAndSetters *;
 }
 
+-keep class androidx.camera.** { *; }
+-keep class androidx.lifecycle.** { *; }
+-keep class com.facebook.react.** { *; }
+
+
 # Worklet functions
 -keepclassmembers class * {
     *** *Worklet*(...);
 }
 
-# React Native Bridge
--keep class com.facebook.react.bridge.** { *; }
--keep class com.facebook.react.uimanager.** { *; }
+# Keep TF.js classes
+-keep class org.tensorflow.** { *; }
+-keep class org.tensorflow.lite.** { *; }
+-keep class org.tensorflow.lite.support.** { *; }
+-keep class org.tensorflow.tensorbuffer.** { *; }
+-keep class com.github.rtmigo.** { *; } 
+
+-keep class com.google.** { *; }
 
 # Expo Modules
 -keep class expo.modules.** { *; }

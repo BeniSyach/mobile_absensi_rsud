@@ -35,7 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   updates: {
     fallbackToCacheTimeout: 0,
   },
-  assetBundlePatterns: ['**/*'],
+  assetBundlePatterns: ['**/*', 'assets/model/*'],
   ios: {
     supportsTablet: true,
     bundleIdentifier: Env.BUNDLE_ID,
@@ -123,14 +123,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-      'react-native-vision-camera',
+      'react-native-fast-tflite',
       {
-        cameraPermissionText: '$(PRODUCT_NAME) needs access to your Camera.',
-
-        // optionally, if you want to record audio:
-        enableMicrophonePermission: true,
-        microphonePermissionText:
-          '$(PRODUCT_NAME) needs access to your Microphone.',
+        enableCoreMLDelegate: true,
+        enableAndroidGpuLibraries: true,
       },
     ],
   ],

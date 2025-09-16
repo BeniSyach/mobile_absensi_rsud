@@ -5,6 +5,14 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
+// Pastikan JSON dan BIN ikut ke bundler
+config.resolver.assetExts = [
+  ...config.resolver.assetExts.filter((ext) => ext !== 'svg'),
+  'tflite',
+  'bin',
+  'json',
+];
+
 // Resolver untuk TensorFlow.js
 config.resolver.alias = {
   ...config.resolver.alias,
@@ -20,7 +28,7 @@ config.transformer.minifierConfig = {
     drop_debugger: true,
     conditionals: true,
     evaluate: true,
-    drop_console: true, // Hapus semua console.* di release
+    drop_console: true,
   },
   output: {
     ascii_only: true,
@@ -29,11 +37,6 @@ config.transformer.minifierConfig = {
   keep_fnames: true,
 };
 
-// Kalau kamu pakai SVG, aktifkan ini (bisa dihapus kalau tidak pakai SVG)
-
-config.resolver.assetExts = config.resolver.assetExts.filter(
-  (ext) => ext !== 'svg'
-);
 config.resolver.sourceExts = [
   ...config.resolver.sourceExts,
   'svg',

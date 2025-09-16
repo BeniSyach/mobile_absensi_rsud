@@ -1,191 +1,237 @@
 /* eslint-disable max-lines-per-function */
-import '@tensorflow/tfjs-react-native';
-
-import * as tf from '@tensorflow/tfjs';
-import { decodeJpeg } from '@tensorflow/tfjs-react-native';
-import * as blazeface from '@tensorflow-models/blazeface';
-import { Camera, CameraView } from 'expo-camera';
+import * as jpeg from 'jpeg-js';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useTensorflowModel } from 'react-native-fast-tflite';
+import RNFS from 'react-native-fs';
+import ImageResizer from 'react-native-image-resizer';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
-interface FaceRegisterProps {
-  onRegister: (embedding: Float32Array | null, photoUri?: string) => void;
-}
+import { anchors } from '@/utils/blazeface-anchors';
 
-interface CapturedPhoto {
-  uri: string;
-}
+type FaceRegisterProps = {
+  onRegister: (embedding: Float32Array, photoUri: string) => void;
+};
 
-const FaceRegisterCPU: React.FC<FaceRegisterProps> = ({ onRegister }) => {
-  const [hasPermission, setHasPermission] = useState(false);
-  const [tfReady, setTfReady] = useState(false);
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [captured, setCaptured] = useState<CapturedPhoto | null>(null);
-  const [isCapturing, setIsCapturing] = useState(false);
+const DET_INPUT_SIZE = 128;
+const EMBED_INPUT_SIZE = 112;
 
-  const cameraRef = useRef<CameraView | null>(null);
-  const blazefaceModel = useRef<blazeface.BlazeFaceModel | null>(null);
+export default function FaceRegisterMobileFaceNet({
+  onRegister,
+}: FaceRegisterProps) {
+  const cameraRef = useRef<Camera>(null);
+  const device = useCameraDevice('front');
 
+  const detModel = useTensorflowModel(
+    require('../../../../assets/model/blazeface.tflite')
+  );
+  const embedModel = useTensorflowModel(
+    require('../../../../assets/model/mobilefacenet.tflite')
+  );
+
+  const [status, setStatus] = useState('Loading models...');
+
+  // Update status when models load
   useEffect(() => {
-    const init = async () => {
-      try {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setHasPermission(status === 'granted');
-
-        await tf.ready();
-        await tf.setBackend('cpu');
-
-        blazefaceModel.current = await blazeface.load();
-        setModelLoaded(true);
-        setTfReady(true);
-      } catch (e) {
-        console.error('Init error:', e);
-        Alert.alert('Error', 'Gagal inisialisasi kamera / TensorFlow');
-        onRegister(null);
-      }
-    };
-    init();
-  }, []);
-
-  const detectFaceAndCapture = async (uri: string) => {
-    if (!blazefaceModel.current) return;
-
-    try {
-      const response = await fetch(uri);
-      const buffer = await response.arrayBuffer();
-      const imageTensor = decodeJpeg(new Uint8Array(buffer));
-
-      const predictions = await blazefaceModel.current.estimateFaces(
-        imageTensor,
-        false
-      );
-      imageTensor.dispose();
-
-      if (predictions.length > 0) {
-        const topLeft = predictions[0].topLeft as [number, number];
-        const bottomRight = predictions[0].bottomRight as [number, number];
-
-        const embedding = new Float32Array([...topLeft, ...bottomRight]);
-        onRegister(embedding, uri);
-        setCaptured({ uri });
-
-        Alert.alert('Berhasil', 'Foto wajah berhasil diambil!');
-      } else {
-        Alert.alert('Gagal', 'Tidak ada wajah terdeteksi, coba lagi.');
-      }
-    } catch (err) {
-      console.error('Detection error:', err);
-      Alert.alert('Error', 'Gagal memproses foto.');
+    if (detModel.state === 'loaded' && embedModel.state === 'loaded') {
+      setStatus('Models loaded, ready to capture');
+    } else if (detModel.state === 'loading' || embedModel.state === 'loading') {
+      setStatus('Loading models...');
+    } else if (detModel.state === 'error' || embedModel.state === 'error') {
+      setStatus('Error loading models');
     }
+  }, [detModel.state, embedModel.state]);
+
+  // Convert image URI ke Float32Array
+  const imageUriToTensor = async (
+    uri: string,
+    targetSize: number,
+    normalize: 'zero_one' | 'neg_one_pos_one' = 'zero_one'
+  ): Promise<Float32Array> => {
+    const resized = await ImageResizer.createResizedImage(
+      uri,
+      targetSize,
+      targetSize,
+      'JPEG',
+      100
+    );
+    const base64 = await RNFS.readFile(resized.uri, 'base64');
+    const buffer = Buffer.from(base64, 'base64');
+    const { data, width, height } = jpeg.decode(buffer, { useTArray: true });
+
+    const tensor = new Float32Array(width * height * 3);
+    let ti = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i],
+        g = data[i + 1],
+        b = data[i + 2];
+      tensor[ti++] = normalize === 'neg_one_pos_one' ? r / 127.5 - 1 : r / 255;
+      tensor[ti++] = normalize === 'neg_one_pos_one' ? g / 127.5 - 1 : g / 255;
+      tensor[ti++] = normalize === 'neg_one_pos_one' ? b / 127.5 - 1 : b / 255;
+    }
+    return tensor;
   };
 
-  const capturePhoto = async () => {
-    if (!cameraRef.current || isCapturing) return;
-    setIsCapturing(true);
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        base64: false,
-        quality: 0.7,
-      });
+  const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 
-      if (!photo?.uri) {
-        Alert.alert('Gagal', 'Gagal mengambil foto');
-        setIsCapturing(false);
+  // Deteksi wajah
+  const detectFaces = async (photoUri: string) => {
+    if (!detModel.model || detModel.state !== 'loaded') return [];
+
+    const pixels = await imageUriToTensor(photoUri, DET_INPUT_SIZE, 'zero_one');
+
+    let outputs;
+    try {
+      outputs = detModel.model.runSync([pixels]);
+    } catch (err) {
+      console.error('Face detection failed', err);
+      return [];
+    }
+
+    if (!outputs || !outputs[0]) return [];
+    const detections = outputs[0] as Float32Array;
+    if (!detections || detections.length === 0) return [];
+
+    const results: any[] = [];
+    const stride = 16;
+
+    for (let i = 0; i < detections.length; i += stride) {
+      const score = sigmoid(detections[i + 15]);
+      if (score < 0.8) continue;
+      const anchor = anchors[Math.floor(i / stride)];
+      if (!anchor) continue;
+      results.push({
+        score,
+        box: {
+          x: detections[i] + anchor[0],
+          y: detections[i + 1] + anchor[1],
+          w: detections[i + 2],
+          h: detections[i + 3],
+        },
+      });
+    }
+
+    return results.sort((a, b) => b.score - a.score);
+  };
+
+  // Ambil foto & generate embedding
+  const captureAndRegister = async () => {
+    if (!cameraRef.current) return;
+    if (!detModel.model || detModel.state !== 'loaded') {
+      Alert.alert('Face detection model is not ready');
+      return;
+    }
+    if (!embedModel.model || embedModel.state !== 'loaded') {
+      Alert.alert('Face embedding model is not ready');
+      return;
+    }
+
+    try {
+      setStatus('📸 Taking photo...');
+      const photo = await cameraRef.current.takePhoto();
+      const photoUri = 'file://' + photo.path;
+
+      setStatus('🔎 Detecting faces...');
+      const faces = await detectFaces(photoUri);
+      if (faces.length === 0) {
+        Alert.alert('No face detected');
+        setStatus('❌ No face');
         return;
       }
 
-      await detectFaceAndCapture(photo.uri);
+      setStatus('✂️ Cropping & resizing face...');
+      const cropped = await ImageResizer.createResizedImage(
+        photoUri,
+        EMBED_INPUT_SIZE,
+        EMBED_INPUT_SIZE,
+        'JPEG',
+        100
+      );
+
+      setStatus('🤖 Generating embedding...');
+      const tensor = await imageUriToTensor(
+        cropped.uri,
+        EMBED_INPUT_SIZE,
+        'neg_one_pos_one'
+      );
+
+      let embedding: Float32Array | null = null;
+      try {
+        const embeddingOutput = embedModel.model.runSync([tensor]);
+        if (!embeddingOutput || !embeddingOutput[0])
+          throw new Error('Invalid output');
+        embedding = embeddingOutput[0] as Float32Array;
+      } catch (err) {
+        console.error('Embedding generation failed', err);
+        Alert.alert('Error', 'Failed to generate embedding');
+        setStatus('❌ Error embedding');
+        return;
+      }
+
+      setStatus('✅ Success');
+      onRegister(embedding, cropped.uri);
     } catch (err) {
-      console.error('Capture error:', err);
-      Alert.alert('Error', 'Terjadi kesalahan saat mengambil foto');
-      onRegister(null);
-    } finally {
-      setIsCapturing(false);
+      console.error(err);
+      Alert.alert('Error', String(err));
+      setStatus('❌ Error');
     }
   };
 
-  if (!hasPermission) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.text}>Meminta izin kamera...</Text>
-      </View>
-    );
-  }
+  const isModelsReady =
+    detModel.state === 'loaded' && embedModel.state === 'loaded';
 
-  if (!tfReady || !modelLoaded) {
+  if (!device || !isModelsReady) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.text}>Loading Camera...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>{status}</Text>
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1 }}>
-      {!captured ? (
-        <CameraView
-          ref={cameraRef}
-          style={StyleSheet.absoluteFill}
-          facing="front"
-        />
-      ) : (
-        <Image source={{ uri: captured.uri }} style={StyleSheet.absoluteFill} />
-      )}
+      <Camera
+        ref={cameraRef}
+        style={{ flex: 1 }}
+        device={device}
+        isActive
+        photo
+      />
 
-      <View style={styles.instructionBox}>
-        <Text style={styles.text}>
-          {!captured ? '📷 Siap mengambil foto...' : '✅ Foto diambil!'}
-        </Text>
-        {!captured && (
-          <TouchableOpacity
-            style={[
-              styles.captureButton,
-              isCapturing && { backgroundColor: '#999' },
-            ]}
-            onPress={capturePhoto}
-            disabled={isCapturing}
-          >
-            {isCapturing ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                📸 Ambil Foto
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
+      <TouchableOpacity
+        onPress={captureAndRegister}
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          alignSelf: 'center',
+          backgroundColor: 'white',
+          padding: 16,
+          borderRadius: 50,
+        }}
+      >
+        <Text>📸</Text>
+      </TouchableOpacity>
+
+      <Text
+        style={{
+          position: 'absolute',
+          top: 50,
+          alignSelf: 'center',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          color: 'white',
+          padding: 6,
+          borderRadius: 8,
+        }}
+      >
+        {status}
+      </Text>
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 18, color: '#333', textAlign: 'center' },
-  instructionBox: {
-    position: 'absolute',
-    bottom: 60,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  captureButton: {
-    marginTop: 10,
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-});
-
-export default FaceRegisterCPU;
+}

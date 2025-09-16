@@ -35,9 +35,7 @@ module.exports = function (api) {
 
       // Hanya aktifkan async generator transform di dev, jarang dibutuhkan di release
       ...(isDev ? ['@babel/plugin-transform-async-generator-functions'] : []),
-
-      'react-native-worklets-core/plugin',
-
+      // ['react-native-worklets-core/plugin'],
       // Harus paling akhir
       ['react-native-reanimated/plugin', { processNestedWorklets: true }],
     ],

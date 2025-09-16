@@ -7,14 +7,9 @@ import { showMessage } from 'react-native-flash-message';
 import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
-import {
-  type ApiResponse,
-  postFaceRecognition,
-  queryClient,
-  type UseFaceUserResponse,
-} from '@/api';
-import FaceRegisterCPU from '@/app/setting-app/upload-foto/camera-capture';
-import { Button, Image, Pressable, Text, View } from '@/components/ui';
+import { type ApiResponse, type UseFaceUserResponse } from '@/api';
+import FaceRegisterMobileFaceNet from '@/app/setting-app/upload-foto/camera-capture';
+import { Image, Pressable, Text, View } from '@/components/ui';
 import { useAuth } from '@/lib';
 
 interface Props {
@@ -33,7 +28,7 @@ const FACE_URI_KEY = 'face_photo_uri';
 const FACE_EMBED_KEY = 'face_embedding';
 
 export default function ProfileCard({
-  user,
+  // user,
   photo,
   isloading,
   isErrorAPI,
@@ -42,10 +37,11 @@ export default function ProfileCard({
   const [photoUri, setPhotoUri] = useState<string>(
     'https://dummyimage.com/80x80'
   );
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const [embedding, setEmbedding] = useState<Float32Array | null>(null);
   const [progress, setProgress] = useState(0);
 
-  const { mutateAsync, isPending, isError } = postFaceRecognition();
+  // const { mutateAsync, isPending, isError } = postFaceRecognition();
   const token = useAuth.getState().token?.access;
 
   // load foto profil dari server (cache ke lokal)
@@ -141,34 +137,34 @@ export default function ProfileCard({
     }
   };
 
-  const handleUpload = async () => {
-    if (!photoUri || !embedding) return;
+  // const handleUpload = async () => {
+  //   if (!photoUri || !embedding) return;
 
-    try {
-      await mutateAsync({
-        nik: user?.data?.nik ? user.data.nik.toString() : '-',
-        photos: [
-          {
-            uri: photoUri,
-            type: 'image/jpeg',
-            name: `face_${Date.now()}.jpg`,
-          },
-        ],
-      });
-      queryClient.invalidateQueries({ queryKey: ['useFaceRecognition'] });
-      showMessage({
-        message: 'Foto wajah berhasil diunggah',
-        type: 'success',
-        duration: 7000,
-      });
-    } catch (error) {
-      showMessage({
-        message: 'Terjadi kesalahan saat upload foto',
-        type: 'danger',
-        duration: 7000,
-      });
-    }
-  };
+  //   try {
+  //     await mutateAsync({
+  //       nik: user?.data?.nik ? user.data.nik.toString() : '-',
+  //       photos: [
+  //         {
+  //           uri: photoUri,
+  //           type: 'image/jpeg',
+  //           name: `face_${Date.now()}.jpg`,
+  //         },
+  //       ],
+  //     });
+  //     queryClient.invalidateQueries({ queryKey: ['useFaceRecognition'] });
+  //     showMessage({
+  //       message: 'Foto wajah berhasil diunggah',
+  //       type: 'success',
+  //       duration: 7000,
+  //     });
+  //   } catch (error) {
+  //     showMessage({
+  //       message: 'Terjadi kesalahan saat upload foto',
+  //       type: 'danger',
+  //       duration: 7000,
+  //     });
+  //   }
+  // };
 
   return (
     <View className="mx-auto mt-2 max-w-lg rounded-lg">
@@ -233,12 +229,12 @@ export default function ProfileCard({
               </Text>
             </TouchableOpacity>
 
-            <FaceRegisterCPU onRegister={handleRegister} />
+            <FaceRegisterMobileFaceNet onRegister={handleRegister} />
           </View>
         </Modal>
       </View>
 
-      {/* Tombol Upload */}
+      {/* Tombol Upload
       {photoUri && embedding && (
         <View className="mt-4">
           <Button
@@ -252,7 +248,7 @@ export default function ProfileCard({
             </Text>
           )}
         </View>
-      )}
+      )} */}
     </View>
   );
 }
