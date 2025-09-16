@@ -8,7 +8,7 @@ import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
 import { type ApiResponse, type UseFaceUserResponse } from '@/api';
-import FaceRegisterMobileFaceNet from '@/app/setting-app/upload-foto/camera-capture';
+import FaceRegisterExpoCameraView from '@/app/setting-app/upload-foto/camera-capture';
 import { Image, Pressable, Text, View } from '@/components/ui';
 import { useAuth } from '@/lib';
 
@@ -97,22 +97,24 @@ export default function ProfileCard({
       let localUri = capturedUri;
 
       // simpan foto di Android secara lokal
-      if (Platform.OS === 'android') {
-        const fileName = `face_${Date.now()}.jpg`;
-        const newPath = `${FileSystem.documentDirectory}${fileName}`;
-        try {
-          await FileSystem.copyAsync({
-            from: capturedUri,
-            to: newPath,
-          });
-          localUri = newPath;
-          console.log('✅ Foto tersimpan di Android:', localUri);
-        } catch (err) {
-          console.error('❌ Gagal simpan foto:', err);
-        }
+      const fileName = `face_${Date.now()}.jpg`;
+      let newPath = `${FileSystem.documentDirectory}${fileName}`;
+
+      if (Platform.OS === 'android' && !newPath.startsWith('file://')) {
+        newPath = 'file://' + newPath;
       }
 
-      setPhotoUri(localUri);
+      try {
+        await FileSystem.copyAsync({
+          from: capturedUri,
+          to: newPath,
+        });
+        console.log('✅ Foto tersimpan di Android:', newPath);
+      } catch (err) {
+        console.error('❌ Gagal simpan foto:', err);
+      }
+
+      setPhotoUri(newPath);
       setEmbedding(faceEmbedding);
       setShowCamera(false);
 
@@ -229,7 +231,7 @@ export default function ProfileCard({
               </Text>
             </TouchableOpacity>
 
-            <FaceRegisterMobileFaceNet onRegister={handleRegister} />
+            <FaceRegisterExpoCameraView onRegister={handleRegister} />
           </View>
         </Modal>
       </View>

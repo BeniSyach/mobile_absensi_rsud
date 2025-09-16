@@ -2,13 +2,12 @@
 /* eslint-disable max-lines-per-function */
 import '@tensorflow/tfjs-react-native';
 
-import type * as tf from '@tensorflow/tfjs';
-import { decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { type CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { Camera, CameraIcon, Save } from 'lucide-react-native';
 import * as React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
-import { ActivityIndicator, Alert, BackHandler, Vibration } from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
+import { useTensorflowModel } from 'react-native-fast-tflite';
 import { MMKV } from 'react-native-mmkv';
 
 import { type ApiResponse } from '@/api';
@@ -23,8 +22,8 @@ import {
   Text,
   View,
 } from '@/components/ui';
-import { getFaceEmbedding } from '@/utils/face-utils';
-import { loadModels } from '@/utils/model-loader';
+import { imageUriToTensor } from '@/utils/face-utils-lite';
+import { DET_INPUT_SIZE, EMB_INPUT_SIZE } from '@/utils/model-loader-lite';
 
 import { type FormType } from './absensi-types';
 import { useAbsensiForm } from './use-absensi-form';
@@ -65,15 +64,9 @@ const storage = new MMKV({
 });
 
 const FACE_EMBED_KEY = 'face_embedding';
-const VERIFICATION_ATTEMPTS_KEY = 'verification_attempts';
-const LAST_VERIFICATION_KEY = 'last_verification_time';
 
 // ===== Constants =====
-const SIMILARITY_THRESHOLD = 0.7; // Increased for better security
-const MAX_VERIFICATION_ATTEMPTS = 5;
-const VERIFICATION_COOLDOWN = 30000; // 30 seconds
-// const FACE_CONFIDENCE_THRESHOLD = 0.8;
-// const VERIFICATION_TIMEOUT = 30000; // 15 seconds
+const SIMILARITY_THRESHOLD = 0.6; // Increased for better security
 
 // ===== Types =====
 interface VerificationResult {
@@ -82,41 +75,6 @@ interface VerificationResult {
   confidence: number;
   attempts: number;
 }
-
-interface VerificationState {
-  status: 'idle' | 'loading' | 'processing' | 'success' | 'fail' | 'blocked';
-  loading: boolean;
-  error: string | null;
-  attempts: number;
-  cooldownUntil: number | null;
-  lastResult: VerificationResult | null;
-}
-
-// ===== Utility Functions =====
-const cosineSimilarity = (a: Float32Array, b: Float32Array): number => {
-  if (!a || !b || a.length !== b.length || a.length === 0) {
-    throw new Error('Invalid embeddings for similarity calculation');
-  }
-
-  let dot = 0.0;
-  let normA = 0.0;
-  let normB = 0.0;
-
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  const denominator = Math.sqrt(normA) * Math.sqrt(normB);
-
-  if (denominator === 0) {
-    console.warn('Zero norm detected in embeddings');
-    return 0;
-  }
-
-  return Math.max(0, Math.min(1, dot / denominator)); // Clamp to [0, 1]
-};
 
 const getStoredEmbedding = (): Float32Array | null => {
   try {
@@ -129,29 +87,6 @@ const getStoredEmbedding = (): Float32Array | null => {
     console.error('Failed to load stored embedding:', error);
     return null;
   }
-};
-
-const getVerificationAttempts = (): number => {
-  return storage.getNumber(VERIFICATION_ATTEMPTS_KEY) || 0;
-};
-
-const incrementVerificationAttempts = (): number => {
-  const current = getVerificationAttempts() + 1;
-  storage.set(VERIFICATION_ATTEMPTS_KEY, current);
-  return current;
-};
-
-const resetVerificationAttempts = (): void => {
-  storage.delete(VERIFICATION_ATTEMPTS_KEY);
-};
-
-const isInCooldown = (): boolean => {
-  const lastVerification = storage.getNumber(LAST_VERIFICATION_KEY) || 0;
-  return Date.now() - lastVerification < VERIFICATION_COOLDOWN;
-};
-
-const setCooldown = (): void => {
-  storage.set(LAST_VERIFICATION_KEY, Date.now());
 };
 
 // ===== Camera Component =====
@@ -245,364 +180,211 @@ interface FaceVerifyScreenProps {
   handleTakePhoto?: (photo: { uri: string; base64?: string }) => Promise<void>; // optional
 }
 
+// ===== Utils =====
+const cosineSimilarity = (a: Float32Array, b: Float32Array) => {
+  let dot = 0,
+    normA = 0,
+    normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+};
+
 export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
   showCamera,
   onVerificationComplete,
-  onCancel,
   handleTakePhoto,
 }) => {
-  const [state, setState] = React.useState<VerificationState>({
-    status: 'idle',
-    loading: true,
-    error: null,
-    attempts: 0,
-    cooldownUntil: null,
-    lastResult: null,
-  });
-
   const [blazefaceModel, setBlazefaceModel] = React.useState<any>(null);
   const [mobileFaceNet, setMobileFaceNet] = React.useState<any>(null);
-  const timeoutRef = React.useRef<NodeJS.Timeout>();
-  const isUnmounted = React.useRef(false);
+  const [savedEmbedding, setSavedEmbedding] =
+    React.useState<Float32Array | null>(null);
+  const [verifiedPhotoUri, setVerifiedPhotoUri] = React.useState<string | null>(
+    null
+  );
+  const [attempts, setAttempts] = React.useState(0);
+  const [isVerifying, setIsVerifying] = React.useState(false);
 
-  // Initialize models
+  // Load TensorFlow models
+  const detectionModel = useTensorflowModel(
+    require('../../../assets/model/blazeface.tflite')
+  );
+  const embedModel = useTensorflowModel(
+    require('../../../assets/model/mobilefacenet.tflite')
+  );
+
   React.useEffect(() => {
-    const initializeModels = async () => {
+    const init = async () => {
       try {
-        const { blazefaceModel, mobileFaceNet } = await loadModels();
+        while (
+          detectionModel.state !== 'loaded' ||
+          embedModel.state !== 'loaded'
+        ) {
+          await new Promise((r) => setTimeout(r, 100));
+        }
+        setBlazefaceModel(detectionModel);
+        setMobileFaceNet(embedModel);
 
-        if (isUnmounted.current) return;
-
-        setBlazefaceModel(blazefaceModel);
-        setMobileFaceNet(mobileFaceNet);
-
-        // Check initial state
-        const attempts = getVerificationAttempts();
-        const inCooldown = isInCooldown();
-
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          attempts,
-          status: attempts >= MAX_VERIFICATION_ATTEMPTS ? 'blocked' : 'idle',
-          cooldownUntil: inCooldown ? Date.now() + VERIFICATION_COOLDOWN : null,
-        }));
-      } catch (error) {
-        console.error('Failed to initialize models:', error);
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to load AI models',
-          status: 'fail',
-        }));
+        const stored = await getStoredEmbedding();
+        if (!stored) Alert.alert('Error', 'Belum ada wajah yang terdaftar');
+        else setSavedEmbedding(stored);
+      } catch (err) {
+        console.error(err);
+        Alert.alert('Error', 'Gagal load AI models');
       }
     };
-
-    initializeModels();
-
-    return () => {
-      isUnmounted.current = true;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    init();
   }, []);
 
-  // Handle back button
-  React.useEffect(() => {
-    const backAction = () => {
-      if (state.status === 'processing') {
-        Alert.alert(
-          'Cancel Verification?',
-          'Face verification is in progress.',
-          [
-            { text: 'Wait', style: 'cancel' },
-            {
-              text: 'Cancel',
-              style: 'destructive',
-              onPress: () => onCancel?.(),
-            },
-          ]
-        );
-        return true;
+  const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
+  // Deteksi wajah sederhana menggunakan BlazeFace
+  const detectFaces = React.useCallback(
+    async (photoUri: string) => {
+      if (!blazefaceModel) return [];
+      // Resize ke 128x128 untuk BlazeFace
+      const pixels = await imageUriToTensor(
+        photoUri,
+        DET_INPUT_SIZE,
+        'zero_one'
+      );
+
+      const outputs = blazefaceModel.model.runSync([pixels]);
+      if (!outputs || !outputs[0]) return [];
+      const detections = outputs[0] as Float32Array;
+
+      // Ambil prediksi dengan score tinggi
+      const results: any[] = [];
+      const stride = 16;
+      for (let i = 0; i < detections.length; i += stride) {
+        const score = sigmoid(detections[i + 15]);
+        if (score < 0.8) continue;
+        results.push({
+          score,
+          box: {
+            x: detections[i],
+            y: detections[i + 1],
+            w: detections[i + 2],
+            h: detections[i + 3],
+          },
+        });
       }
-      return false;
-    };
+      return results.sort((a, b) => b.score - a.score);
+    },
+    [blazefaceModel]
+  );
 
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-    return () => backHandler.remove();
-  }, [state.status, onCancel]);
-
-  // Cooldown timer
-  React.useEffect(() => {
-    if (state.cooldownUntil && state.cooldownUntil > Date.now()) {
-      const timer = setInterval(() => {
-        const remaining = state.cooldownUntil! - Date.now();
-        if (remaining <= 0) {
-          setState((prev) => ({ ...prev, cooldownUntil: null }));
-          clearInterval(timer);
-        }
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [state.cooldownUntil]);
-
-  // const handleVerificationTimeout = React.useCallback(() => {
-  //   setState((prev) => ({
-  //     ...prev,
-  //     status: 'fail',
-  //     error: 'Verification timeout',
-  //   }));
-  //   Alert.alert('Timeout', 'Verification took too long. Please try again.');
-  // }, []);
-
+  // Verifikasi foto
   const onVerifyPhoto = React.useCallback(
     async (photo: { uri: string }) => {
-      if (!blazefaceModel || !mobileFaceNet) {
-        setState((prev) => ({ ...prev, error: 'Model belum siap' }));
-        return;
-      }
+      if (!blazefaceModel || !mobileFaceNet || !savedEmbedding) return;
 
-      setState((prev) => ({ ...prev, status: 'processing', error: null }));
-
-      let imageTensor: tf.Tensor3D | null = null;
+      setIsVerifying(true);
 
       try {
-        const savedEmbedding = getStoredEmbedding();
-        if (!savedEmbedding) throw new Error('Belum ada wajah yang terdaftar');
+        const faces = await detectFaces(photo.uri);
+        if (faces.length === 0) throw new Error('Wajah tidak terdeteksi');
 
-        const response = await fetch(photo.uri);
-        const buffer = await response.arrayBuffer();
-        imageTensor = decodeJpeg(new Uint8Array(buffer));
-
-        const predictions = await blazefaceModel.estimateFaces(
-          imageTensor,
-          false,
-          1,
-          true
-        );
-
-        if (!predictions || predictions.length === 0)
-          throw new Error('Wajah tidak terdeteksi');
-
-        const face = predictions[0];
-
-        if (face.probability && face.probability < 0.8)
-          throw new Error('Confidence wajah terlalu rendah');
-
-        const currentEmbedding = await getFaceEmbedding(
+        const embeddingTensor = await imageUriToTensor(
           photo.uri,
-          face,
-          mobileFaceNet,
-          { margin: 0.3, targetSize: [224, 224], normalize: true }
+          EMB_INPUT_SIZE,
+          'neg_one_pos_one'
         );
 
-        if (!currentEmbedding) throw new Error('Gagal memproses wajah');
+        const embeddingOutput = mobileFaceNet.model.runSync([embeddingTensor]);
+        const currentEmbedding = embeddingOutput[0] as Float32Array;
 
         const similarity = cosineSimilarity(currentEmbedding, savedEmbedding);
-        const attempts = incrementVerificationAttempts();
+        const success = similarity >= SIMILARITY_THRESHOLD;
 
-        const cocok = similarity >= SIMILARITY_THRESHOLD;
+        // Increment attempts safely
+        setAttempts((prev) => prev + 1);
 
-        const result: VerificationResult = {
-          success: cocok,
-          similarity,
-          confidence: face.probability || 0,
-          attempts,
-        };
+        if (success) {
+          setVerifiedPhotoUri(photo.uri);
 
-        if (cocok) {
-          resetVerificationAttempts();
-          Vibration.vibrate(100);
-          setState((prev) => ({
-            ...prev,
-            status: 'success',
-            lastResult: result,
-          }));
-        } else {
-          // similarity < 70%, user harus ulangi
-          setCooldown();
-          setState((prev) => ({
-            ...prev,
-            status: 'fail',
-            cooldownUntil: Date.now() + VERIFICATION_COOLDOWN,
-            lastResult: result,
-            error: `Wajah tidak cukup cocok (${(similarity * 100).toFixed(1)}%). Silakan coba lagi.`,
-          }));
+          if (handleTakePhoto) {
+            await handleTakePhoto(photo);
+          }
 
           Alert.alert(
-            'Verifikasi Gagal',
-            `Wajah tidak cukup cocok (${(similarity * 100).toFixed(1)}%). Silakan coba lagi.`,
-            [{ text: 'Ulangi', style: 'default' }]
+            'Sukses',
+            `Wajah cocok (${(similarity * 100).toFixed(1)}%)`
+          );
+        } else {
+          Alert.alert(
+            'Gagal',
+            `Wajah tidak cocok (${(similarity * 100).toFixed(1)}%)`
           );
         }
 
-        onVerificationComplete(result);
-      } catch (error) {
-        const attempts = incrementVerificationAttempts();
-        const errorMessage =
-          error instanceof Error ? error.message : 'Verifikasi gagal';
-
-        setState((prev) => ({
-          ...prev,
-          status: 'fail',
-          error: errorMessage,
-          attempts,
-        }));
-
-        Alert.alert('Verifikasi Error', errorMessage, [
-          { text: 'Ulangi', style: 'default' },
-        ]);
+        // callback ke parent
+        onVerificationComplete({
+          success,
+          similarity,
+          confidence: faces[0].score,
+          attempts: attempts + 1, // atau bisa di-update setelah setAttempts prev+1
+        });
+      } catch (err: any) {
+        setAttempts((prev) => prev + 1);
+        onVerificationComplete({
+          success: false,
+          similarity: 0,
+          confidence: 0,
+          attempts: attempts + 1,
+        });
+        Alert.alert('Error', err.message || 'Verifikasi gagal');
       } finally {
-        imageTensor?.dispose();
+        setIsVerifying(false);
       }
     },
-    [blazefaceModel, mobileFaceNet, onVerificationComplete]
+    [
+      blazefaceModel,
+      mobileFaceNet,
+      savedEmbedding,
+      detectFaces,
+      onVerificationComplete,
+      handleTakePhoto,
+    ]
   );
 
   const internalHandleTakePhoto = React.useCallback(
-    async (photo: { uri: string; base64: string }) => {
-      // 1. Kirim ke parent handler kalau ada
-      if (handleTakePhoto) {
-        await handleTakePhoto(photo);
-      }
+    async (photo: { uri: string; base64?: string }) => {
+      if (!photo) return;
 
-      // 2. Langsung lakukan verifikasi setelah foto diambil
+      // langsung panggil verifikasi
       await onVerifyPhoto(photo);
     },
-    [handleTakePhoto, onVerifyPhoto]
+    [onVerifyPhoto]
   );
 
-  // Render loading state
-  if (state.loading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="mt-2 text-gray-600">Loading AI models...</Text>
-      </View>
-    );
-  }
-
-  // Render error state
-  if (state.error && state.status !== 'processing') {
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="mb-4 text-center text-red-600">{state.error}</Text>
-        <Button
-          label="Retry"
-          onPress={() =>
-            setState((prev) => ({ ...prev, status: 'idle', error: null }))
-          }
-        />
-        {onCancel && (
-          <Button
-            label="Cancel"
-            onPress={onCancel}
-            variant="outline"
-            className="mt-2"
-          />
-        )}
-      </View>
-    );
-  }
-
-  // Render blocked state
-  if (state.status === 'blocked') {
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="mb-4 text-center text-xl font-bold text-red-600">
-          🔒 Account Locked
-        </Text>
-        <Text className="mb-4 text-center text-gray-600">
-          Too many failed verification attempts.
-        </Text>
-        <Button label="Contact Support" onPress={() => onCancel?.()} />
-      </View>
-    );
-  }
-
-  // Render cooldown state
-  if (state.cooldownUntil && state.cooldownUntil > Date.now()) {
-    const remainingSeconds = Math.ceil(
-      (state.cooldownUntil - Date.now()) / 1000
-    );
-    return (
-      <View className="flex-1 items-center justify-center p-4">
-        <Text className="mb-4 text-center text-xl font-bold text-orange-600">
-          ⏱️ Please Wait
-        </Text>
-        <Text className="mb-4 text-center text-gray-600">
-          Try again in {remainingSeconds} seconds
-        </Text>
-        {onCancel && (
-          <Button label="Cancel" onPress={onCancel} variant="outline" />
-        )}
-      </View>
-    );
-  }
-
-  const isCapturing = state.status === 'processing';
-  // Render main verification interface
   return (
     <View className="flex-1">
-      {state.status === 'idle' && showCamera && (
-        <CameraSectionVerify
-          showCamera={showCamera}
-          onTakePhoto={internalHandleTakePhoto}
-          isCapturing={isCapturing}
-        />
-      )}
-
-      {state.status === 'processing' && (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text className="mt-4 text-lg text-gray-600">Verifying face...</Text>
-          <Text className="mt-2 text-sm text-gray-400">Please wait</Text>
+      {/* Loading overlay */}
+      {isVerifying && (
+        <View className="absolute inset-0 z-50 flex-1 items-center justify-center bg-black/40">
+          <ActivityIndicator size="large" color="#00FF00" />
+          <Text className="mt-2 text-lg text-white">Verifying face...</Text>
         </View>
       )}
 
-      {state.status === 'success' && (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-2xl font-bold text-green-600">
-            ✅ Verification Successful
-          </Text>
-          {state.lastResult && (
-            <Text className="mt-2 text-gray-600">
-              Similarity: {(state.lastResult.similarity * 100).toFixed(1)}%
-            </Text>
-          )}
-        </View>
-      )}
-
-      {state.status === 'fail' && (
-        <View className="flex-1 items-center justify-center p-4">
-          <Text className="mb-2 text-2xl font-bold text-red-600">
-            ❌ Verification Failed
-          </Text>
-          {state.lastResult && (
-            <Text className="mb-2 text-gray-600">
-              Similarity: {(state.lastResult.similarity * 100).toFixed(1)}%
-            </Text>
-          )}
-          <Text className="mb-4 text-center text-gray-600">
-            Attempts: {state.attempts}/{MAX_VERIFICATION_ATTEMPTS}
+      {/* Tampilkan foto yang berhasil diverifikasi */}
+      {verifiedPhotoUri && (
+        <View className="items-center justify-center p-4">
+          <Text className="mb-2 text-lg font-bold text-green-600">
+            ✅ Verified Photo
           </Text>
         </View>
       )}
 
-      {/* Status bar */}
-      <View className="absolute inset-x-4 top-12">
-        <View className="rounded-lg bg-white/90 p-3 shadow-sm">
-          <Text className="text-center text-sm text-gray-600">
-            Face Verification • {state.attempts}/{MAX_VERIFICATION_ATTEMPTS}{' '}
-            attempts
-          </Text>
-        </View>
-      </View>
+      {/* Camera section */}
+      <CameraSectionVerify
+        showCamera={showCamera}
+        onTakePhoto={internalHandleTakePhoto}
+        isCapturing={isVerifying}
+      />
     </View>
   );
 };

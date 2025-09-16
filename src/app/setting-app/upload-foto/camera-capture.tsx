@@ -1,5 +1,6 @@
 /* eslint-disable max-lines-per-function */
-import * as jpeg from 'jpeg-js';
+import { Camera, CameraView } from 'expo-camera';
+import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,11 +10,9 @@ import {
   View,
 } from 'react-native';
 import { useTensorflowModel } from 'react-native-fast-tflite';
-import RNFS from 'react-native-fs';
-import ImageResizer from 'react-native-image-resizer';
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
 import { anchors } from '@/utils/blazeface-anchors';
+import { imageUriToTensor } from '@/utils/face-utils-lite';
 
 type FaceRegisterProps = {
   onRegister: (embedding: Float32Array, photoUri: string) => void;
@@ -22,11 +21,12 @@ type FaceRegisterProps = {
 const DET_INPUT_SIZE = 128;
 const EMBED_INPUT_SIZE = 112;
 
-export default function FaceRegisterMobileFaceNet({
+export default function FaceRegisterExpoCameraView({
   onRegister,
 }: FaceRegisterProps) {
-  const cameraRef = useRef<Camera>(null);
-  const device = useCameraDevice('front');
+  const cameraRef = useRef<CameraView>(null);
+  const [hasPermission, setHasPermission] = useState(false);
+  const [status, setStatus] = useState('Checking camera permission...');
 
   const detModel = useTensorflowModel(
     require('../../../../assets/model/blazeface.tflite')
@@ -35,7 +35,19 @@ export default function FaceRegisterMobileFaceNet({
     require('../../../../assets/model/mobilefacenet.tflite')
   );
 
-  const [status, setStatus] = useState('Loading models...');
+  // Request camera permission
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === 'granted');
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Camera permission is required to use this feature.'
+        );
+      }
+    })();
+  }, []);
 
   // Update status when models load
   useEffect(() => {
@@ -48,42 +60,10 @@ export default function FaceRegisterMobileFaceNet({
     }
   }, [detModel.state, embedModel.state]);
 
-  // Convert image URI ke Float32Array
-  const imageUriToTensor = async (
-    uri: string,
-    targetSize: number,
-    normalize: 'zero_one' | 'neg_one_pos_one' = 'zero_one'
-  ): Promise<Float32Array> => {
-    const resized = await ImageResizer.createResizedImage(
-      uri,
-      targetSize,
-      targetSize,
-      'JPEG',
-      100
-    );
-    const base64 = await RNFS.readFile(resized.uri, 'base64');
-    const buffer = Buffer.from(base64, 'base64');
-    const { data, width, height } = jpeg.decode(buffer, { useTArray: true });
-
-    const tensor = new Float32Array(width * height * 3);
-    let ti = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i],
-        g = data[i + 1],
-        b = data[i + 2];
-      tensor[ti++] = normalize === 'neg_one_pos_one' ? r / 127.5 - 1 : r / 255;
-      tensor[ti++] = normalize === 'neg_one_pos_one' ? g / 127.5 - 1 : g / 255;
-      tensor[ti++] = normalize === 'neg_one_pos_one' ? b / 127.5 - 1 : b / 255;
-    }
-    return tensor;
-  };
-
   const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 
-  // Deteksi wajah
   const detectFaces = async (photoUri: string) => {
     if (!detModel.model || detModel.state !== 'loaded') return [];
-
     const pixels = await imageUriToTensor(photoUri, DET_INPUT_SIZE, 'zero_one');
 
     let outputs;
@@ -96,8 +76,6 @@ export default function FaceRegisterMobileFaceNet({
 
     if (!outputs || !outputs[0]) return [];
     const detections = outputs[0] as Float32Array;
-    if (!detections || detections.length === 0) return [];
-
     const results: any[] = [];
     const stride = 16;
 
@@ -120,43 +98,98 @@ export default function FaceRegisterMobileFaceNet({
     return results.sort((a, b) => b.score - a.score);
   };
 
-  // Ambil foto & generate embedding
+  const showAlert = (title: string, message?: string) => {
+    try {
+      if (message) {
+        Alert.alert(title, message);
+      } else {
+        Alert.alert(title);
+      }
+    } catch (error) {
+      console.error('Alert error:', error);
+      console.log(`Alert: ${title}${message ? ` - ${message}` : ''}`);
+    }
+  };
+
   const captureAndRegister = async () => {
-    if (!cameraRef.current) return;
-    if (!detModel.model || detModel.state !== 'loaded') {
-      Alert.alert('Face detection model is not ready');
+    if (!cameraRef.current) {
+      showAlert(
+        'Camera Not Ready',
+        'Camera is not initialized yet. Please wait a moment and try again.'
+      );
       return;
     }
+
+    if (!detModel.model || detModel.state !== 'loaded') {
+      showAlert('Model Not Ready', 'Face detection model is not ready');
+      return;
+    }
+
     if (!embedModel.model || embedModel.state !== 'loaded') {
-      Alert.alert('Face embedding model is not ready');
+      showAlert('Model Not Ready', 'Face embedding model is not ready');
       return;
     }
 
     try {
       setStatus('📸 Taking photo...');
-      const photo = await cameraRef.current.takePhoto();
-      const photoUri = 'file://' + photo.path;
+      const photo = await cameraRef.current.takePictureAsync({
+        skipProcessing: true,
+      });
 
-      setStatus('🔎 Detecting faces...');
-      const faces = await detectFaces(photoUri);
-      if (faces.length === 0) {
-        Alert.alert('No face detected');
-        setStatus('❌ No face');
+      if (!photo?.uri) {
+        showAlert('Photo Error', 'Failed to take photo');
+        setStatus('❌ Error taking photo');
         return;
       }
 
-      setStatus('✂️ Cropping & resizing face...');
-      const cropped = await ImageResizer.createResizedImage(
-        photoUri,
-        EMBED_INPUT_SIZE,
-        EMBED_INPUT_SIZE,
-        'JPEG',
-        100
-      );
+      // sekarang TypeScript tahu photoUri pasti string
+      const photoUri: string = photo.uri;
+
+      setStatus('🔎 Detecting faces...');
+      const faces = await detectFaces(photoUri);
+
+      if (faces.length === 0) {
+        showAlert(
+          'No Face Detected',
+          'Please position your face clearly in the camera view and try again.'
+        );
+        setStatus('❌ No face detected');
+        return;
+      }
+
+      // const faceBox = faces[0].box;
+
+      // setStatus('✂️ Cropping & resizing face...');
+
+      // const scaleX = photo.width / DET_INPUT_SIZE;
+      // const scaleY = photo.height / DET_INPUT_SIZE;
+
+      // const cropX = Math.max(faceBox.x * scaleX, 0);
+      // const cropY = Math.max(faceBox.y * scaleY, 0);
+      // const cropW = Math.min(faceBox.w * scaleX, photo.width - cropX);
+      // const cropH = Math.min(faceBox.h * scaleY, photo.height - cropY);
+
+      // const manipResult = await ImageManipulator.manipulateAsync(
+      //   photoUri,
+      //   [
+      //     {
+      //       crop: {
+      //         originX: cropX,
+      //         originY: cropY,
+      //         width: cropW,
+      //         height: cropH,
+      //       },
+      //     },
+      //     { resize: { width: EMBED_INPUT_SIZE, height: EMBED_INPUT_SIZE } },
+      //   ],
+      //   { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+      // );
+
+      // const croppedUri = manipResult.uri;
 
       setStatus('🤖 Generating embedding...');
       const tensor = await imageUriToTensor(
-        cropped.uri,
+        photoUri,
         EMBED_INPUT_SIZE,
         'neg_one_pos_one'
       );
@@ -164,46 +197,66 @@ export default function FaceRegisterMobileFaceNet({
       let embedding: Float32Array | null = null;
       try {
         const embeddingOutput = embedModel.model.runSync([tensor]);
-        if (!embeddingOutput || !embeddingOutput[0])
-          throw new Error('Invalid output');
+        if (!embeddingOutput || !embeddingOutput[0]) {
+          throw new Error('Invalid embedding output');
+        }
         embedding = embeddingOutput[0] as Float32Array;
       } catch (err) {
         console.error('Embedding generation failed', err);
-        Alert.alert('Error', 'Failed to generate embedding');
-        setStatus('❌ Error embedding');
+        showAlert(
+          'Embedding Error',
+          'Failed to generate face embedding. Please try again.'
+        );
+        setStatus('❌ Error generating embedding');
         return;
       }
 
-      setStatus('✅ Success');
-      onRegister(embedding, cropped.uri);
+      setStatus('✅ Face registered successfully!');
+      onRegister(embedding, photoUri);
+
+      // Cleanup temporary file
+      try {
+        await FileSystem.deleteAsync(photoUri, { idempotent: true });
+      } catch (cleanupError) {
+        console.error('Failed to cleanup temp file:', cleanupError);
+      }
     } catch (err) {
-      console.error(err);
-      Alert.alert('Error', String(err));
-      setStatus('❌ Error');
+      console.error('Capture and register error:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      showAlert('Registration Error', `An error occurred: ${errorMessage}`);
+      setStatus('❌ Registration failed');
     }
   };
 
-  const isModelsReady =
-    detModel.state === 'loaded' && embedModel.state === 'loaded';
+  const isReady =
+    hasPermission &&
+    detModel.state === 'loaded' &&
+    embedModel.state === 'loaded';
 
-  if (!device || !isModelsReady) {
+  if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-        <Text>{status}</Text>
+        <ActivityIndicator size="large" color="#0066cc" />
+        <Text style={{ marginTop: 16, textAlign: 'center', fontSize: 16 }}>
+          {status}
+        </Text>
+        {!hasPermission && (
+          <Text style={{ marginTop: 8, textAlign: 'center', color: 'red' }}>
+            Camera permission is required
+          </Text>
+        )}
+        {(detModel.state === 'error' || embedModel.state === 'error') && (
+          <Text style={{ marginTop: 8, textAlign: 'center', color: 'red' }}>
+            Failed to load AI models. Please check model files.
+          </Text>
+        )}
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <Camera
-        ref={cameraRef}
-        style={{ flex: 1 }}
-        device={device}
-        isActive
-        photo
-      />
+      <CameraView style={{ flex: 1 }} facing="front" ref={cameraRef} />
 
       <TouchableOpacity
         onPress={captureAndRegister}
@@ -212,25 +265,64 @@ export default function FaceRegisterMobileFaceNet({
           bottom: 40,
           alignSelf: 'center',
           backgroundColor: 'white',
-          padding: 16,
+          padding: 20,
           borderRadius: 50,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
+        activeOpacity={0.7}
+      >
+        <Text style={{ fontSize: 24 }}>📸</Text>
+      </TouchableOpacity>
+
+      <View
+        style={{
+          position: 'absolute',
+          top: 60,
+          left: 20,
+          right: 20,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          padding: 12,
+          borderRadius: 8,
+          alignItems: 'center',
         }}
       >
-        <Text>📸</Text>
-      </TouchableOpacity>
+        <Text style={{ color: 'white', fontSize: 16, textAlign: 'center' }}>
+          {status}
+        </Text>
+      </View>
+
+      {/* Face detection guide overlay */}
+      <View
+        style={{
+          position: 'absolute',
+          top: '30%',
+          left: '20%',
+          right: '20%',
+          bottom: '40%',
+          borderWidth: 2,
+          borderColor: 'rgba(255,255,255,0.8)',
+          borderRadius: 8,
+          backgroundColor: 'transparent',
+        }}
+      />
 
       <Text
         style={{
           position: 'absolute',
-          top: 50,
+          bottom: 120,
           alignSelf: 'center',
-          backgroundColor: 'rgba(0,0,0,0.6)',
           color: 'white',
-          padding: 6,
-          borderRadius: 8,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          padding: 8,
+          borderRadius: 6,
+          textAlign: 'center',
         }}
       >
-        {status}
+        Position your face in the frame
       </Text>
     </View>
   );
