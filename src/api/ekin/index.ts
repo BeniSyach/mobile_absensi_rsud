@@ -3,6 +3,7 @@ export * from './add-kegiatan-pejabat';
 export * from './dashboard';
 export * from './delete-rhk-staff';
 export * from './edit-atasan';
+export * from './edit-rhk-staff';
 export * from './edit-status-kegiatan';
 export * from './export-tpp';
 export * from './list-harian-kegiatan';

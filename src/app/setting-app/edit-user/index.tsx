@@ -1,11 +1,12 @@
 import { router, Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { PutUser } from '@/api';
 import FormEditUser, {
   type FormEditUserProps,
 } from '@/components/edit-user-form/form-edit-user';
-import { SafeAreaView, showErrorMessage } from '@/components/ui';
+import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
 export default function EditUser() {

@@ -1,4 +1,4 @@
-export interface PasswordChangeResponse {
+export interface CheckPasswordChangeResponse {
   message: string;
   password_changed: boolean;
 }

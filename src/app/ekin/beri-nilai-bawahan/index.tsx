@@ -1,14 +1,14 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { useListBawahan } from '@/api';
 import FormNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/form-nilai-bawahan';
 import ListNilaiBawahanComponent from '@/components/ekin-component/beri-nilai-bawahan/list-nilai-bawahan';
 import LogoNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/logo-nilai-bawahan';
 import NavbarNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/navbar-nilai-bawahan';
-import { SafeAreaView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function BeriNilaiBawahan() {

@@ -1,14 +1,14 @@
 /* eslint-disable max-lines-per-function */
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import { GetRhkStaffChild, UseProfileEkin } from '@/api';
 import FormHasilKerja from '@/components/ekin-component/rencana-hasil-kerja-component/form-hasil-kerja';
 import ListHasilKerjaComponent from '@/components/ekin-component/rencana-hasil-kerja-component/list-hasil-kerja';
 import LogoHasilKerja from '@/components/ekin-component/rencana-hasil-kerja-component/logo-hasil-kerja';
 import NavbarHasilKerjaComponent from '@/components/ekin-component/rencana-hasil-kerja-component/navbar-hasil-kerja-component';
-import { Button, SafeAreaView, Text, View } from '@/components/ui';
+import { Button, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function RencanaHasilKinerja() {

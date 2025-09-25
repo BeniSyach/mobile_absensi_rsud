@@ -1,39 +1,43 @@
 /* eslint-disable max-lines-per-function */
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { TextInput } from 'react-native';
-import { showMessage } from 'react-native-flash-message';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import {
-  GetSatuanEkin,
-  queryClient,
-  type Satuan,
-  type UpdateRHKPejabatPayload,
-  type UserDataEkin,
-} from '@/api';
-import { PutRHKPejabat } from '@/api/ekin/rhk-pejabat/put-rhk-pejabat';
+import { GetSatuanEkin, type Satuan } from '@/api';
 import { AlertModal } from '@/components/title-second';
 import {
   Button,
+  ControlledInput,
   type OptionType,
   ScrollView,
   Select,
-  showErrorMessage,
-  Text,
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
-import { getMessage } from '@/lib';
 
-interface Props {
-  data: UserDataEkin | undefined;
+const schema = z.object({
+  indikator: z.string().min(1, 'Indikator wajib diisi'),
+  uraian: z.string().min(1, 'Uraian wajib diisi'),
+  id_satuan: z.number().min(1, 'Satuan wajib diisi'),
+  nilai: z.string().min(1, 'Target wajib diisi'),
+  tahun: z.string().min(1, 'Tahun wajib diisi'),
+});
+
+export type FormType = z.infer<typeof schema>;
+
+export interface FormEditRHKPejabatProps {
   dataEdit: {
     id: number;
     uraian: string;
     indikator: string;
     id_rhk_pejabat: number;
+    nilai: number;
   };
+  onSubmit: SubmitHandler<FormType>;
+  isPending: boolean;
 }
 
 const currentYear = new Date().getFullYear();
@@ -47,16 +51,27 @@ const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
   };
 });
 
-export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
+export default function FormEditRHKAtasan({
+  dataEdit,
+  onSubmit,
+  isPending,
+}: FormEditRHKPejabatProps) {
   const router = useRouter();
-  const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [rhkStaff, setRhkStaff] = useState('');
-  const [indikator, setindikator] = useState('');
-  const [nilai, setNilai] = useState('');
   const [tahun, setTahun] = useState<string>(currentYear.toString());
-  const { mutateAsync: putRHK, isPending: isPosting } = PutRHKPejabat();
-  const [idSatuan, setIdSatuan] = useState<string>('');
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    setValue,
+    reset,
+  } = useForm<FormType>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      tahun: currentYear.toString(), // langsung set default
+    },
+  });
 
   const fetchOptionSatuansWithQuery = async (page: number, search: string) => {
     try {
@@ -80,125 +95,82 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
-  const handleConfirm = async () => {
-    setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
 
-    const payload: UpdateRHKPejabatPayload = {
-      id: Number(dataEdit.id),
-      kode_unit_kerja: storedMessage?.kode_unit_kerja ?? '',
-      uraian: rhkStaff,
-      kode_jabatan: data?.detail_pegawai.data.jabatan_id ?? '',
-      kode_pangkat: data?.detail_pegawai.data.pangkat_id ?? '',
-      indikator,
-      nilai: Number(nilai),
-      tahun: Number(tahun),
-      id_satuan: Number(idSatuan),
-    };
+  const handleConfirm = handleSubmit((data) => {
+    onSubmit(data); // proses submit data
+    reset();
+    setShowConfirmModal(false); // tutup modal
+  });
 
-    try {
-      const response = await putRHK(payload);
-      console.log('✅ Data berhasil dikirim:', response);
-      queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
-      showMessage({
-        message: 'RHK berhasil disimpan.',
-        type: 'success',
-        duration: 7000,
-      });
-      setRhkStaff('');
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.error) {
-        errorMessage = error.error;
-      }
-
-      showErrorMessage(errorMessage);
-    }
-  };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
 
   useEffect(() => {
     if (dataEdit?.id) {
-      setRhkStaff(dataEdit.uraian);
-      setindikator(dataEdit.indikator);
+      reset({
+        uraian: dataEdit.uraian || '',
+        nilai: dataEdit.nilai?.toString() || '',
+        indikator: dataEdit.indikator || '',
+        tahun: currentYear.toString(),
+      });
     }
-  }, [dataEdit?.id]);
+  }, [dataEdit, reset]);
+
   return (
     <ScrollView className="flex-1">
       <View className="bg-whites m-2 mt-7 rounded-2xl bg-white">
         <View className="p-5">
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Rencana Hasil Kerja
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+          <ControlledInput
+            control={control}
+            name="uraian"
+            label="Rencana Hasil Kerja"
             placeholder="Rencana Hasil Kerja"
-            value={rhkStaff}
-            onChangeText={setRhkStaff}
-          />
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Indikator
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Rencana Hasil Kerja"
-            value={indikator}
-            onChangeText={setindikator}
-            multiline
-            textAlignVertical="top"
-          />
-          <Text className="mb-2 text-lg font-semibold text-black">Nilai</Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Rencana Hasil Kerja"
-            value={nilai}
-            onChangeText={setNilai}
-            keyboardType="number-pad"
+            error={errors.uraian?.message}
           />
 
-          <RemoteSelect
-            label="Satuan"
-            value={idSatuan}
-            onSelect={(val) => setIdSatuan(val as string)}
-            placeholder="Pilih Satuan..."
-            debounceMs={400}
-            pageSize={10}
-            fetchOptions={fetchOptionSatuansWithQuery}
+          <ControlledInput
+            control={control}
+            name="indikator"
+            label="Indikator"
+            placeholder="Indikator"
+            error={errors.indikator?.message}
           />
+
+          <ControlledInput
+            control={control}
+            name="nilai"
+            label="Target"
+            placeholder="Target"
+            error={errors.nilai?.message}
+          />
+
+          <Controller
+            control={control}
+            name="id_satuan"
+            render={({ field: { value, onChange } }) => (
+              <RemoteSelect
+                label="Satuan"
+                value={value}
+                onSelect={(val) => onChange(val as string)}
+                placeholder="Pilih Satuan..."
+                debounceMs={400}
+                pageSize={10}
+                fetchOptions={fetchOptionSatuansWithQuery}
+              />
+            )}
+          />
+
           <Select
             label="Tahun"
             placeholder="Pilih Tahun"
             options={tahunOptions}
             value={tahun}
-            onSelect={(value) => setTahun(String(value))}
+            onSelect={(val) => {
+              setTahun(val as string); // update state lokal
+              setValue('tahun', String(val)); // update react-hook-form
+            }}
+            error={errors.tahun?.message}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">
@@ -208,7 +180,7 @@ export default function FormEditRHKAtasan({ data, dataEdit }: Props) {
             variant="outline"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
-            disabled={isPosting}
+            disabled={isPending}
           />
           <Button
             label="Batal"

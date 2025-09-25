@@ -28,6 +28,10 @@ const schemaStep3 = z
     path: ['confirmPassword'],
   });
 
+export type Step1Values = z.infer<typeof schemaStep1>;
+export type Step2Values = z.infer<typeof schemaStep2>;
+export type Step3Values = z.infer<typeof schemaStep3>;
+
 export type FormType =
   | z.infer<typeof schemaStep1>
   | z.infer<typeof schemaStep2>
@@ -47,17 +51,22 @@ export default function ResetPasswordStepper({
   const schema =
     step === 1 ? schemaStep1 : step === 2 ? schemaStep2 : schemaStep3;
 
-  const { handleSubmit, control, getValues, watch } = useForm<FormType>({
-    resolver: zodResolver(schema),
-  });
+  const { handleSubmit, control, getValues, watch, setValue } =
+    useForm<FormType>({
+      resolver: zodResolver(schema),
+    });
 
-  const nextStep = () => {
+  const nextStep = handleSubmit(async (values) => {
+    // kirim data ke parent
+    await onSubmit?.(values);
+
     if (step === 1) {
       const no_wa = getValues('no_wa') as string;
       setPhone(no_wa);
     }
     setStep((prev) => prev + 1);
-  };
+  });
+
   const prevStep = () => setStep((prev) => prev - 1);
 
   // ambil password dari form langsung
@@ -112,7 +121,7 @@ export default function ResetPasswordStepper({
             <Button
               label="Kirim OTP"
               loading={isPending}
-              onPress={handleSubmit(nextStep)}
+              onPress={nextStep}
               variant="outline"
               className="mt-6 bg-[#258DDB]"
             />
@@ -132,8 +141,7 @@ export default function ResetPasswordStepper({
             <OtpInput
               length={4}
               onChange={(code) => {
-                // contoh: bisa dihubungkan ke react-hook-form dengan setValue("otp", code)
-                console.log('OTP:', code);
+                setValue('otp', code, { shouldValidate: true }); // <<--- ini penting
               }}
             />
 
@@ -147,7 +155,7 @@ export default function ResetPasswordStepper({
               <Button
                 label="Verifikasi No WhatsApp"
                 loading={isPending}
-                onPress={handleSubmit(nextStep)}
+                onPress={nextStep}
                 variant="outline"
                 className="bg-[#258DDB]"
               />

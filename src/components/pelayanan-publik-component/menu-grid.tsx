@@ -1,7 +1,8 @@
 import { type Href, Link } from 'expo-router';
 import React from 'react';
+import { Pressable } from 'react-native';
 
-import { Image, Pressable } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 type MenuGridItemProps = {
   href: Href;

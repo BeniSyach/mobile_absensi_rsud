@@ -23,8 +23,11 @@ export const postFaceRecognition = createMutation<
       const formData = new FormData();
 
       // kirim user_id
-      formData.append('user_id', variables.nik);
-
+      formData.append('nik', variables.nik);
+      formData.append(
+        'embedding',
+        JSON.stringify(Array.from(variables.embedding))
+      );
       // kirim semua foto dengan key "photos"
       variables.photos.forEach((p, idx) => {
         const file = {

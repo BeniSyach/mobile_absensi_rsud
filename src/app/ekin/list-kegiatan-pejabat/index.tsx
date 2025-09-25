@@ -1,14 +1,14 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { useGetKegiatanHarianPejabatByUser } from '@/api';
 import FormListKegiatan from '@/components/ekin-component/list-kegiatan-component/form-list-kegiatan';
 import ListKegiatanPejabatComponent from '@/components/ekin-component/list-kegiatan-component/list-kegiatan-pejabat-compoent';
 import LogoListKegiatan from '@/components/ekin-component/list-kegiatan-component/logo-list-kegiatan';
 import NavbarListKegiatan from '@/components/ekin-component/list-kegiatan-component/navbar-list-kegiatan';
-import { SafeAreaView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 const formatDate = (date: Date) => date.toISOString().split('T')[0];

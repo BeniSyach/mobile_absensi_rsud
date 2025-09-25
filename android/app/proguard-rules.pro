@@ -31,19 +31,6 @@
 -keep class androidx.lifecycle.** { *; }
 -keep class com.facebook.react.** { *; }
 
-
-# Worklet functions
--keepclassmembers class * {
-    *** *Worklet*(...);
-}
-
-# Keep TF.js classes
--keep class org.tensorflow.** { *; }
--keep class org.tensorflow.lite.** { *; }
--keep class org.tensorflow.lite.support.** { *; }
--keep class org.tensorflow.tensorbuffer.** { *; }
--keep class com.github.rtmigo.** { *; } 
-
 -keep class com.google.** { *; }
 
 # Expo Modules

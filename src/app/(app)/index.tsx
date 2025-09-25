@@ -1,54 +1,81 @@
 /* eslint-disable max-lines-per-function */
-import React from 'react';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ImageBackground,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  View,
+} from 'react-native';
 
+import { useCheckPasswordUser } from '@/api';
 // import VersionCheck from 'react-native-version-check';
 import Footer from '@/components/home/footer';
 import MenuUtama from '@/components/home/menu-utama';
 import Navbar from '@/components/home/navbar';
-import { Image, ScrollView, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function Feed() {
   const storedMessage = getMessage();
-  // useEffect(() => {
-  //   const checkForUpdate = async () => {
-  //     try {
-  //       const currentVersion = VersionCheck.getCurrentVersion(); // versi dari app lokal
-  //       const latestVersion = await VersionCheck.getLatestVersion(); // versi dari Play Store
-  //       console.log('currentVersion', currentVersion);
-  //       console.log('latestVersion', latestVersion);
-  //       const updateNeeded = await VersionCheck.needUpdate({
-  //         currentVersion,
-  //         latestVersion,
-  //       });
-  //       console.log('updateNeeded', updateNeeded);
-  //       if (updateNeeded?.isNeeded) {
-  //         Alert.alert(
-  //           'Update Tersedia',
-  //           'Versi baru tersedia. Perbarui aplikasi dari Play Store untuk melanjutkan.',
-  //           [
-  //             {
-  //               text: 'Perbarui Sekarang',
-  //               onPress: () => Linking.openURL(updateNeeded.storeUrl),
-  //             },
-  //             {
-  //               text: 'Nanti Saja',
-  //               style: 'cancel',
-  //             },
-  //           ]
-  //         );
-  //       }
-  //     } catch (err) {
-  //       console.warn('Gagal memeriksa versi:', err);
-  //     }
-  //   };
+  const { data, isPending, isError } = useCheckPasswordUser();
 
-  //   checkForUpdate();
-  // }, []);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (data && data.password_changed === false) {
+      // kalau masih pakai password lama → kasih alert
+      Alert.alert(
+        'Ganti Password',
+        'Anda masih menggunakan password lama. Silakan reset password untuk melanjutkan.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.replace('/setting-app/reset-password');
+              // ⚠️ pastikan ada file app/reset-password.tsx
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [data, router]);
+
+  // 🔹 Skeleton Error (semua abu-abu)
+  if (isError) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-200">
+        <View className="h-48 w-full animate-pulse bg-gray-300" />
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-lg font-semibold text-gray-600">
+            Gagal memuat data
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">
       <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
+
+      {/* 🔹 Loading Modal tetap ditampilkan tapi berada di dalam return */}
+      <Modal visible={isPending} transparent animationType="fade">
+        <View className="flex-1 items-center justify-center bg-black/40">
+          <View className="items-center rounded-2xl bg-white px-6 py-8 shadow-lg">
+            <ActivityIndicator size="large" color="#0B3880" />
+            <Text className="mt-4 text-base font-semibold text-gray-700">
+              Memuat data...
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
       <View className="h-48 rounded-b-3xl bg-[#0B3880]">
         <Navbar />
         <View className="items-center justify-center">
@@ -60,6 +87,7 @@ export default function Feed() {
           />
         </View>
       </View>
+
       <ImageBackground
         source={require('../../../assets/background/background_home.png')}
         resizeMode="stretch"

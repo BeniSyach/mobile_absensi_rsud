@@ -1,8 +1,9 @@
 import { Link } from 'expo-router';
 import React from 'react';
-import { ImageBackground, SafeAreaView } from 'react-native';
+import { ImageBackground, Pressable, SafeAreaView, View } from 'react-native';
 
-import { FocusAwareStatusBar, Image, Pressable, View } from '@/components/ui';
+import { FocusAwareStatusBar, Image } from '@/components/ui';
+
 export default function Onboarding() {
   return (
     <SafeAreaView className="flex-1 bg-[#0B3880]">

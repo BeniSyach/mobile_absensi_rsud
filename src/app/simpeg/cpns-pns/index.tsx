@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground } from 'react-native';
+import { ImageBackground, SafeAreaView, ScrollView } from 'react-native';
 import { StatusBar } from 'react-native';
 
 import { GetUser } from '@/api';
@@ -10,7 +10,7 @@ import BackSimpeg from '@/components/back-simpeg';
 import HeaderSimpeg from '@/components/header-simpeg';
 import CardDataCpns from '@/components/simpegComponent/cpns-pns-component/card-data-cpns';
 import CardDataPns from '@/components/simpegComponent/cpns-pns-component/card-data-pns';
-import { SafeAreaView, ScrollView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import LoadingComponent from '@/components/ui/loading';
 
 export default function CpnsPns() {

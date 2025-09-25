@@ -1,9 +1,8 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { Title } from '@/components/title';
-import { SafeAreaView } from '@/components/ui';
 
 export default function ListCuti() {
   return (

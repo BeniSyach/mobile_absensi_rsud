@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
+import { Pressable, View } from 'react-native';
 
-import { Image, Pressable, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 
 export default function MenuDua() {
   return (

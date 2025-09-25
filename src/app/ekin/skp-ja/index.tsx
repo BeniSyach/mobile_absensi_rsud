@@ -1,10 +1,9 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import LogoSKPJA from '@/components/ekin-component/skp-ja-component/logo-skp-js';
 import NavbarSKPJA from '@/components/ekin-component/skp-ja-component/navbar-skp-ja';
-import { SafeAreaView } from '@/components/ui';
 
 export default function SkpJa() {
   return (

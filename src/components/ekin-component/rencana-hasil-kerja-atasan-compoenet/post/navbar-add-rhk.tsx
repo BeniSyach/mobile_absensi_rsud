@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
+import { Pressable, View } from 'react-native';
 
-import { Image, Pressable, View } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 export default function NavbarAddRHK() {
   const router = useRouter();

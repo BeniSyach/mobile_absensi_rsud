@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { Pressable, View } from 'react-native';
 
-import { Pressable, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 import { ArrowRight } from '@/components/ui/icons';
 import type { TxKeyPath } from '@/lib';
 

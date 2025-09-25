@@ -1,7 +1,8 @@
 import { Link } from 'expo-router';
 import React from 'react';
+import { Pressable, View } from 'react-native';
 
-import { Image, Pressable, View } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 import { Title } from '../title';
 

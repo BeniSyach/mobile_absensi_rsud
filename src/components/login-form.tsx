@@ -3,18 +3,12 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import React, { useState } from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
+import { Pressable, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { MMKV } from 'react-native-mmkv';
 import * as z from 'zod';
 
-import {
-  Button,
-  Checkbox,
-  ControlledInput,
-  Image,
-  Pressable,
-  View,
-} from '@/components/ui';
+import { Button, Checkbox, ControlledInput, Image } from '@/components/ui';
 
 const storage = new MMKV({
   id: 'credentials-storage',

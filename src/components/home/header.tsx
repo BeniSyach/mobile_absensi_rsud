@@ -1,10 +1,33 @@
 import { Env } from '@env';
 import { Link } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { MMKV } from 'react-native-mmkv';
 
 import { type UserPegawai } from '@/api';
-import { Image, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
+
+const storage = new MMKV({ id: 'face-auth' });
+const FACE_URI_KEY = 'face_photo_uri';
 
 export default function Header({ data }: { data: UserPegawai | null }) {
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Ambil dari MMKV dulu
+    const cachedUri = storage.getString(FACE_URI_KEY);
+    if (cachedUri) {
+      setPhotoUri(cachedUri);
+    } else if (data?.photo) {
+      // fallback ke API kalau belum ada cache
+      setPhotoUri(`${Env.API_URL}/storage/${data.photo}`);
+    } else {
+      // fallback terakhir → dummy
+      setPhotoUri('https://dummyimage.com/80x80');
+    }
+  }, [data]);
+
+  if (!data) return null;
   if (!data) {
     return null;
   }
@@ -13,14 +36,10 @@ export default function Header({ data }: { data: UserPegawai | null }) {
     <Link href="/settings">
       <View className="flex-row items-center rounded-lg bg-[#C9DEFE] p-2 shadow">
         <Image
-          source={{
-            uri: data.photo
-              ? `${Env.API_URL}/storage/${data.photo}`
-              : `https://dummyimage.com/80x80`, // fallback URL jika data?.photo tidak ada
-          }}
+          source={{ uri: photoUri ?? 'https://dummyimage.com/80x80' }}
           className="mr-4 size-20 rounded-full"
           transition={1000}
-          contentFit="contain"
+          contentFit="cover" // ✅ biar gak gepeng
         />
         <View className="flex-1 p-2">
           <Text className="dark:text-dark-500 text-lg font-bold">

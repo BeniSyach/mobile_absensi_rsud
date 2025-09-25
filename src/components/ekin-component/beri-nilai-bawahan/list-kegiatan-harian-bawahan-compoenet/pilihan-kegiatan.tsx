@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from '@/components/ui';
+import { Pressable, View } from 'react-native';
 
+import { Text } from '@/components/ui';
 type TabType = 'pending' | 'disetujui' | 'ditolak';
 
 interface TabSwitchProps {

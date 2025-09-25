@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import FormInputEsppt from '@/components/pelayanan-publik-component/bapenda-component/e-sppt-component/form-input-e-sppt';
-import { Image, View } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 export default function MenuESppt() {
   return (

@@ -2,14 +2,26 @@
 import { Env } from '@env';
 import * as FileSystem from 'expo-file-system';
 import { useEffect, useState } from 'react';
-import { Modal, Platform, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
+import { Pressable, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
-import { type ApiResponse, type UseFaceUserResponse } from '@/api';
+import {
+  type ApiResponse,
+  postFaceRecognition,
+  queryClient,
+  type UseFaceUserResponse,
+} from '@/api';
 import FaceRegisterExpoCameraView from '@/app/setting-app/upload-foto/camera-capture';
-import { Image, Pressable, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 import { useAuth } from '@/lib';
 
 interface Props {
@@ -28,7 +40,7 @@ const FACE_URI_KEY = 'face_photo_uri';
 const FACE_EMBED_KEY = 'face_embedding';
 
 export default function ProfileCard({
-  // user,
+  user,
   photo,
   isloading,
   isErrorAPI,
@@ -37,44 +49,13 @@ export default function ProfileCard({
   const [photoUri, setPhotoUri] = useState<string>(
     'https://dummyimage.com/80x80'
   );
+
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [embedding, setEmbedding] = useState<Float32Array | null>(null);
   const [progress, setProgress] = useState(0);
 
-  // const { mutateAsync, isPending, isError } = postFaceRecognition();
+  const { mutateAsync, isPending, isError } = postFaceRecognition();
   const token = useAuth.getState().token?.access;
-
-  // load foto profil dari server (cache ke lokal)
-  useEffect(() => {
-    const loadProfilePhoto = async () => {
-      if (!photo?.photo_path) return;
-
-      try {
-        const remoteUrl = `${Env.API_URL}/absensi/files/faceprint/${photo.photo_path}/view`;
-        const localPath =
-          FileSystem.cacheDirectory +
-          'profile-uploads/' +
-          `${photo.photo_path}.jpg`;
-
-        const folder = localPath.substring(0, localPath.lastIndexOf('/') + 1);
-        const folderInfo = await FileSystem.getInfoAsync(folder);
-        if (!folderInfo.exists) {
-          await FileSystem.makeDirectoryAsync(folder, { intermediates: true });
-        }
-
-        await FileSystem.downloadAsync(remoteUrl, localPath, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setPhotoUri(localPath + '?t=' + Date.now());
-      } catch (err) {
-        console.warn('Gagal load foto profil:', err);
-        setPhotoUri('https://dummyimage.com/80x80');
-      }
-    };
-
-    loadProfilePhoto();
-  }, [photo?.photo_path, token]);
 
   // load dari MMKV jika sudah ada
   useEffect(() => {
@@ -88,14 +69,66 @@ export default function ProfileCard({
     }
   }, []);
 
+  // load foto profil dari server (cache ke lokal)
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (!photo?.photo_path) {
+        setPhotoUri('https://dummyimage.com/80x80');
+        return;
+      }
+
+      if (photo.photo_path) {
+        try {
+          const remoteUrl = `${Env.API_URL}/absensi/files/faceprint/${photo.photo_path}/view`;
+          const localPath =
+            FileSystem.cacheDirectory +
+            'profile-uploads/' +
+            `${photo.photo_path}.jpg`;
+
+          const folder = localPath.substring(0, localPath.lastIndexOf('/') + 1);
+          const folderInfo = await FileSystem.getInfoAsync(folder);
+          if (!folderInfo.exists) {
+            await FileSystem.makeDirectoryAsync(folder, {
+              intermediates: true,
+            });
+          }
+
+          await FileSystem.downloadAsync(remoteUrl, localPath, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          setPhotoUri(localPath + '?t=' + Date.now());
+
+          // simpan ke MMKV untuk offline reuse
+          storage.set(FACE_URI_KEY, localPath);
+
+          if (photo.embedding) {
+            // kalau dari server Float32Array, pastikan stringify dulu
+            setEmbedding(photo.embedding);
+            storage.set(
+              FACE_EMBED_KEY,
+              JSON.stringify(Array.from(photo.embedding))
+            );
+          }
+        } catch (err) {
+          console.warn('❌ Gagal ambil foto dari server:', err);
+          setPhotoUri('https://dummyimage.com/80x80');
+        }
+      } else {
+        // fallback terakhir → dummy
+        setPhotoUri('https://dummyimage.com/80x80');
+      }
+    };
+
+    loadProfilePhoto();
+  }, [photo, token]);
+
   // handle hasil FaceRegisterCPU
   const handleRegister = async (
     faceEmbedding: Float32Array | null,
     capturedUri?: string
   ) => {
     if (faceEmbedding && capturedUri) {
-      let localUri = capturedUri;
-
       // simpan foto di Android secara lokal
       const fileName = `face_${Date.now()}.jpg`;
       let newPath = `${FileSystem.documentDirectory}${fileName}`;
@@ -119,15 +152,40 @@ export default function ProfileCard({
       setShowCamera(false);
 
       // Simpan ke MMKV
-      storage.set(FACE_URI_KEY, localUri);
+      storage.set(FACE_URI_KEY, newPath);
       storage.set(FACE_EMBED_KEY, JSON.stringify(Array.from(faceEmbedding)));
 
-      console.log('✅ Embedding wajah tersimpan:', faceEmbedding);
-      showMessage({
-        message: 'Wajah berhasil didaftarkan dan tersimpan lokal',
-        type: 'success',
-        duration: 5000,
-      });
+      Alert.alert(
+        'Wajah berhasil didaftarkan',
+        'Apakah Anda Yakin mengupload Wajah ini ?',
+        [
+          {
+            text: 'Batal',
+            style: 'cancel',
+            onPress: async () => {
+              // ❌ Hapus foto lokal
+              try {
+                await FileSystem.deleteAsync(newPath, { idempotent: true });
+                console.log('🗑️ Foto lokal dihapus:', newPath);
+              } catch (err) {
+                console.warn('⚠️ Gagal hapus foto lokal:', err);
+              }
+
+              // ❌ Hapus data MMKV
+              storage.delete(FACE_URI_KEY);
+              storage.delete(FACE_EMBED_KEY);
+
+              setPhotoUri('https://dummyimage.com/80x80');
+              setEmbedding(null);
+            },
+          },
+          {
+            text: 'OK',
+            onPress: () => handleUpload(newPath, faceEmbedding),
+          },
+        ],
+        { cancelable: false }
+      );
     } else {
       console.log('⚠️ Registrasi gagal / tidak senyum');
       setShowCamera(false);
@@ -139,40 +197,45 @@ export default function ProfileCard({
     }
   };
 
-  // const handleUpload = async () => {
-  //   if (!photoUri || !embedding) return;
-
-  //   try {
-  //     await mutateAsync({
-  //       nik: user?.data?.nik ? user.data.nik.toString() : '-',
-  //       photos: [
-  //         {
-  //           uri: photoUri,
-  //           type: 'image/jpeg',
-  //           name: `face_${Date.now()}.jpg`,
-  //         },
-  //       ],
-  //     });
-  //     queryClient.invalidateQueries({ queryKey: ['useFaceRecognition'] });
-  //     showMessage({
-  //       message: 'Foto wajah berhasil diunggah',
-  //       type: 'success',
-  //       duration: 7000,
-  //     });
-  //   } catch (error) {
-  //     showMessage({
-  //       message: 'Terjadi kesalahan saat upload foto',
-  //       type: 'danger',
-  //       duration: 7000,
-  //     });
-  //   }
-  // };
+  const handleUpload = async (newPath: any, faceEmbedding: any) => {
+    try {
+      await mutateAsync({
+        nik: user?.data?.nik ? user.data.nik.toString() : '-',
+        embedding: faceEmbedding,
+        photos: [
+          {
+            uri: newPath,
+            type: 'image/jpeg',
+            name: `face_${Date.now()}.jpg`,
+          },
+        ],
+      });
+      queryClient.invalidateQueries({ queryKey: ['useFaceRecognition'] });
+      showMessage({
+        message: 'Foto wajah berhasil diunggah',
+        type: 'success',
+        duration: 7000,
+      });
+    } catch (error) {
+      showMessage({
+        message: 'Terjadi kesalahan saat upload foto',
+        type: 'danger',
+        duration: 7000,
+      });
+    }
+  };
 
   return (
     <View className="mx-auto mt-2 max-w-lg rounded-lg">
       {/* Foto Profil */}
       <View className="mb-4 flex items-center justify-center">
-        <Pressable onPress={() => setShowCamera(true)}>
+        <Pressable
+          onPress={() => {
+            if (photo?.photo_path === null) {
+              setShowCamera(true); // cuma buka kamera kalau photo kosong
+            }
+          }}
+        >
           <Image
             source={{
               uri: isErrorAPI ? 'https://dummyimage.com/80x80' : photoUri,
@@ -235,22 +298,10 @@ export default function ProfileCard({
           </View>
         </Modal>
       </View>
-
-      {/* Tombol Upload
-      {photoUri && embedding && (
-        <View className="mt-4">
-          <Button
-            onPress={handleUpload}
-            disabled={isPending}
-            label={isPending ? 'Mengunggah...' : 'Upload Foto Wajah'}
-          />
-          {isError && (
-            <Text className="mt-2 text-center text-sm text-red-500">
-              Gagal upload, coba lagi.
-            </Text>
-          )}
-        </View>
-      )} */}
+      {isPending && <ActivityIndicator size="large" color="blue" />}
+      {isError && (
+        <Text style={{ color: 'red' }}>Upload gagal, coba lagi.</Text>
+      )}
     </View>
   );
 }

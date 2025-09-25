@@ -2,6 +2,7 @@ export interface UseFaceUserResponse {
   status: number;
   message: string;
   photo_path: string | null;
+  embedding: Float32Array;
 }
 
 export interface FaceRegisterSuccess {
@@ -18,6 +19,7 @@ export interface FaceRegisterError {
 // ✅ Types untuk variabel request
 export interface FaceRegisterVariables {
   nik: string;
+  embedding: Float32Array;
   photos: {
     uri: string;
     type?: string;

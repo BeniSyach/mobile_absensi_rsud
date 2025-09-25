@@ -1,11 +1,11 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import { type Permohonan } from '@/api/perizinan';
 import DataHasilSeriDeli from '@/components/pelayanan-publik-component/seri-deli-component/data-hasil-seri-deli';
 import FromInputSeriDeli from '@/components/pelayanan-publik-component/seri-deli-component/form-input-seri-deli';
-import { Image, SafeAreaView, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 
 export default function MenuSeriDeli() {
   const [data, setData] = useState<Permohonan>();

@@ -2,12 +2,12 @@ export interface PostKegiatanHarianVariables {
   nik: string;
   uraian_tugas: string;
   indikator: string;
-  id_rhkstaff: string;
+  id_rhkstaff: number;
   waktu_kinerja: string;
   nilai: number;
   tgl_kinerja: string;
   status: number;
-  id_satuan: string;
+  id_satuan: number;
 }
 export interface KinerjaResponse {
   status: number;

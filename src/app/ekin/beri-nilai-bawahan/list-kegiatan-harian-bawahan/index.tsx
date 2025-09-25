@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { useListDetailKegiatan } from '@/api';
 import DiterimaComponent from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/diterima-component';
@@ -10,7 +10,7 @@ import LogoKegiatanHarianBawahan from '@/components/ekin-component/beri-nilai-ba
 import PendingComponent from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/pending-component';
 import PilihanKegiatan from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/pilihan-kegiatan';
 import NavbarNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/navbar-nilai-bawahan';
-import { SafeAreaView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 type TabType = 'pending' | 'disetujui' | 'ditolak';
 

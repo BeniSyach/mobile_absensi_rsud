@@ -2,12 +2,13 @@
 import { useRouter } from 'expo-router';
 import { Edit, Trash } from 'lucide-react-native';
 import React, { useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { type DataItemRHKPejabat, queryClient } from '@/api';
 import { DeleteRHKPejabat } from '@/api/ekin/rhk-pejabat/delete-rhk-pejabat';
 import { AlertModal } from '@/components/title-second';
-import { Pressable, showErrorMessage, Text, View } from '@/components/ui';
+import { showErrorMessage, Text } from '@/components/ui';
 
 interface CardProps {
   dataRHKItems: DataItemRHKPejabat;

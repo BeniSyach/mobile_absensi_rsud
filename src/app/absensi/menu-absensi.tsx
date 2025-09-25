@@ -1,7 +1,16 @@
 /* eslint-disable max-lines-per-function */
+import { Env } from '@env';
 import { Stack, useRouter } from 'expo-router';
 import { Clock } from 'lucide-react-native';
-import { ImageBackground, ScrollView, StatusBar } from 'react-native';
+import { useEffect } from 'react';
+import {
+  Alert,
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
+import { MMKV } from 'react-native-mmkv';
 
 import {
   useFaceRecognition,
@@ -13,12 +22,23 @@ import CardWaktuAbsensi from '@/components/absensi/menu-utama/card-waktu-absensi
 import DaftarAbsensiCard from '@/components/absensi/menu-utama/daftar-card-absensi';
 import MenuAbsensiComponent from '@/components/absensi/menu-utama/menu-absensi-component';
 import ProfileCardAbsensi from '@/components/absensi/menu-utama/profile-card-absensi';
-import { Button, SafeAreaView } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { getMessage } from '@/lib';
+
+const storage = new MMKV({
+  id: 'face-auth',
+});
+
+const FACE_URI_KEY = 'face_photo_uri';
+const FACE_EMBED_KEY = 'face_embedding';
 
 export default function MenuAbsensi() {
   const storedMessage = getMessage();
   const router = useRouter();
+  // ambil dari MMKV
+  const cachedUri = storage.getString(FACE_URI_KEY);
+  const cachedEmbedding = storage.getString(FACE_EMBED_KEY);
+
   const userId = storedMessage?.nik ?? '';
   const page = 1;
   const {
@@ -42,6 +62,36 @@ export default function MenuAbsensi() {
     isLoading: loadingWajah,
     isError: errorWajah,
   } = useFaceRecognition({ variables: { nik: storedMessage?.nik ?? '' } });
+
+  useEffect(() => {
+    if (cachedUri && cachedEmbedding) {
+      console.log('✅ Pakai wajah dari cache MMKV');
+      return;
+    }
+
+    if (!wajah) return;
+
+    if (wajah.status === 0) {
+      Alert.alert('Peringatan', wajah.message, [
+        {
+          text: 'Pindah Ke menu Profile',
+          onPress: () => router.replace('/settings'),
+        },
+      ]);
+    } else {
+      if (wajah.photo_path) {
+        const url = `${Env.API_URL}/absensi/files/faceprint/${wajah.photo_path}/view`;
+        storage.set(FACE_URI_KEY, url);
+      }
+      if (wajah.embedding) {
+        storage.set(
+          FACE_EMBED_KEY,
+          JSON.stringify(Array.from(wajah.embedding))
+        );
+      }
+    }
+  }, [wajah, cachedUri, cachedEmbedding, router]);
+
   return (
     <SafeAreaView className="flex-1">
       <Stack.Screen

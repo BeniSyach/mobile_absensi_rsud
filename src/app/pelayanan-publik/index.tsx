@@ -1,11 +1,17 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import {
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  View,
+} from 'react-native';
 
 import BackSimpeg from '@/components/back-simpeg';
 import Footer from '@/components/home/footer';
 import MenuUtamaPelayananPublik from '@/components/pelayanan-publik-component/menu-utama-pelayanan-publik';
-import { SafeAreaView, ScrollView, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 export default function PelayananPublik() {
   return (

@@ -1,18 +1,16 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { UseProfileEkin } from '@/api';
 import CardDataPegawaiComponent from '@/components/ekin-component/data-pegawai-component/card-data-pegawai';
 import LogoDataPegawai from '@/components/ekin-component/data-pegawai-component/logo-data-pegawai';
 import NavbarTambahKegiatan from '@/components/ekin-component/tambah-kegiatan-component/navbar-tambah-kegiatan';
-import { SafeAreaView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function PegawaiEkin() {
   const storedMessage = getMessage();
   const { data: dataProfile, error } = UseProfileEkin();
-
-  console.log('data pegawai', dataProfile);
 
   if (error) {
     return (

@@ -2,6 +2,7 @@
 import { Env } from '@env';
 import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from 'react';
+import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
 import { type UseFaceUserResponse } from '@/api';
@@ -45,6 +46,8 @@ export default function ProfileCardAbsensi({
   isLoading,
 }: Props) {
   const token = useAuth.getState().token?.access;
+  const storage = new MMKV({ id: 'face-auth' });
+  const FACE_URI_KEY = 'face_photo_uri';
   const [photoUri, setPhotoUri] = useState<string>(
     'https://dummyimage.com/80x80'
   );
@@ -56,21 +59,38 @@ export default function ProfileCardAbsensi({
 
   useEffect(() => {
     if (isError) {
+      // error → dummy image
       setPhotoUri('https://dummyimage.com/80x80');
+      return;
     }
-  }, [isError]);
+
+    if (photo?.photo_path) {
+      // wajah dari API → pakai dan simpan ke MMKV
+      setPhotoUri(photo?.photo_path);
+      storage.set(FACE_URI_KEY, photo?.photo_path);
+    } else {
+      // fallback ke cache MMKV
+      const cached = storage.getString(FACE_URI_KEY);
+      if (cached) {
+        setPhotoUri(cached);
+      }
+    }
+  }, [isError, photo]);
   // load foto profil dari server (cache ke lokal)
   useEffect(() => {
     if (isError) return;
     const loadProfilePhoto = async () => {
-      if (!photo?.photo_path) return;
+      if (!photo?.photo_path) {
+        setPhotoUri('https://dummyimage.com/80x80');
+        return;
+      }
 
       try {
         const remoteUrl = `${Env.API_URL}/absensi/files/faceprint/${photo.photo_path}/view`;
         const localPath =
           FileSystem.cacheDirectory +
           'profile-uploads/' +
-          `${photo.photo_path}.jpg`;
+          `${photo.photo_path}`;
 
         // pastikan semua folder ada
         await ensureFilePath(localPath);
@@ -90,6 +110,7 @@ export default function ProfileCardAbsensi({
     loadProfilePhoto();
   }, [photo?.photo_path, token]);
 
+  console.log('foto', photoUri);
   return (
     <View className="flex-row items-center rounded-2xl p-4">
       {/* Info Text */}

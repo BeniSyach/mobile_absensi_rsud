@@ -1,8 +1,10 @@
 /* eslint-disable max-params */
 /* eslint-disable max-lines-per-function */
-import '@tensorflow/tfjs-react-native';
 
 import { type CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import * as FaceDetector from 'expo-face-detector';
+import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { Camera, CameraIcon, Save } from 'lucide-react-native';
 import * as React from 'react';
 import type { SubmitHandler } from 'react-hook-form';
@@ -22,8 +24,11 @@ import {
   Text,
   View,
 } from '@/components/ui';
-import { imageUriToTensor } from '@/utils/face-utils-lite';
-import { DET_INPUT_SIZE, EMB_INPUT_SIZE } from '@/utils/model-loader-lite';
+import {
+  imageUriToSpoofTensor,
+  imageUriToTensor,
+} from '@/utils/face-utils-lite';
+import { EMB_INPUT_SIZE } from '@/utils/model-loader-lite';
 
 import { type FormType } from './absensi-types';
 import { useAbsensiForm } from './use-absensi-form';
@@ -66,13 +71,13 @@ const storage = new MMKV({
 const FACE_EMBED_KEY = 'face_embedding';
 
 // ===== Constants =====
-const SIMILARITY_THRESHOLD = 0.6; // Increased for better security
-
+const SIMILARITY_THRESHOLD = 0.7; // Increased for better security
+const SPOOF_INPUT_SIZE = 256;
+const SPOOF_THRESHOLD = 0.2;
 // ===== Types =====
 interface VerificationResult {
   success: boolean;
   similarity: number;
-  confidence: number;
   attempts: number;
 }
 
@@ -87,6 +92,19 @@ const getStoredEmbedding = (): Float32Array | null => {
     console.error('Failed to load stored embedding:', error);
     return null;
   }
+};
+
+// ===== Utils =====
+const cosineSimilarity = (a: Float32Array, b: Float32Array) => {
+  let dot = 0,
+    normA = 0,
+    normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 };
 
 // ===== Camera Component =====
@@ -110,7 +128,7 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
   if (!permission) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-gray-500">Checking camera permission...</Text>
+        <Text className="text-gray-500">Memeriksa Izin Kamera...</Text>
       </View>
     );
   }
@@ -119,7 +137,8 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
     return (
       <View className="mt-2 items-center">
         <Text className="mb-2 text-gray-400">
-          Camera access is required for face verification
+          Izin Kamera Tidak Diberikan, Tolong Izinkan Kamera Untuk Mengakses
+          Aplikasi ini.
         </Text>
         <Button label="Grant Camera Access" onPress={requestPermission} />
       </View>
@@ -127,18 +146,28 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
   }
 
   const handleTakePhoto = async () => {
-    if (!cameraRef.current || isCapturing || !cameraReady) return;
+    if (!cameraRef.current) {
+      Alert.alert('Error', 'Camera tidak siap (ref null)');
+      return;
+    }
+    if (isCapturing) {
+      Alert.alert('Info', 'Sedang memproses verifikasi, tunggu sebentar');
+      return;
+    }
+    if (!cameraReady) {
+      Alert.alert('Info', 'Camera belum siap, tunggu sebentar');
+      return;
+    }
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
         base64: true, // Don't need base64 for verification
-        quality: 0.3, // Higher quality for better accuracy
-        skipProcessing: false,
-        exif: false,
+        skipProcessing: true,
+        quality: 0.5,
       });
 
       if (!photo?.uri) {
-        throw new Error('Failed to capture photo');
+        throw new Error('Gagal Mengambil Foto Kamera');
       }
 
       await onTakePhoto({
@@ -146,8 +175,8 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
         base64: photo.base64 ?? '', // Not needed
       });
     } catch (error) {
-      console.error('Failed to take photo:', error);
-      Alert.alert('Error', 'Failed to capture photo. Please try again.');
+      console.error('Gagal Mengambil Foto Kamera:', error);
+      Alert.alert('Error', 'Gagal Mengambil Foto Kamera, Silahkan Coba Lagi.');
     }
   };
 
@@ -159,9 +188,15 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
         facing={facing}
         onCameraReady={() => setCameraReady(true)}
       >
+        {/* Overlay Face Box */}
+        <View className="absolute inset-0 items-center justify-center">
+          <View className="h-[70%] w-1/2 rounded-full border-4 border-green-500 bg-transparent" />
+        </View>
+
+        {/* Capture button */}
         <View className="h-96 w-full flex-1 items-end justify-end bg-transparent px-4 pb-4">
           <Button
-            label={isCapturing ? 'Processing...' : 'Verify Face'}
+            label={isCapturing ? 'Proses Verifikasi' : 'Verifikasi Wajah'}
             onPress={handleTakePhoto}
             disabled={isCapturing || !cameraReady}
             icon={!isCapturing && <Camera size={20} color="white" />}
@@ -180,184 +215,375 @@ interface FaceVerifyScreenProps {
   handleTakePhoto?: (photo: { uri: string; base64?: string }) => Promise<void>; // optional
 }
 
-// ===== Utils =====
-const cosineSimilarity = (a: Float32Array, b: Float32Array) => {
-  let dot = 0,
-    normA = 0,
-    normB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-};
-
 export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
   showCamera,
   onVerificationComplete,
   handleTakePhoto,
 }) => {
-  const [blazefaceModel, setBlazefaceModel] = React.useState<any>(null);
-  const [mobileFaceNet, setMobileFaceNet] = React.useState<any>(null);
   const [savedEmbedding, setSavedEmbedding] =
     React.useState<Float32Array | null>(null);
   const [verifiedPhotoUri, setVerifiedPhotoUri] = React.useState<string | null>(
     null
   );
+  const [status, setStatus] = React.useState('Checking models...');
   const [attempts, setAttempts] = React.useState(0);
   const [isVerifying, setIsVerifying] = React.useState(false);
 
-  // Load TensorFlow models
-  const detectionModel = useTensorflowModel(
-    require('../../../assets/model/blazeface.tflite')
+  const spoofModel = useTensorflowModel(
+    require('../../../assets/model/FaceAntiSpoofing.tflite')
   );
+
   const embedModel = useTensorflowModel(
     require('../../../assets/model/mobilefacenet.tflite')
   );
 
+  // Load stored embedding once
   React.useEffect(() => {
-    const init = async () => {
-      try {
-        while (
-          detectionModel.state !== 'loaded' ||
-          embedModel.state !== 'loaded'
-        ) {
-          await new Promise((r) => setTimeout(r, 100));
-        }
-        setBlazefaceModel(detectionModel);
-        setMobileFaceNet(embedModel);
-
-        const stored = await getStoredEmbedding();
-        if (!stored) Alert.alert('Error', 'Belum ada wajah yang terdaftar');
-        else setSavedEmbedding(stored);
-      } catch (err) {
-        console.error(err);
-        Alert.alert('Error', 'Gagal load AI models');
+    const loadEmbedding = async () => {
+      const stored = getStoredEmbedding();
+      if (!stored) {
+        Alert.alert('Error', 'Belum ada wajah yang terdaftar');
+      } else {
+        setSavedEmbedding(stored);
       }
     };
-    init();
+    loadEmbedding();
   }, []);
 
-  const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
-  // Deteksi wajah sederhana menggunakan BlazeFace
-  const detectFaces = React.useCallback(
-    async (photoUri: string) => {
-      if (!blazefaceModel) return [];
-      // Resize ke 128x128 untuk BlazeFace
-      const pixels = await imageUriToTensor(
-        photoUri,
-        DET_INPUT_SIZE,
-        'zero_one'
+  // Update status based on model state
+  React.useEffect(() => {
+    if (embedModel.state === 'loaded') {
+      setStatus('Face Recoginiton Siap, Kamera Siap Mengambil Wajah');
+    } else if (embedModel.state === 'loading') {
+      setStatus('Loading Face Recoginiton...');
+    } else if (embedModel.state === 'error') {
+      setStatus('Error Data Face Recognition');
+      Alert.alert('Error', 'Gagal Mengambil Data Face Recognition');
+    }
+  }, [embedModel.state]);
+
+  async function runSpoofCheck(uri: string): Promise<'Real' | 'Spoof'> {
+    if (!spoofModel.model || spoofModel.state !== 'loaded') {
+      console.warn('⚠️ Spoof model not loaded');
+      return 'Real'; // fallback biar app tetap jalan
+    }
+
+    try {
+      // 🔹 Normalisasi gambar jadi Float32Array
+      const input = await imageUriToSpoofTensor(uri, SPOOF_INPUT_SIZE);
+
+      // ✅ Validasi ukuran input
+      const expectedSize = SPOOF_INPUT_SIZE * SPOOF_INPUT_SIZE * 3;
+      if (input.length !== expectedSize) {
+        console.error(
+          `❌ Input size mismatch. Expected: ${expectedSize}, Got: ${input.length}`
+        );
+        return 'Real';
+      }
+
+      // 🔹 Bentuk input sesuai model: [1, 256, 256, 3]
+      const reshaped = new Float32Array(1 * expectedSize);
+      reshaped.set(input);
+
+      console.log('🔍 Input tensor shape:', [
+        1,
+        SPOOF_INPUT_SIZE,
+        SPOOF_INPUT_SIZE,
+        3,
+      ]);
+      console.log(
+        '🔍 Input sample values:',
+        Array.from(input.slice(0, 5)).map((x) => x.toFixed(4))
       );
 
-      const outputs = blazefaceModel.model.runSync([pixels]);
-      if (!outputs || !outputs[0]) return [];
-      const detections = outputs[0] as Float32Array;
+      // 🔹 Jalankan model
+      const outputs = spoofModel.model.runSync([reshaped]);
 
-      // Ambil prediksi dengan score tinggi
-      const results: any[] = [];
-      const stride = 16;
-      for (let i = 0; i < detections.length; i += stride) {
-        const score = sigmoid(detections[i + 15]);
-        if (score < 0.8) continue;
-        results.push({
-          score,
-          box: {
-            x: detections[i],
-            y: detections[i + 1],
-            w: detections[i + 2],
-            h: detections[i + 3],
-          },
+      if (!outputs || outputs.length === 0) {
+        console.error('❌ Spoof model returned empty output:', outputs);
+        return 'Real';
+      }
+
+      console.log('🔍 Raw spoof outputs info:', {
+        numOutputs: outputs.length,
+        outputShapes: outputs.map((out) =>
+          Array.isArray(out) ? out.length : typeof out
+        ),
+        outputSamples: outputs.map((out) =>
+          Array.isArray(out)
+            ? Array.from((out as Float32Array).slice(0, 3)).map((x) =>
+                x.toFixed(4)
+              )
+            : out
+        ),
+      });
+
+      let spoofScore = 0;
+
+      if (outputs.length >= 2) {
+        // 🔹 Case: model punya 2 output → [classification_pred, leaf_node_mask]
+        const clssPred = Float32Array.from(outputs[0] as Float32Array);
+        const leafNodeMask = Float32Array.from(outputs[1] as Float32Array);
+
+        if (clssPred.length !== leafNodeMask.length) {
+          console.warn(
+            '⚠️ Output length mismatch:',
+            clssPred.length,
+            'vs',
+            leafNodeMask.length
+          );
+          // Fallback ke output pertama saja
+          spoofScore = clssPred.length > 0 ? clssPred[0] : 0;
+        } else {
+          // ✅ Weighted sum approach (typical untuk ensemble models)
+          let weightedSum = 0;
+          let totalWeight = 0;
+
+          for (let i = 0; i < clssPred.length; i++) {
+            const pred = clssPred[i];
+            const weight = leafNodeMask[i];
+
+            if (!isNaN(pred) && !isNaN(weight) && weight > 0) {
+              weightedSum += pred * weight;
+              totalWeight += weight;
+            }
+          }
+
+          spoofScore =
+            totalWeight > 0 ? weightedSum / totalWeight : clssPred[0] || 0;
+        }
+
+        console.log('📊 Multi-output spoof score calculation:', {
+          classificationLength: clssPred.length,
+          maskLength: leafNodeMask.length,
+          finalScore: spoofScore.toFixed(4),
+        });
+      } else {
+        // 🔹 Case: model cuma punya 1 output
+        const output = Float32Array.from(outputs[0] as Float32Array);
+
+        if (output.length === 1) {
+          // Single value prediction (common case)
+          spoofScore = output[0];
+        } else if (output.length === 2) {
+          // Binary classification [real_prob, spoof_prob]
+          spoofScore = output[1]; // spoof probability
+        } else if (output.length > 2) {
+          // Multi-class atau feature vector - ambil yang pertama
+          console.warn(
+            '⚠️ Unexpected output length:',
+            output.length,
+            'using first value'
+          );
+          spoofScore = output[0];
+        } else {
+          console.error('❌ Empty output array');
+          return 'Real';
+        }
+
+        console.log('📊 Single-output spoof score:', {
+          outputLength: output.length,
+          rawOutput: Array.from(
+            output.slice(0, Math.min(5, output.length))
+          ).map((x) => x.toFixed(4)),
+          selectedScore: spoofScore.toFixed(4),
         });
       }
-      return results.sort((a, b) => b.score - a.score);
-    },
-    [blazefaceModel]
-  );
 
-  // Verifikasi foto
+      console.log(
+        `📊 Final spoof score: ${spoofScore.toFixed(4)} (threshold: ${SPOOF_THRESHOLD})`
+      );
+
+      // ✅ Handle edge cases
+      if (isNaN(spoofScore)) {
+        console.error('❌ Spoof score is NaN, defaulting to Real');
+        return 'Real';
+      }
+
+      const result = spoofScore > SPOOF_THRESHOLD ? 'Spoof' : 'Real';
+      console.log(`🎯 Spoof detection result: ${result}`);
+
+      return result;
+    } catch (err) {
+      console.error('❌ runSpoofCheck error:', err);
+      return 'Real'; // fallback aman
+    }
+  }
+
   const onVerifyPhoto = React.useCallback(
     async (photo: { uri: string }) => {
-      if (!blazefaceModel || !mobileFaceNet || !savedEmbedding) return;
+      if (!embedModel || embedModel.state !== 'loaded') {
+        Alert.alert('Error', 'Model Face Recognition belum siap');
+        return;
+      }
+
+      if (!savedEmbedding) {
+        Alert.alert('Error', 'Belum ada wajah yang terdaftar');
+        return;
+      }
 
       setIsVerifying(true);
+      let croppedUri: string | null = null;
+
+      // ✅ Update attempts di awal untuk menghindari race condition
+      const currentAttempt = attempts + 1;
+      setAttempts(currentAttempt);
 
       try {
-        const faces = await detectFaces(photo.uri);
-        if (faces.length === 0) throw new Error('Wajah tidak terdeteksi');
+        console.log(`🔍 Starting verification attempt #${currentAttempt}`);
 
-        const embeddingTensor = await imageUriToTensor(
+        // 🔹 Face Detection
+        const detection = await FaceDetector.detectFacesAsync(photo.uri, {
+          mode: FaceDetector.FaceDetectorMode.accurate,
+        });
+
+        if (!detection.faces.length) {
+          throw new Error('Wajah tidak terdeteksi dalam foto');
+        }
+
+        // ✅ Handle multiple faces
+        if (detection.faces.length > 1) {
+          console.warn('⚠️ Multiple faces detected, using largest face');
+          // Pilih wajah terbesar
+          const faces = detection.faces.sort(
+            (a, b) =>
+              b.bounds.size.width * b.bounds.size.height -
+              a.bounds.size.width * a.bounds.size.height
+          );
+          var face = faces[0];
+        } else {
+          var face = detection.faces[0];
+        }
+
+        const box = face.bounds;
+        console.log('📐 Face bounds:', box);
+
+        // ✅ Validate face size
+        if (box.size.width < 50 || box.size.height < 50) {
+          throw new Error('Wajah terlalu kecil, dekatkan ke kamera');
+        }
+
+        // 🔹 Crop face
+        const cropped = await ImageManipulator.manipulateAsync(
           photo.uri,
+          [
+            {
+              crop: {
+                originX: Math.max(0, box.origin.x),
+                originY: Math.max(0, box.origin.y),
+                width: box.size.width,
+                height: box.size.height,
+              },
+            },
+          ],
+          { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        croppedUri = cropped.uri;
+
+        // ✅ Anti-Spoofing Check (PENTING untuk verifikasi!)
+        console.log('🛡️ Running anti-spoofing check...');
+        const spoofResult = await runSpoofCheck(cropped.uri);
+        if (spoofResult === 'Spoof') {
+          throw new Error(
+            'Terdeteksi menggunakan foto/video. Gunakan wajah asli!'
+          );
+        }
+        console.log('✅ Anti-spoofing passed');
+
+        // 🔹 Generate embedding
+        console.log('🤖 Generating face embedding...');
+        const embeddingTensor = await imageUriToTensor(
+          cropped.uri,
           EMB_INPUT_SIZE,
           'neg_one_pos_one'
         );
 
-        const embeddingOutput = mobileFaceNet.model.runSync([embeddingTensor]);
-        const currentEmbedding = embeddingOutput[0] as Float32Array;
+        const embeddingOutput = embedModel.model.runSync([embeddingTensor]);
+        if (!embeddingOutput || !embeddingOutput[0]) {
+          throw new Error('Gagal membuat face embedding');
+        }
 
+        const currentEmbedding = embeddingOutput[0] as Float32Array;
+        console.log('🧠 Embedding generated:', {
+          length: currentEmbedding.length,
+          sample: Array.from(currentEmbedding.slice(0, 5)).map((x) =>
+            x.toFixed(4)
+          ),
+        });
+
+        // 🔹 Calculate similarity
         const similarity = cosineSimilarity(currentEmbedding, savedEmbedding);
         const success = similarity >= SIMILARITY_THRESHOLD;
 
-        // Increment attempts safely
-        setAttempts((prev) => prev + 1);
+        console.log(
+          `📊 Similarity: ${(similarity * 100).toFixed(2)}% (threshold: ${(SIMILARITY_THRESHOLD * 100).toFixed(1)}%)`
+        );
 
+        // ✅ Update state based on result
         if (success) {
           setVerifiedPhotoUri(photo.uri);
+          console.log('✅ Verification successful');
 
+          // Handle success callback
           if (handleTakePhoto) {
             await handleTakePhoto(photo);
           }
 
           Alert.alert(
-            'Sukses',
-            `Wajah cocok (${(similarity * 100).toFixed(1)}%)`
+            '✅ Verifikasi Berhasil',
+            `Wajah cocok dengan tingkat kemiripan ${(similarity * 100).toFixed(1)}%`
           );
         } else {
+          setVerifiedPhotoUri(null);
+          console.log('❌ Verification failed');
+
           Alert.alert(
-            'Gagal',
-            `Wajah tidak cocok (${(similarity * 100).toFixed(1)}%)`
+            '❌ Verifikasi Gagal',
+            `Wajah tidak cocok. Kemiripan hanya ${(similarity * 100).toFixed(1)}%\n\nSilakan coba lagi atau daftar ulang wajah Anda.`
           );
         }
 
-        // callback ke parent
+        // ✅ Callback dengan attempt number yang konsisten
         onVerificationComplete({
           success,
           similarity,
-          confidence: faces[0].score,
-          attempts: attempts + 1, // atau bisa di-update setelah setAttempts prev+1
+          attempts: currentAttempt,
         });
       } catch (err: any) {
-        setAttempts((prev) => prev + 1);
+        console.error('❌ Verification error:', err);
+
+        // ✅ Consistent error handling
         onVerificationComplete({
           success: false,
           similarity: 0,
-          confidence: 0,
-          attempts: attempts + 1,
+          attempts: currentAttempt,
         });
-        Alert.alert('Error', err.message || 'Verifikasi gagal');
+
+        const errorMessage = err.message || 'Verifikasi gagal';
+        Alert.alert('❌ Error Verifikasi', errorMessage);
       } finally {
+        // ✅ Cleanup cropped image
+        if (croppedUri && croppedUri !== photo.uri) {
+          try {
+            await FileSystem.deleteAsync(croppedUri, { idempotent: true });
+            console.log('🗑️ Cleaned up cropped image');
+          } catch (cleanupError) {
+            console.warn('⚠️ Failed to cleanup cropped image:', cleanupError);
+          }
+        }
+
         setIsVerifying(false);
+        console.log(`🏁 Verification attempt #${currentAttempt} completed`);
       }
     },
     [
-      blazefaceModel,
-      mobileFaceNet,
+      embedModel,
       savedEmbedding,
-      detectFaces,
       onVerificationComplete,
       handleTakePhoto,
+      attempts,
     ]
-  );
-
-  const internalHandleTakePhoto = React.useCallback(
-    async (photo: { uri: string; base64?: string }) => {
-      if (!photo) return;
-
-      // langsung panggil verifikasi
-      await onVerifyPhoto(photo);
-    },
-    [onVerifyPhoto]
   );
 
   return (
@@ -366,15 +592,22 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       {isVerifying && (
         <View className="absolute inset-0 z-50 flex-1 items-center justify-center bg-black/40">
           <ActivityIndicator size="large" color="#00FF00" />
-          <Text className="mt-2 text-lg text-white">Verifying face...</Text>
+          <Text className="mt-2 text-lg text-white">
+            Memverifikasi Wajah...
+          </Text>
         </View>
       )}
+
+      {/* Tampilkan status */}
+      <View className="p-4">
+        <Text className="text-gray-400">{status}</Text>
+      </View>
 
       {/* Tampilkan foto yang berhasil diverifikasi */}
       {verifiedPhotoUri && (
         <View className="items-center justify-center p-4">
           <Text className="mb-2 text-lg font-bold text-green-600">
-            ✅ Verified Photo
+            ✅ Foto berhasil Di Verifikasi
           </Text>
         </View>
       )}
@@ -382,7 +615,7 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       {/* Camera section */}
       <CameraSectionVerify
         showCamera={showCamera}
-        onTakePhoto={internalHandleTakePhoto}
+        onTakePhoto={onVerifyPhoto}
         isCapturing={isVerifying}
       />
     </View>
@@ -418,7 +651,7 @@ const ImagePreview = React.memo<{
           }}
         />
       )}
-      {hasError && <Text className="text-red-500">Gagal memuat gambar</Text>}
+      {hasError && <Text className="text-red-500">Foto tidak tersedia</Text>}
     </View>
   );
 });
@@ -526,7 +759,6 @@ const FormFields = React.memo<FormFieldsProps>(
         uri: photo.uri,
         base64: photo.base64 ?? '', // selalu kirim string
       });
-      setShowCamera(false);
     };
 
     const handleVerificationComplete = (result: VerificationResult) => {
@@ -534,18 +766,18 @@ const FormFields = React.memo<FormFieldsProps>(
 
       if (result.success) {
         Alert.alert(
-          'Success',
-          `Face verified! Similarity: ${(result.similarity * 100).toFixed(1)}%`
+          'Berhasil',
+          `Wajah berhasil Di Verifikasi! Skor Wajah: ${(result.similarity * 100).toFixed(1)}%`
         );
+        setShowCamera(false);
       } else {
         Alert.alert(
-          'Failed',
-          `Verification failed. Similarity: ${(result.similarity * 100).toFixed(
-            1
-          )}%`
+          'Gagal',
+          `Wajah Gagal Di Verifikasi. Skor Wajah: ${(
+            result.similarity * 100
+          ).toFixed(1)}%`
         );
       }
-      setShowCamera(false); // Close camera after verification
     };
 
     return (
@@ -596,7 +828,7 @@ const FormContainer = React.memo<{
         variant="outline"
         loading={isPending}
         onPress={onSubmit}
-        className="mx-32 rounded-full bg-[#20A0D8]"
+        className="mx-24 rounded-full bg-[#20A0D8]"
         size="lg"
         icon={<Save size={20} color={'white'} />}
       />

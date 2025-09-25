@@ -13,16 +13,6 @@ export const useLogin = createMutation<
     try {
       const nik = variables.nik.replace(/['"]/g, '');
 
-      // jalankan dua request bersamaan
-      await axios.post<LoginResponse>(
-        `https://ekin-deliserdangsehat.deliserdangkab.go.id/api/login-mobile`,
-        {
-          nik,
-          password: variables.password,
-          device_token: variables.device_token,
-        }
-      );
-
       const responseMain = await axios.post<LoginResponse>(
         `${Env.API_URL}/auth-mobile/login`,
         {

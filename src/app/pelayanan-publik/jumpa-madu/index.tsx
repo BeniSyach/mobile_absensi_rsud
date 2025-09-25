@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import BackSimpeg from '@/components/back-simpeg';
-import { Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 export default function MenuJumpaMadu() {
   return (

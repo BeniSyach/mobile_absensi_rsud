@@ -1,10 +1,11 @@
 import { Env } from '@env';
 import { Stack } from 'expo-router';
+import { SafeAreaView, ScrollView } from 'react-native';
 
 import { Item } from '@/components/settings/item';
 import { ItemsContainer } from '@/components/settings/items-container';
 import { ThemeItem } from '@/components/settings/theme-item';
-import { FocusAwareStatusBar, SafeAreaView, ScrollView } from '@/components/ui';
+import { FocusAwareStatusBar } from '@/components/ui';
 
 export default function SettingsApp() {
   return (

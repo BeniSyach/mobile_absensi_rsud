@@ -1,20 +1,19 @@
 /* eslint-disable max-lines-per-function */
 import 'dayjs/locale/id';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { ScrollView, TextInput } from 'react-native';
-import { showMessage } from 'react-native-flash-message';
+import { z } from 'zod';
 
 import {
   GetRhkStaffChild,
   GetSatuanEkin,
-  PostKegiatanHarian,
-  type PostKegiatanHarianVariables,
-  queryClient,
   type RhkStaffChildItem,
   type Satuan,
   type UserPegawai,
@@ -22,8 +21,8 @@ import {
 import { AlertPostModal } from '@/components/title-second';
 import {
   Button,
+  ControlledInput,
   DateInputOriginal,
-  showErrorMessage,
   Text,
   TimeInputOri,
   View,
@@ -32,26 +31,44 @@ import { RemoteSelect } from '@/components/ui/remote-select';
 dayjs.extend(customParseFormat);
 dayjs.locale('id');
 
-interface Props {
+const schema = z.object({
+  uraian_tugas: z.string().min(1, 'Uraian tugas wajib diisi'),
+  lamaWaktu: z.string().min(1, 'Lama waktu wajib diisi'),
+  jumlah_capaian: z.string().min(1, 'Jumlah capaian wajib diisi'),
+  satuan: z.number().min(1, 'Satuan wajib dipilih'),
+  tanggal: z.string().min(1, 'Tanggal wajib dipilih'),
+  waktu_tanggal: z.string().min(1, 'Jam wajib dipilih'),
+  selectedrhk: z.number().min(1, 'RHK wajib dipilih'),
+  selectedIndikator: z.string().optional(),
+});
+
+export type FormType = z.infer<typeof schema>;
+export interface FormKegiatanProps {
+  onSubmit: SubmitHandler<FormType>;
   dataUserLogin: UserPegawai | null;
+  isPending: boolean;
 }
 
-export default function FormTambahKegiatan({ dataUserLogin }: Props) {
-  // const storedMessage = getMessage();
+export default function FormTambahKegiatan({
+  onSubmit,
+  dataUserLogin,
+  isPending,
+}: FormKegiatanProps) {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [lamaWaktu, setLamaWaktu] = useState('');
-  const [tanggal, setTanggal] = useState('');
-  const [waktu_tanggal, setWaktuTanggal] = useState('');
-  const [selectedrhk, setSelectedrhk] = useState('');
-  const [selectedIndikator, setSelectedIndikator] = useState('');
-  const [satuan, setSatuan] = useState('');
-  const [uraian_tugas, setUraianTugas] = useState('');
-  const [jumlah_capaian, setJumlahCapaian] = useState('');
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+  } = useForm<FormType>({ resolver: zodResolver(schema) });
+
   const [rhkMap, setRhkMap] = useState<Record<string, RhkStaffChildItem>>({});
 
-  const { mutateAsync: postKegiatan, isPending: isPosting } =
-    PostKegiatanHarian();
+  const selectedrhk = watch('selectedrhk');
 
   const fetchOptionRHKsWithQuery = async (page: number, search: string) => {
     try {
@@ -83,29 +100,6 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
     }
   };
 
-  // const fetchOptionIndikatorsWithQuery = async (
-  //   page: number,
-  //   search: string
-  // ) => {
-  //   try {
-  //     const data = await GetIndikatorByUnitKerja.fetcher({
-  //       page,
-  //       limit: 20,
-  //       search: search || undefined,
-  //       kode_unit_kerja: storedMessage?.kode_unit_kerja || '1',
-  //     });
-  //     return (
-  //       data.data?.map((item: Indikator) => ({
-  //         label: item.uraian || '',
-  //         value: item.id,
-  //       })) || []
-  //     );
-  //   } catch (error) {
-  //     console.error('Error fetching RHK staff:', error);
-  //     return [];
-  //   }
-  // };
-
   const fetchOptionSatuansWithQuery = async (page: number, search: string) => {
     try {
       const data = await GetSatuanEkin.fetcher({
@@ -124,85 +118,17 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
       return [];
     }
   };
+
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
-  const handleConfirm = async () => {
-    setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
 
-    // const tgl_kinerja = `${tanggal}T${waktu_tanggal}:00`;
+  const handleConfirm = handleSubmit((data) => {
+    onSubmit(data); // proses submit data
+    reset();
+    setShowConfirmModal(false); // tutup modal
+  });
 
-    const tgl_kinerja = dayjs(
-      `${tanggal} ${waktu_tanggal}`,
-      'DD MMMM YYYY HH:mm'
-    ).format('YYYY-MM-DDTHH:mm:ss');
-
-    const payload: PostKegiatanHarianVariables = {
-      waktu_kinerja: lamaWaktu,
-      tgl_kinerja: tgl_kinerja,
-      id_rhkstaff: selectedrhk,
-      indikator: selectedIndikator,
-      id_satuan: satuan,
-      uraian_tugas,
-      nik: dataUserLogin?.nik ?? '',
-      nilai: Number(jumlah_capaian),
-      status: 0,
-    };
-
-    try {
-      const response = await postKegiatan(payload);
-      console.log('✅ Data berhasil dikirim:', response);
-      queryClient.invalidateQueries({ queryKey: ['getKegiatanHarianByUser'] });
-      showMessage({
-        message: 'Kegiatan harian berhasil disimpan.',
-        type: 'success',
-        duration: 7000,
-      });
-      setTanggal('');
-      setWaktuTanggal('');
-      setLamaWaktu('');
-      setSelectedrhk('');
-      setSelectedIndikator('');
-      setSatuan('');
-      setLamaWaktu('');
-      setUraianTugas('');
-      setJumlahCapaian('');
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.error) {
-        errorMessage = error.error;
-      }
-
-      showErrorMessage(errorMessage);
-    }
-  };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
@@ -210,105 +136,132 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
   // Saat selectedrhk berubah, update selectedIndikator
   useEffect(() => {
     if (selectedrhk && rhkMap[selectedrhk]) {
-      const indikatorText = rhkMap[selectedrhk]?.rhk_staff?.indikator;
-      setSelectedIndikator(indikatorText);
+      const indikatorText = rhkMap[selectedrhk]?.rhk_staff?.indikator ?? '';
+      setValue('selectedIndikator', indikatorText);
     } else {
-      setSelectedIndikator('');
+      setValue('selectedIndikator', '');
     }
-  }, [selectedrhk, rhkMap]);
+  }, [selectedrhk, rhkMap, setValue]);
+
   return (
-    <ScrollView className="flex-1">
+    <ScrollView
+      className="flex-1"
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
       <View className="bg-whites m-2 mt-7 rounded-2xl bg-white">
         <View className="p-5">
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Uraian Tugas
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Uraian Tugas"
-            onChangeText={setUraianTugas}
-            value={uraian_tugas}
+          <ControlledInput
+            control={control}
+            name="uraian_tugas"
+            label="Uraian Tugas"
+            placeholder="Ketik Uraian Tugas Anda"
+            error={errors.uraian_tugas?.message}
           />
-          <View>
-            <Text className="mb-2 text-lg font-semibold text-black">
-              Lama Waktu
-            </Text>
-            <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
-              <TextInput
-                className="flex-1 p-2 text-black"
-                placeholder="Lama waktu"
-                keyboardType="number-pad"
-                onChangeText={setLamaWaktu}
-                value={lamaWaktu}
-              />
-              <Text className="ml-2 text-gray-500">menit</Text>
-            </View>
-          </View>
           <Text className="mb-2 text-lg font-semibold text-black">
-            Jumlah Capaian Kegiatan
+            Lama Waktu
           </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
-            placeholder="Jumlah Capaian Kegiatan"
+          <Controller
+            control={control}
+            name="lamaWaktu"
+            render={({ field: { value, onChange } }) => (
+              <View className="mb-2 flex-row items-center rounded-lg border border-black bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 p-2 text-black"
+                  placeholder="Lama waktu"
+                  keyboardType="number-pad"
+                  onChangeText={onChange}
+                  value={value}
+                />
+                <Text className="ml-2 text-gray-500">menit</Text>
+              </View>
+            )}
+          />
+          <ControlledInput
+            control={control}
+            name="jumlah_capaian"
+            label="Jumlah Capaian Kegiatan"
+            placeholder="Ketik Uraian Tugas Anda"
             keyboardType="number-pad"
-            onChangeText={setJumlahCapaian}
-            value={jumlah_capaian}
+            error={errors.uraian_tugas?.message}
           />
-          <RemoteSelect
-            label="Satuan"
-            value={satuan}
-            onSelect={(val) => setSatuan(val as string)}
-            placeholder="Pilih Satuan..."
-            debounceMs={400}
-            pageSize={10}
-            fetchOptions={fetchOptionSatuansWithQuery}
+          <Controller
+            control={control}
+            name="satuan"
+            render={({ field: { value, onChange } }) => (
+              <RemoteSelect
+                label="Satuan"
+                value={value}
+                onSelect={(val) => onChange(val as string)}
+                placeholder="Pilih Satuan..."
+                debounceMs={400}
+                pageSize={10}
+                fetchOptions={fetchOptionSatuansWithQuery}
+              />
+            )}
           />
           <View className="flex-row justify-between gap-2">
             <View className="mr-1 flex-1">
-              <DateInputOriginal
-                label="Tanggal"
-                placeholder="Pilih tanggal"
-                value={tanggal}
-                onChange={setTanggal}
+              <Controller
+                control={control}
+                name="tanggal"
+                render={({ field: { value, onChange } }) => (
+                  <DateInputOriginal
+                    label="Tanggal"
+                    placeholder="Pilih tanggal"
+                    value={value}
+                    onChange={onChange}
+                  />
+                )}
               />
             </View>
             <View className="ml-1 flex-1">
-              <TimeInputOri
-                label="Jam"
-                placeholder="Pilih waktu (HH:MM)"
-                value={waktu_tanggal}
-                onChange={setWaktuTanggal}
+              <Controller
+                control={control}
+                name="waktu_tanggal"
+                render={({ field: { value, onChange } }) => (
+                  <TimeInputOri
+                    label="Jam"
+                    placeholder="Pilih waktu (HH:MM)"
+                    value={value}
+                    onChange={onChange}
+                  />
+                )}
               />
             </View>
           </View>
-          <RemoteSelect
-            label="Rencana Hasil Kerja"
-            value={selectedrhk}
-            onSelect={(val) => setSelectedrhk(val as string)}
-            placeholder="Pilih RHK..."
-            debounceMs={400}
-            pageSize={10}
-            fetchOptions={fetchOptionRHKsWithQuery}
+          <Controller
+            control={control}
+            name="selectedrhk"
+            render={({ field: { value, onChange } }) => (
+              <RemoteSelect
+                label="Rencana Hasil Kerja"
+                value={value}
+                onSelect={(val) => onChange(val as string)}
+                placeholder="Pilih RHK..."
+                debounceMs={400}
+                pageSize={10}
+                fetchOptions={fetchOptionRHKsWithQuery}
+              />
+            )}
           />
-          {/* <RemoteSelect
-            label="Indikator"
-            value={selectedIndikator}
-            onSelect={(val) => setSelectedIndikator(val as string)}
-            placeholder="Pilih Indikator..."
-            debounceMs={400} // Bisa disesuaikan
-            fetchOptions={fetchOptionIndikatorsWithQuery}
-          /> */}
+          {/* Indikator */}
           <Text className="mb-2 text-lg font-semibold text-black">
             Indikator
           </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2"
-            placeholder="Indikator"
-            onChangeText={setSelectedIndikator}
-            value={selectedIndikator}
-            editable={false}
-            multiline
-            textAlignVertical="top" // biar rapih di atas
+          <Controller
+            control={control}
+            name="selectedIndikator"
+            render={({ field: { value } }) => (
+              <TextInput
+                className="mb-2 rounded-lg border p-2"
+                placeholder="Indikator"
+                value={value}
+                editable={false}
+                multiline
+                textAlignVertical="top"
+              />
+            )}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">
@@ -318,7 +271,7 @@ export default function FormTambahKegiatan({ dataUserLogin }: Props) {
             variant="outline"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
-            disabled={isPosting}
+            disabled={isPending}
           />
           <Button
             label="Batal"

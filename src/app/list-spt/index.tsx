@@ -1,11 +1,11 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import { type SptData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
 import { Title } from '@/components/title';
-import { SafeAreaView, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 import ListContent from './list-content';
 import UseFetchSPT from './use-fetch-spt';

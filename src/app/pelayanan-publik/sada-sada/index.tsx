@@ -4,9 +4,10 @@ import {
   Pressable,
   SafeAreaView,
   StatusBar,
+  View,
 } from 'react-native';
 
-import { Image, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 
 export default function SadaSada() {
   return (

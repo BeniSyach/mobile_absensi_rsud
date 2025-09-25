@@ -1,6 +1,7 @@
 import React from 'react';
+import { Pressable, View } from 'react-native';
 
-import { Pressable, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 type TabType = 'pasar' | 'rata' | 'hariIni';
 

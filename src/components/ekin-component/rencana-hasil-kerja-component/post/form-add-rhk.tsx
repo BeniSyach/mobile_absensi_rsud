@@ -1,16 +1,14 @@
 /* eslint-disable max-lines-per-function */
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useState } from 'react';
-import { TextInput } from 'react-native';
-import { showMessage } from 'react-native-flash-message';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import {
   GetRhkStaffChild,
   GetSatuanEkin,
-  PostRHKStaff,
-  type PostRhkStaffVariables,
-  queryClient,
   type RhkPejabatDataItem,
   type RhkStaffChildItem,
   type Satuan,
@@ -20,18 +18,29 @@ import {
 import { AlertModal } from '@/components/title-second';
 import {
   Button,
+  ControlledInput,
   type OptionType,
   ScrollView,
   Select,
-  showErrorMessage,
-  Text,
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
-import { getMessage } from '@/lib';
 
-interface Props {
+const schema = z.object({
+  id_rhk_pejabat: z.string().min(1, 'RHK Atasan wajib diisi'),
+  indikator: z.string().min(1, 'Indikator wajib diisi'),
+  uraian: z.string().min(1, 'Uraian wajib diisi'),
+  id_satuan: z.number().min(1, 'Satuan wajib diisi'),
+  nilai: z.string().min(1, 'Target wajib diisi'),
+  tahun: z.string().min(1, 'Tahun wajib diisi'),
+});
+
+export type FormType = z.infer<typeof schema>;
+
+export interface FormAddRHKProps {
+  onSubmit: SubmitHandler<FormType>;
   dataAtasan: string;
+  isPending: boolean;
 }
 
 const currentYear = new Date().getFullYear();
@@ -45,19 +54,29 @@ const tahunOptions: OptionType[] = Array.from({ length: 7 }, (_, i) => {
   };
 });
 
-export default function FormAddRHK({ dataAtasan }: Props) {
+export default function FormAddRHK({
+  onSubmit,
+  dataAtasan,
+  isPending,
+}: FormAddRHKProps) {
   const { data: user } = useGetUser(dataAtasan ?? '');
   const router = useRouter();
-  const storedMessage = getMessage();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [rhk_atasan, setRhkAtasan] = useState('');
-  const [satuan, setSatuan] = useState('');
-  const [rhkStaff, setRhkStaff] = useState('');
-  const [indikator, setIndikator] = useState('');
-  const [target, setTarget] = useState('');
   const [tahun, setTahun] = useState<string>(currentYear.toString());
-  const { mutateAsync: postRHK, isPending: isPosting } = PostRHKStaff();
 
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    setValue,
+    reset,
+  } = useForm<FormType>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      tahun: currentYear.toString(), // langsung set default
+    },
+  });
+  console.log('data error', errors);
   const isSekda =
     user?.data?.nama_eselon === 'II.a' || user?.data?.nama_eselon === 'II/a';
   const isKadis =
@@ -120,69 +139,13 @@ export default function FormAddRHK({ dataAtasan }: Props) {
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
-  const handleConfirm = async () => {
-    setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
-    const payload: PostRhkStaffVariables = {
-      id_rhk_pejabat: Number(rhk_atasan),
-      nik: storedMessage?.nik ?? '',
-      kode_unit_kerja: storedMessage?.kode_unit_kerja ?? '',
-      indikator: indikator,
-      uraian: rhkStaff,
-      nilai: Number(target),
-      tahun: Number(tahun),
-      id_satuan: Number(satuan),
-    };
 
-    try {
-      const response = await postRHK(payload);
-      console.log('✅ Data berhasil dikirim:', response);
-      queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
-      showMessage({
-        message: 'RHK berhasil disimpan.',
-        type: 'success',
-        duration: 7000,
-      });
-      setRhkAtasan('');
-      setSatuan('');
-      setRhkStaff('');
-      setIndikator('');
-      setTarget('');
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
+  const handleConfirm = handleSubmit((data) => {
+    onSubmit(data); // proses submit data
+    reset();
+    setShowConfirmModal(false); // tutup modal
+  });
 
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.error) {
-        errorMessage = error.error;
-      }
-
-      showErrorMessage(errorMessage);
-    }
-  };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
@@ -190,60 +153,71 @@ export default function FormAddRHK({ dataAtasan }: Props) {
     <ScrollView className="flex-1">
       <View className="bg-whites m-2 mt-7 rounded-2xl bg-white">
         <View className="p-5">
-          <RemoteSelect
-            label="Rencana Hasil Kerja Atasan"
-            value={rhk_atasan}
-            onSelect={(val) => setRhkAtasan(val as string)}
-            placeholder="Pilih Rencana Hasil Kerja Atasan..."
-            debounceMs={400}
-            pageSize={10}
-            fetchOptions={fetchOptionRHKsWithQuery}
+          <Controller
+            control={control}
+            name="id_rhk_pejabat"
+            render={({ field: { value, onChange } }) => (
+              <RemoteSelect
+                label="Rencana Hasil Kerja Atasan"
+                value={value}
+                onSelect={(val) => onChange(val as string)}
+                placeholder="Pilih Rencana Hasil Kerja Atasan..."
+                debounceMs={400}
+                pageSize={10}
+                fetchOptions={fetchOptionRHKsWithQuery}
+              />
+            )}
           />
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Rencana Hasil Kerja
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+
+          <ControlledInput
+            control={control}
+            name="uraian"
+            label="Rencana Hasil Kerja"
             placeholder="Rencana Hasil Kerja"
-            value={rhkStaff}
-            onChangeText={setRhkStaff}
-            multiline
-            textAlignVertical="top"
+            error={errors.uraian?.message}
           />
-          <Text className="mb-2 text-lg font-semibold text-black">
-            Indikator
-          </Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+
+          <ControlledInput
+            control={control}
+            name="indikator"
+            label="Indikator"
             placeholder="Indikator"
-            value={indikator}
-            onChangeText={setIndikator}
-            multiline
-            textAlignVertical="top"
+            error={errors.indikator?.message}
           />
-          <Text className="mb-2 text-lg font-semibold text-black">Target</Text>
-          <TextInput
-            className="mb-2 rounded-lg border p-2 py-4"
+
+          <ControlledInput
+            control={control}
+            name="nilai"
+            label="Target"
             placeholder="Target"
-            keyboardType="number-pad"
-            value={target}
-            onChangeText={setTarget}
+            error={errors.nilai?.message}
           />
-          <RemoteSelect
-            label="Satuan"
-            value={satuan}
-            onSelect={(val) => setSatuan(val as string)}
-            placeholder="Pilih Satuan..."
-            debounceMs={400}
-            pageSize={10}
-            fetchOptions={fetchOptionSatuansWithQuery}
+          <Controller
+            control={control}
+            name="id_satuan"
+            render={({ field: { value, onChange } }) => (
+              <RemoteSelect
+                label="Satuan"
+                value={value}
+                onSelect={(val) => onChange(val as string)}
+                placeholder="Pilih Satuan..."
+                debounceMs={400}
+                pageSize={10}
+                fetchOptions={fetchOptionSatuansWithQuery}
+              />
+            )}
           />
+
           <Select
             label="Tahun"
             placeholder="Pilih Tahun"
             options={tahunOptions}
             value={tahun}
-            onSelect={(value) => setTahun(String(value))}
+            onSelect={(val) => {
+              setTahun(val as string); // update state lokal
+              setValue('tahun', String(val)); // update react-hook-form
+            }}
+            error={errors.tahun?.message}
           />
         </View>
         <View className="flex-row justify-start px-5 py-2">
@@ -253,7 +227,7 @@ export default function FormAddRHK({ dataAtasan }: Props) {
             variant="outline"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
-            disabled={isPosting}
+            disabled={isPending}
           />
           <Button
             label="Batal"

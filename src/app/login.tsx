@@ -1,18 +1,14 @@
 import { type AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground } from 'react-native';
+import { ImageBackground, SafeAreaView } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 
 import { type LoginResponse, type LoginVariables, useLogin } from '@/api';
 import Footer from '@/components/home/footer';
 import type { LoginFormProps } from '@/components/login-form';
 import { LoginForm } from '@/components/login-form';
-import {
-  FocusAwareStatusBar,
-  SafeAreaView,
-  showErrorMessage,
-} from '@/components/ui';
+import { FocusAwareStatusBar, showErrorMessage } from '@/components/ui';
 import { getItem, setItem, setMessage, useAuth } from '@/lib';
 
 const getPersistentDeviceId = async () => {

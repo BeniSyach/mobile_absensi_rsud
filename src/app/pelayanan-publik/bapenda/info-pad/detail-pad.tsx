@@ -1,9 +1,9 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import DataDetailPad from '@/components/pelayanan-publik-component/bapenda-component/info-pad-component/data-detail-pad';
-import { SafeAreaView, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 export default function DetailPad() {
   const { data } = useLocalSearchParams();

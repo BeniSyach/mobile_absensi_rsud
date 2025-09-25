@@ -1,12 +1,11 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar, View } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import { type AbsenMasuk } from '@/api';
 import { Card } from '@/components/list-absensi-component/card';
 import { Title } from '@/components/title';
 import { Text } from '@/components/ui';
-import { SafeAreaView } from '@/components/ui';
 
 import ListContent from './list-content';
 import UseFetchAbsen from './use-fetch-absen';

@@ -1,11 +1,10 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import BackSimpeg from '@/components/back-simpeg';
 import HeaderSimpeg from '@/components/header-simpeg';
 import AddDiklatTeknis from '@/components/simpegComponent/diklat-teknis-component/add-diklat-teknis';
-import { SafeAreaView } from '@/components/ui';
 
 export default function DiklatTeknis() {
   return (

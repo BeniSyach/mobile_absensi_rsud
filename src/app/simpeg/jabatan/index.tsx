@@ -1,12 +1,16 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, ScrollView, StatusBar } from 'react-native';
+import {
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 
 import BackSimpeg from '@/components/back-simpeg';
 import HeaderSimpeg from '@/components/header-simpeg';
 import AddJabatan from '@/components/simpegComponent/jabatan-component/add-jabatan';
 import CardJabatan from '@/components/simpegComponent/jabatan-component/card-jabatan';
-import { SafeAreaView } from '@/components/ui';
 
 export default function Jabatan() {
   return (

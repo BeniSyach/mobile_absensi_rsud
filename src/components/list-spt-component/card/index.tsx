@@ -3,11 +3,11 @@ import { Buffer } from 'buffer';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Eye } from 'lucide-react-native';
-import { Alert, Pressable } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { type SptData } from '@/api';
 import { useViewSPT } from '@/api/spt/view-spt';
-import { Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 interface CardProps {
   dataSPT: SptData;

@@ -1,11 +1,11 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
 
 import { type ResponseSPM } from '@/api/keuangan';
 import DataHasilSp2d from '@/components/pelayanan-publik-component/keuangan-sp2d-component/data-hasil-sp2d';
 import FormInputSp2d from '@/components/pelayanan-publik-component/keuangan-sp2d-component/form-input-sp2d';
-import { Image, SafeAreaView, View } from '@/components/ui';
+import { Image } from '@/components/ui';
 
 export default function KeuanganSp2d() {
   const [data, setData] = useState<ResponseSPM>();

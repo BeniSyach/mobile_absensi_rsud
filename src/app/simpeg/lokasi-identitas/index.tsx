@@ -1,13 +1,18 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import {
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 
 import { GetUser } from '@/api';
 import BackSimpeg from '@/components/back-simpeg';
 import CardDataIdentitas from '@/components/simpegComponent/lokasi-identitas-component/card-data-identitas';
 import CardLokasiUnit from '@/components/simpegComponent/lokasi-identitas-component/card-lokasi-unit';
 import MenuLokasiIdentitas from '@/components/simpegComponent/lokasi-identitas-component/menu-lokasi-identitas';
-import { SafeAreaView, ScrollView, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import LoadingComponent from '@/components/ui/loading';
 
 export default function LokasiIdentitas() {

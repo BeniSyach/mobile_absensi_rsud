@@ -1,7 +1,8 @@
 import { Link } from 'expo-router';
+import { Pressable, View } from 'react-native';
 
 import { type BawahanRekapNilaiBawahan } from '@/api';
-import { Pressable, Text, View } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 interface CardProps {
   dataCardbawahan: BawahanRekapNilaiBawahan;

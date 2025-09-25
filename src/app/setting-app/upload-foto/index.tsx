@@ -1,10 +1,10 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { SafeAreaView, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { UploadPhoto } from '@/api';
-import { Image, SafeAreaView } from '@/components/ui';
-import { Button, showErrorMessage, View } from '@/components/ui';
+import { Button, Image, showErrorMessage } from '@/components/ui';
 
 import UseImagePicker from './image-picker';
 

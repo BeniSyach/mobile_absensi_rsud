@@ -1,8 +1,9 @@
 import { Link } from 'expo-router';
 import React from 'react';
+import { Pressable, View } from 'react-native';
 
 import type { Post } from '@/api';
-import { Image, Pressable, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 
 type Props = Post;
 

@@ -1,9 +1,11 @@
 /* eslint-disable max-lines-per-function */
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { TextInput, View } from 'react-native';
-import { showMessage } from 'react-native-flash-message';
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { View } from 'react-native';
+import { z } from 'zod';
 
 import {
   type Eselon,
@@ -11,12 +13,7 @@ import {
   type JabatanSimpeg,
   type PangkatSimpeg,
   type Pegawai,
-  PutPegawai,
-  type PutPegawaiVariables,
-  queryClient,
   type UnitKerjaSimpeg,
-  UpdateAtasanUser,
-  type UpdateAtasanVariables,
   useGolonganRuangSimpeg,
   useJabatanSimpeg,
   usePangkatSimpeg,
@@ -25,7 +22,7 @@ import {
 } from '@/api';
 import { useEselonSimpeg } from '@/api';
 import { AlertModal } from '@/components/title-second';
-import { Button, ScrollView, showErrorMessage, Text } from '@/components/ui';
+import { Button, ControlledInput, ScrollView } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
 
 export interface DataProfileEdit {
@@ -40,44 +37,56 @@ export interface DataProfileEdit {
   pangkat: string;
 }
 
-interface EditDataPegawaiProps {
+const schema = z.object({
+  nama: z.string().min(1, 'nama wajib diisi'),
+  nip: z.string().optional(),
+  nik: z.string().min(1, 'NIK wajib diisi'),
+  kode_opd: z.string().optional(),
+  jabatan_id: z.string().optional(),
+  pangkat_id: z.string().optional(),
+  golongan_ruang_id: z.string().optional(),
+  eselon_id: z.string().optional(),
+  atasan: z.string().optional(),
+});
+
+export type FormType = z.infer<typeof schema>;
+
+export interface EditDataPegawaiProps {
+  onSubmit: SubmitHandler<FormType>;
   dataProfileEdit: DataProfileEdit;
+  isPending: boolean;
 }
 
 export default function EditDataPegawaiEkin({
+  onSubmit,
   dataProfileEdit,
+  isPending,
 }: EditDataPegawaiProps) {
   console.log('data profile', dataProfileEdit);
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [namaLengkap, setNamaLengkap] = useState('');
-  const [nip, setNip] = useState('');
-  const [nik, setNik] = useState('');
-  const [opd, setOpd] = useState('');
-  const [jabatan, setJabatan] = useState('');
-  const [pangkat, setPangkat] = useState('');
-  const [golongan, setGolongan] = useState('');
-  const [atasan, setAtasan] = useState('');
-  const [eselon, setEselon] = useState('');
 
-  const { mutateAsync: updateAtasan, isPending: isPosting } =
-    UpdateAtasanUser();
-
-  const { mutateAsync: updatePegawai, isPending: isPostingPegawai } =
-    PutPegawai();
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    reset,
+  } = useForm<FormType>({ resolver: zodResolver(schema) });
 
   useEffect(() => {
-    if (dataProfileEdit?.nama) {
-      setNamaLengkap(dataProfileEdit.nama);
-      setNip(dataProfileEdit.nip);
-      setNik(dataProfileEdit.nik);
-      setOpd(dataProfileEdit.kode_opd);
-      setJabatan(dataProfileEdit.jabatan);
-      setPangkat(dataProfileEdit.pangkat);
-      setGolongan(dataProfileEdit.golongan);
-      setAtasan(dataProfileEdit.atasan);
+    if (dataProfileEdit) {
+      reset({
+        nama: dataProfileEdit.nama || '',
+        nip: dataProfileEdit.nip || '',
+        nik: dataProfileEdit.nik || '',
+        kode_opd: dataProfileEdit.kode_opd || '',
+        jabatan_id: dataProfileEdit.jabatan || '',
+        pangkat_id: dataProfileEdit.pangkat || '',
+        golongan_ruang_id: dataProfileEdit.golongan || '',
+        atasan: dataProfileEdit.atasan || '',
+      });
     }
-  }, [dataProfileEdit?.nama, dataProfileEdit?.nip, dataProfileEdit?.nik]);
+  }, [dataProfileEdit, reset]);
 
   const fetchOptionOPDsWithQuery = async (page: number, search: string) => {
     try {
@@ -199,155 +208,130 @@ export default function EditDataPegawaiEkin({
   const handleSetujui = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
-  const handleConfirm = async () => {
-    setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
 
-    const payload: UpdateAtasanVariables = {
-      nik_user: dataProfileEdit?.nik ?? '',
-      nik_atasan: atasan,
-    };
-    try {
-      // 1️⃣ Update Atasan
-      const responseAtasan = await updateAtasan(payload);
-      console.log('✅ Data atasan berhasil dikirim:', responseAtasan);
+  const handleConfirm = handleSubmit((data) => {
+    onSubmit(data); // proses submit data
+    setShowConfirmModal(false); // tutup modal
+  });
 
-      // 2️⃣ Jika sukses, lanjut update pegawai
-      const payloadPegawai: PutPegawaiVariables = {
-        nama: dataProfileEdit?.nama ?? '',
-        nip: dataProfileEdit?.nip ?? '',
-        pangkat_id: pangkat ?? '',
-        golongan_ruang_id: golongan ?? '',
-        jabatan_id: jabatan ?? '',
-        eselon_id: eselon ?? '',
-        nik: dataProfileEdit?.nik ?? '',
-      };
-
-      const responsePegawai = await updatePegawai(payloadPegawai);
-      console.log('✅ Data pegawai berhasil dikirim:', responsePegawai);
-      queryClient.invalidateQueries({ queryKey: ['UseProfileEkin'] });
-      showMessage({
-        message: 'Data Berhasil Di Edit.',
-        type: 'success',
-        duration: 7000,
-      });
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      showErrorMessage(errorMessage);
-    }
-  };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
   return (
     <ScrollView className="mx-5 mt-2 flex-1">
       <View className="bg-whites m-2 mt-7 rounded-2xl bg-transparent">
-        <Text className="mb-2 text-lg font-semibold text-black">
-          Nama Lengkap
-        </Text>
-        <TextInput
-          className="mb-2 rounded-lg border p-2 py-4"
-          placeholder="Nama Lengkap"
-          value={namaLengkap}
-          onChangeText={setNamaLengkap}
+        <ControlledInput
+          control={control}
+          name="nama"
+          label="Nama Lengkap"
+          placeholder="Ketik Nama Lengkap Anda"
+          error={errors.nama?.message}
         />
-        <Text className="mb-2 text-lg font-semibold text-black">NIP</Text>
-        <TextInput
-          className="mb-2 rounded-lg border p-2 py-4"
-          placeholder="NIP"
-          value={nip}
-          onChangeText={setNip}
+        <ControlledInput
+          control={control}
+          name="nip"
+          label="NIP"
+          placeholder="Ketik NIP Anda"
+          keyboardType="number-pad"
+          error={errors.nip?.message}
         />
-        <Text className="mb-2 text-lg font-semibold text-black">NIK</Text>
-        <TextInput
-          className="mb-2 rounded-lg border p-2 py-4"
-          placeholder="NIK"
-          value={nik}
-          onChangeText={setNik}
+        <ControlledInput
+          control={control}
+          name="nik"
+          label="NIK"
+          keyboardType="number-pad"
+          placeholder="Ketik NIK Anda"
+          error={errors.nik?.message}
         />
-        <RemoteSelect
-          label="OPD/UPT"
-          value={opd}
-          onSelect={(val) => setOpd(val as string)}
-          placeholder="Pilih OPD/UPT..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionOPDsWithQuery}
+        <Controller
+          control={control}
+          name="kode_opd"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="OPD/UPT"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih OPD/UPT..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionOPDsWithQuery}
+            />
+          )}
         />
-        <RemoteSelect
-          label="Jabatan"
-          value={jabatan}
-          onSelect={(val) => setJabatan(val as string)}
-          placeholder="Pilih Jabatan..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionJabatansWithQuery}
+        <Controller
+          control={control}
+          name="jabatan_id"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="Jabatan"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih Jabatan..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionJabatansWithQuery}
+            />
+          )}
         />
-        <RemoteSelect
-          label="Pangkat"
-          value={pangkat}
-          onSelect={(val) => setPangkat(val as string)}
-          placeholder="Pilih Pangkat..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionPangkatsWithQuery}
+        <Controller
+          control={control}
+          name="pangkat_id"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="Pangkat"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih Pangkat..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionPangkatsWithQuery}
+            />
+          )}
         />
-        <RemoteSelect
-          label="Golongan"
-          value={golongan}
-          onSelect={(val) => setGolongan(val as string)}
-          placeholder="Pilih Golongan..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionGolongansWithQuery}
+        <Controller
+          control={control}
+          name="golongan_ruang_id"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="Golongan"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih Golongan..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionGolongansWithQuery}
+            />
+          )}
         />
-        <RemoteSelect
-          label="Eselon"
-          value={eselon}
-          onSelect={(val) => setEselon(val as string)}
-          placeholder="Pilih Eselon..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionEselonsWithQuery}
+        <Controller
+          control={control}
+          name="eselon_id"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="Eselon"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih Eselon..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionEselonsWithQuery}
+            />
+          )}
         />
-        <RemoteSelect
-          label="Atasan"
-          value={atasan}
-          onSelect={(val) => setAtasan(val as string)}
-          placeholder="Pilih Atasan..."
-          debounceMs={400}
-          pageSize={10}
-          fetchOptions={fetchOptionAtasansWithQuery}
+        <Controller
+          control={control}
+          name="atasan"
+          render={({ field: { value, onChange } }) => (
+            <RemoteSelect
+              label="Atasan"
+              value={value}
+              onSelect={(val) => onChange(val as string)}
+              placeholder="Pilih Atasan..."
+              debounceMs={400}
+              pageSize={10}
+              fetchOptions={fetchOptionAtasansWithQuery}
+            />
+          )}
         />
         <View className="flex-row justify-start px-5 py-2">
           <Button
@@ -356,7 +340,7 @@ export default function EditDataPegawaiEkin({
             variant="secondary"
             icon={<Save size={20} color="black" />}
             onPress={handleSetujui}
-            disabled={isPosting || isPostingPegawai}
+            disabled={isPending}
           />
           <Button
             label="Batal"

@@ -1,9 +1,10 @@
 /* eslint-disable max-lines-per-function */
 import { Link } from 'expo-router';
 import { useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { type UserPegawai } from '@/api';
-import { Image, Pressable, ScrollView, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 
 interface MenuUtamaProps {
   data: UserPegawai | null;
@@ -96,7 +97,6 @@ export default function MenuUtama({ data }: MenuUtamaProps) {
     <View className="rounded-lg bg-transparent px-2 py-4">
       <ScrollView
         horizontal
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={(e) => {
           const { contentOffset, layoutMeasurement, contentSize } =

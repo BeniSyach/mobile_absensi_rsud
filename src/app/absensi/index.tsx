@@ -1,21 +1,21 @@
 import { Stack, useFocusEffect } from 'expo-router';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Alert, ImageBackground, StatusBar } from 'react-native';
+import {
+  Alert,
+  ImageBackground,
+  SafeAreaView,
+  StatusBar,
+  View,
+} from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
-import {
-  PostAbsenMasuk,
-  PostAbsenPulang,
-  queryClient,
-  useFaceRecognition,
-} from '@/api';
+import { PostAbsenMasuk, PostAbsenPulang, queryClient } from '@/api';
 import {
   AbsensiForm,
   type AbsensiFormProps,
 } from '@/components/absensi/absensi-form';
-import { Button, SafeAreaView, showErrorMessage, View } from '@/components/ui';
-import { getMessage } from '@/lib';
+import { Button, showErrorMessage } from '@/components/ui';
 
 import useAbsensiData from './use-absensi-data';
 import useAbsensiSubmit from './use-absensi-submit';
@@ -55,25 +55,21 @@ const ErrorState = ({ message }: ErrorStateProps) => (
 // eslint-disable-next-line max-lines-per-function
 export default function Absensi() {
   const router = useRouter();
-  const storedMessage = getMessage();
+
   const { user, isError, isLoading, userStatus, getStatusDataAbsenUser } =
     useAbsensiData();
   const [submitLoading, setSubmitLoading] = useState(false);
-  const {
-    data: wajah,
-    isLoading: loadingWajah,
-    // isError: errorWajah,
-    refetch,
-  } = useFaceRecognition({ variables: { nik: storedMessage?.nik ?? '' } });
+
   const { mutateAsync: addPost, isPending: isAddingMasuk } = PostAbsenMasuk();
   const { mutateAsync: addPostPulang, isPending: isAddingPulang } =
     PostAbsenPulang();
   const submitAbsensi = useAbsensiSubmit(addPost, addPostPulang);
+  // kalau ada cache, langsung pakai
+
   useFocusEffect(
     useCallback(() => {
       getStatusDataAbsenUser();
-      refetch();
-    }, [refetch, getStatusDataAbsenUser])
+    }, [getStatusDataAbsenUser])
   );
   const onSubmit: AbsensiFormProps['onSubmit'] = async (data) => {
     setSubmitLoading(true);
@@ -113,7 +109,7 @@ export default function Absensi() {
     }
   };
 
-  if (isLoading || loadingWajah) return <LoadingState />;
+  if (isLoading) return <LoadingState />;
   if (isError || !user) {
     return (
       <ErrorState
@@ -129,19 +125,6 @@ export default function Absensi() {
   if (!user.data.shift_absen_id) {
     Alert.alert('Peringatan', 'Shift belum diatur. Silakan hubungi admin.', [
       { text: 'OK', onPress: () => router.back() },
-    ]);
-  }
-
-  if (wajah?.status === 0) {
-    Alert.alert('Peringatan', wajah.message, [
-      {
-        text: 'Pindah Ke menu Profile',
-        onPress: () => {
-          setTimeout(() => {
-            router.replace('/settings');
-          }, 100);
-        },
-      },
     ]);
   }
 

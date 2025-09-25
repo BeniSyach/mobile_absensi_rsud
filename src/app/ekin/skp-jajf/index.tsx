@@ -1,10 +1,9 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import LogoSKPJajf from '@/components/ekin-component/skp-jajf-component/logo-skp-jajf';
 import NavbarSKPJAJF from '@/components/ekin-component/skp-jajf-component/navbar-skp-jajf';
-import { SafeAreaView } from '@/components/ui';
 
 export default function SkpJajf() {
   return (

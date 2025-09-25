@@ -1,13 +1,12 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, StatusBar } from 'react-native';
+import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
 
 import { GetOrangTua } from '@/api/simpeg/orang-tua';
 import BackSimpeg from '@/components/back-simpeg';
 import HeaderSimpeg from '@/components/header-simpeg';
 import AddOrangTua from '@/components/simpegComponent/orang-tua-component/add-orang-tua';
 import CardOrangTua from '@/components/simpegComponent/orang-tua-component/card-orang-tua';
-import { SafeAreaView } from '@/components/ui';
 
 export default function OrangTua() {
   const { data: orangTua, isLoading: isLoadingOrangTua } = GetOrangTua();

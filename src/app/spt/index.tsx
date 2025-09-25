@@ -1,14 +1,14 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { ImageBackground } from 'react-native';
+import { ImageBackground, SafeAreaView } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 
 import { queryClient } from '@/api';
 import { PostSPT } from '@/api/spt/post-spt';
 import SptForm, { type SptFormProps } from '@/components/spt/spt-form';
 import { Title } from '@/components/title';
-import { SafeAreaView, showErrorMessage } from '@/components/ui';
+import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib/message-storage';
 
 export default function Spt() {
