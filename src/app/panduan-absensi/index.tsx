@@ -1,12 +1,13 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Title } from '@/components/title';
 
 export default function PanduanAbsensi() {
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'Daftar Panduan Absensi',

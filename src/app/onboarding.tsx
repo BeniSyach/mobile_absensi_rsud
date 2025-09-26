@@ -1,12 +1,16 @@
 import { Link } from 'expo-router';
 import React from 'react';
-import { ImageBackground, Pressable, SafeAreaView, View } from 'react-native';
+import { ImageBackground, Pressable, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FocusAwareStatusBar, Image } from '@/components/ui';
 
 export default function Onboarding() {
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <ImageBackground
         source={require('../../assets/background/background_login.png')}
         resizeMode="cover"

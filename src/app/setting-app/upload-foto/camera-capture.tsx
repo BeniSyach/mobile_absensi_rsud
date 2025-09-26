@@ -82,7 +82,6 @@ export default function FaceRegisterExpoCameraView({
       Alert.alert(title, message);
     } catch (error) {
       console.error('Alert error:', error);
-      console.log(`Alert: ${title}${message ? ` - ${message}` : ''}`);
     }
   };
 
@@ -109,17 +108,6 @@ export default function FaceRegisterExpoCameraView({
       const reshaped = new Float32Array(1 * expectedSize);
       reshaped.set(input);
 
-      console.log('🔍 Input tensor shape:', [
-        1,
-        SPOOF_INPUT_SIZE,
-        SPOOF_INPUT_SIZE,
-        3,
-      ]);
-      console.log(
-        '🔍 Input sample values:',
-        Array.from(input.slice(0, 5)).map((x) => x.toFixed(4))
-      );
-
       // 🔹 Jalankan model
       const outputs = spoofModel.model.runSync([reshaped]);
 
@@ -127,20 +115,6 @@ export default function FaceRegisterExpoCameraView({
         console.error('❌ Spoof model returned empty output:', outputs);
         return 'Real';
       }
-
-      console.log('🔍 Raw spoof outputs info:', {
-        numOutputs: outputs.length,
-        outputShapes: outputs.map((out) =>
-          Array.isArray(out) ? out.length : typeof out
-        ),
-        outputSamples: outputs.map((out) =>
-          Array.isArray(out)
-            ? Array.from((out as Float32Array).slice(0, 3)).map((x) =>
-                x.toFixed(4)
-              )
-            : out
-        ),
-      });
 
       let spoofScore = 0;
 
@@ -176,12 +150,6 @@ export default function FaceRegisterExpoCameraView({
           spoofScore =
             totalWeight > 0 ? weightedSum / totalWeight : clssPred[0] || 0;
         }
-
-        console.log('📊 Multi-output spoof score calculation:', {
-          classificationLength: clssPred.length,
-          maskLength: leafNodeMask.length,
-          finalScore: spoofScore.toFixed(4),
-        });
       } else {
         // 🔹 Case: model cuma punya 1 output
         const output = Float32Array.from(outputs[0] as Float32Array);
@@ -204,19 +172,7 @@ export default function FaceRegisterExpoCameraView({
           console.error('❌ Empty output array');
           return 'Real';
         }
-
-        console.log('📊 Single-output spoof score:', {
-          outputLength: output.length,
-          rawOutput: Array.from(
-            output.slice(0, Math.min(5, output.length))
-          ).map((x) => x.toFixed(4)),
-          selectedScore: spoofScore.toFixed(4),
-        });
       }
-
-      console.log(
-        `📊 Final spoof score: ${spoofScore.toFixed(4)} (threshold: ${SPOOF_THRESHOLD})`
-      );
 
       // ✅ Handle edge cases
       if (isNaN(spoofScore)) {
@@ -225,7 +181,6 @@ export default function FaceRegisterExpoCameraView({
       }
 
       const result = spoofScore > SPOOF_THRESHOLD ? 'Spoof' : 'Real';
-      console.log(`🎯 Spoof detection result: ${result}`);
 
       return result;
     } catch (err) {
@@ -235,7 +190,6 @@ export default function FaceRegisterExpoCameraView({
   }
 
   const captureAndRegister = async () => {
-    console.log('take foto');
     if (!cameraRef.current || !isCameraReady) {
       showAlert('Kamera Belum Siap', 'Silahkan tunggu sebentar dan coba lagi');
       return;
@@ -331,11 +285,6 @@ export default function FaceRegisterExpoCameraView({
           throw new Error('Gagal generate embedding');
         }
         embedding = embeddingOutput[0] as Float32Array;
-
-        console.log('🧠 Embedding generated:', {
-          length: embedding.length,
-          sample: Array.from(embedding.slice(0, 5)).map((x) => x.toFixed(4)),
-        });
       } catch (err) {
         console.error('Embedding generation failed:', err);
         showAlert(

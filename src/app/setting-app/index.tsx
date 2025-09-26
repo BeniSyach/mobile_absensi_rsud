@@ -1,6 +1,7 @@
 import { Env } from '@env';
 import { Stack } from 'expo-router';
-import { SafeAreaView, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Item } from '@/components/settings/item';
 import { ItemsContainer } from '@/components/settings/items-container';
@@ -9,7 +10,10 @@ import { FocusAwareStatusBar } from '@/components/ui';
 
 export default function SettingsApp() {
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <Stack.Screen
         options={{
           title: 'Setting App',

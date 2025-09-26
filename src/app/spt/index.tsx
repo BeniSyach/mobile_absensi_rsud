@@ -1,8 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { ImageBackground, SafeAreaView } from 'react-native';
+import { ImageBackground } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { queryClient } from '@/api';
 import { PostSPT } from '@/api/spt/post-spt';
@@ -16,7 +17,6 @@ export default function Spt() {
   const { mutateAsync, isPending, isError } = PostSPT();
 
   const onSubmit: SptFormProps['onSubmit'] = async (data) => {
-    console.log('data SPT', data);
     const userData = getMessage();
 
     const formData = {
@@ -76,7 +76,7 @@ export default function Spt() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'Surat Perintah Tugas',

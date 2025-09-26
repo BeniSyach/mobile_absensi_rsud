@@ -6,11 +6,11 @@ import {
   Alert,
   ImageBackground,
   Modal,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useCheckPasswordUser } from '@/api';
 // import VersionCheck from 'react-native-version-check';
@@ -49,7 +49,10 @@ export default function Feed() {
   // 🔹 Skeleton Error (semua abu-abu)
   if (isError) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-200">
+      <SafeAreaView
+        className="flex-1 bg-gray-200"
+        edges={['top', 'left', 'right']}
+      >
         <View className="h-48 w-full animate-pulse bg-gray-300" />
         <View className="flex-1 items-center justify-center">
           <Text className="text-lg font-semibold text-gray-600">
@@ -61,7 +64,10 @@ export default function Feed() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
 
       {/* 🔹 Loading Modal tetap ditampilkan tapi berada di dalam return */}

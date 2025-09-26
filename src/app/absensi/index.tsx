@@ -1,14 +1,9 @@
 import { Stack, useFocusEffect } from 'expo-router';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import {
-  Alert,
-  ImageBackground,
-  SafeAreaView,
-  StatusBar,
-  View,
-} from 'react-native';
+import { Alert, ImageBackground, StatusBar, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PostAbsenMasuk, PostAbsenPulang, queryClient } from '@/api';
 import {
@@ -75,7 +70,7 @@ export default function Absensi() {
     setSubmitLoading(true);
     try {
       const response = await submitAbsensi(data);
-      console.log(response);
+
       if (response?.error) {
         showErrorMessage(response.error);
         return;
@@ -100,7 +95,6 @@ export default function Absensi() {
       });
       router.back();
     } catch (error: any) {
-      console.log(error);
       showErrorMessage(
         error?.response?.data?.error || error?.message || 'Terjadi kesalahan'
       );
@@ -129,7 +123,7 @@ export default function Absensi() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'Absensi',

@@ -1,13 +1,8 @@
 /* eslint-disable max-lines-per-function */
 
 import React from 'react';
-import {
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  View,
-} from 'react-native';
+import { ImageBackground, ScrollView, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFaceRecognition } from '@/api';
 import { useGetUser } from '@/api/users/get-users';
@@ -39,7 +34,7 @@ export default function Settings() {
       : (user?.data?.nama ?? '');
 
   return (
-    <SafeAreaView className="flex-1 ">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       <ImageBackground
         source={require('../../../assets/background/background_absensi.png')}

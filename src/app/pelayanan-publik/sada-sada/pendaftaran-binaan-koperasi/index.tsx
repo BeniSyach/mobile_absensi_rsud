@@ -1,11 +1,7 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
-import {
-  ActivityIndicator,
-  ImageBackground,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
+import { ActivityIndicator, ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGetMasterDataUmkm } from '@/api/sada-sada/use-get-master-data';
 import FormInputBinaan from '@/components/pelayanan-publik-component/sada-sada-component/pendaftar-binaan-component/form-input';
@@ -66,7 +62,10 @@ export default function PendaftaranBinaan() {
     );
   }
   return (
-    <SafeAreaView className="flex-1 bg-[#91F4F4]">
+    <SafeAreaView
+      className="flex-1 bg-[#91F4F4]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#91F4F4" barStyle="dark-content" />
       <Stack.Screen
         options={{

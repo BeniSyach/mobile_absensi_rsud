@@ -1,8 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { ImageBackground, SafeAreaView } from 'react-native';
+import { ImageBackground } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PostOTP, PostVerifyOTP, PutPasswordUser, queryClient } from '@/api';
 import FormEditPassword from '@/components/edit-password-user/form-edit-password';
@@ -77,7 +78,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'Reset Password',

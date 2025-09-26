@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PutUser } from '@/api';
 import FormEditUser, {
@@ -38,7 +38,10 @@ export default function EditUser() {
   if (!userData) return null;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <Stack.Screen
         options={{ title: 'Edit User', headerBackTitle: 'edit-user' }}
       />

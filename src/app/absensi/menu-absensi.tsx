@@ -3,14 +3,9 @@ import { Env } from '@env';
 import { Stack, useRouter } from 'expo-router';
 import { Clock } from 'lucide-react-native';
 import { useEffect } from 'react';
-import {
-  Alert,
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { Alert, ImageBackground, ScrollView, StatusBar } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   useFaceRecognition,
@@ -65,7 +60,6 @@ export default function MenuAbsensi() {
 
   useEffect(() => {
     if (cachedUri && cachedEmbedding) {
-      console.log('✅ Pakai wajah dari cache MMKV');
       return;
     }
 
@@ -93,7 +87,7 @@ export default function MenuAbsensi() {
   }, [wajah, cachedUri, cachedEmbedding, router]);
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'Home Absensi',

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GetPendidikan } from '@/api/simpeg/pendidikan';
 import BackSimpeg from '@/components/back-simpeg';
@@ -11,7 +12,10 @@ import CardPendidikan from '@/components/simpegComponent/pendidikan-component/ca
 export default function Pendidikan() {
   const { data: pendidikan, isLoading: isLoadingPendidikan } = GetPendidikan();
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#CBDFFF" barStyle="dark-content" />
       <Stack.Screen
         options={{

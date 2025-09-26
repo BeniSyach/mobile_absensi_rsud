@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormExportTPP from '@/components/ekin-component/export-tpp/form-export-tpp';
 import LogoExportTPP from '@/components/ekin-component/export-tpp/logo-export-tpp';
@@ -11,7 +12,10 @@ export default function ExportTpp() {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#287BDC]">
+    <SafeAreaView
+      className="flex-1 bg-[#287BDC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#287BDC" barStyle="dark-content" />
       <Stack.Screen
         options={{

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { type SptData } from '@/api';
 import { CardSPT } from '@/components/list-spt-component/card';
@@ -28,7 +29,7 @@ export default function ListSPT() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           title: 'List SPT',

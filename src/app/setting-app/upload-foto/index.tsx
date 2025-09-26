@@ -1,10 +1,10 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { SafeAreaView, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { UploadPhoto } from '@/api';
-import { Button, Image, showErrorMessage } from '@/components/ui';
+import { Button, Image, showErrorMessage, View } from '@/components/ui';
 
 import UseImagePicker from './image-picker';
 
@@ -41,7 +41,10 @@ export default function UploadFoto() {
     }
   };
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Stack.Screen
           options={{ title: 'Upload Foto', headerBackTitle: 'upload-foto' }}

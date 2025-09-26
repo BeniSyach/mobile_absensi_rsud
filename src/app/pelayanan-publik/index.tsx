@@ -1,12 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import {
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  View,
-} from 'react-native';
+import { ImageBackground, ScrollView, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import BackSimpeg from '@/components/back-simpeg';
 import Footer from '@/components/home/footer';
@@ -15,7 +10,10 @@ import { Text } from '@/components/ui';
 
 export default function PelayananPublik() {
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <Stack.Screen
         options={{

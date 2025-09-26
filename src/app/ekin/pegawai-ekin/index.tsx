@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { UseProfileEkin } from '@/api';
 import CardDataPegawaiComponent from '@/components/ekin-component/data-pegawai-component/card-data-pegawai';
@@ -22,7 +23,10 @@ export default function PegawaiEkin() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#287BDC]">
+    <SafeAreaView
+      className="flex-1 bg-[#287BDC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#287BDC" barStyle="dark-content" />
       <Stack.Screen
         options={{

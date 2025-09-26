@@ -65,9 +65,6 @@ const getCurrentLocationWithRetry = async (
     return location;
   } catch (error) {
     if (retryCount < MAX_RETRIES) {
-      console.log(
-        `Retrying location fetch. Attempt ${retryCount + 1}/${MAX_RETRIES}`
-      );
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
       return getCurrentLocationWithRetry(retryCount + 1);
     }
@@ -109,8 +106,6 @@ const handleDistanceAndZoom = ({
   radius: number;
   router: ReturnType<typeof useRouter>;
 }) => {
-  console.log('lokasi sekarang', loc.coords.latitude);
-  console.log('lokasi tujuan / opd', selectedLatitude);
   const currentDistance = getDistance(
     {
       latitude: loc.coords.latitude,

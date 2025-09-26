@@ -1,17 +1,15 @@
 import { Link, Stack } from 'expo-router';
-import {
-  ImageBackground,
-  Pressable,
-  SafeAreaView,
-  StatusBar,
-  View,
-} from 'react-native';
+import { ImageBackground, Pressable, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Image, Text } from '@/components/ui';
 
 export default function SadaSada() {
   return (
-    <SafeAreaView className="flex-1 bg-[#91F4F4]">
+    <SafeAreaView
+      className="flex-1 bg-[#91F4F4]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#91F4F4" barStyle="dark-content" />
       <Stack.Screen
         options={{

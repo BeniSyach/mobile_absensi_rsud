@@ -32,14 +32,12 @@ export default function CardListKegiatanHarianBawahan({ dataCard }: CardProps) {
   const handleConfirm = async () => {
     setShowConfirmModal(false);
     setModalVisible(false);
-    console.log('✅ Data disetujui secara final');
 
     try {
-      const response = await putDetailKegiatan({
+      await putDetailKegiatan({
         id: dataCard?.id?.toString() ?? '-',
         status: 1,
       });
-      console.log('✅ Data berhasil dikirim:', response);
       queryClient.invalidateQueries({ queryKey: ['useListDetailKegiatan'] });
       queryClient.invalidateQueries({ queryKey: ['useListBawahan'] });
       showMessage({
@@ -88,7 +86,6 @@ export default function CardListKegiatanHarianBawahan({ dataCard }: CardProps) {
   };
 
   const handleTolak = async () => {
-    console.log('❌ Ditolak:', dataCard);
     setModalVisible(false);
 
     try {

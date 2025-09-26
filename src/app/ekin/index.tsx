@@ -3,11 +3,11 @@ import React from 'react';
 import {
   Dimensions,
   ImageBackground,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GetDashboardPegawai, GetDashboardPegawaiBawahan } from '@/api';
 import MenuKegiatanHarianBawahan from '@/components/ekin-component/menu-kegiatan-harian-bawahan';
@@ -36,7 +36,10 @@ export default function Ekin() {
   const horizontalPadding = width > 600 ? 32 : 16;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#287BDC]">
+    <SafeAreaView
+      className="flex-1 bg-[#287BDC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#287BDC" barStyle="light-content" />
       <Stack.Screen
         options={{

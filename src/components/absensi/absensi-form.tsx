@@ -285,17 +285,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       const reshaped = new Float32Array(1 * expectedSize);
       reshaped.set(input);
 
-      console.log('🔍 Input tensor shape:', [
-        1,
-        SPOOF_INPUT_SIZE,
-        SPOOF_INPUT_SIZE,
-        3,
-      ]);
-      console.log(
-        '🔍 Input sample values:',
-        Array.from(input.slice(0, 5)).map((x) => x.toFixed(4))
-      );
-
       // 🔹 Jalankan model
       const outputs = spoofModel.model.runSync([reshaped]);
 
@@ -303,20 +292,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
         console.error('❌ Spoof model returned empty output:', outputs);
         return 'Real';
       }
-
-      console.log('🔍 Raw spoof outputs info:', {
-        numOutputs: outputs.length,
-        outputShapes: outputs.map((out) =>
-          Array.isArray(out) ? out.length : typeof out
-        ),
-        outputSamples: outputs.map((out) =>
-          Array.isArray(out)
-            ? Array.from((out as Float32Array).slice(0, 3)).map((x) =>
-                x.toFixed(4)
-              )
-            : out
-        ),
-      });
 
       let spoofScore = 0;
 
@@ -352,12 +327,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
           spoofScore =
             totalWeight > 0 ? weightedSum / totalWeight : clssPred[0] || 0;
         }
-
-        console.log('📊 Multi-output spoof score calculation:', {
-          classificationLength: clssPred.length,
-          maskLength: leafNodeMask.length,
-          finalScore: spoofScore.toFixed(4),
-        });
       } else {
         // 🔹 Case: model cuma punya 1 output
         const output = Float32Array.from(outputs[0] as Float32Array);
@@ -380,19 +349,7 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
           console.error('❌ Empty output array');
           return 'Real';
         }
-
-        console.log('📊 Single-output spoof score:', {
-          outputLength: output.length,
-          rawOutput: Array.from(
-            output.slice(0, Math.min(5, output.length))
-          ).map((x) => x.toFixed(4)),
-          selectedScore: spoofScore.toFixed(4),
-        });
       }
-
-      console.log(
-        `📊 Final spoof score: ${spoofScore.toFixed(4)} (threshold: ${SPOOF_THRESHOLD})`
-      );
 
       // ✅ Handle edge cases
       if (isNaN(spoofScore)) {
@@ -401,7 +358,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       }
 
       const result = spoofScore > SPOOF_THRESHOLD ? 'Spoof' : 'Real';
-      console.log(`🎯 Spoof detection result: ${result}`);
 
       return result;
     } catch (err) {
@@ -430,8 +386,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       setAttempts(currentAttempt);
 
       try {
-        console.log(`🔍 Starting verification attempt #${currentAttempt}`);
-
         // 🔹 Face Detection
         const detection = await FaceDetector.detectFacesAsync(photo.uri, {
           mode: FaceDetector.FaceDetectorMode.accurate,
@@ -456,7 +410,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
         }
 
         const box = face.bounds;
-        console.log('📐 Face bounds:', box);
 
         // ✅ Validate face size
         if (box.size.width < 50 || box.size.height < 50) {
@@ -482,17 +435,14 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
         croppedUri = cropped.uri;
 
         // ✅ Anti-Spoofing Check (PENTING untuk verifikasi!)
-        console.log('🛡️ Running anti-spoofing check...');
         const spoofResult = await runSpoofCheck(cropped.uri);
         if (spoofResult === 'Spoof') {
           throw new Error(
             'Terdeteksi menggunakan foto/video. Gunakan wajah asli!'
           );
         }
-        console.log('✅ Anti-spoofing passed');
 
         // 🔹 Generate embedding
-        console.log('🤖 Generating face embedding...');
         const embeddingTensor = await imageUriToTensor(
           cropped.uri,
           EMB_INPUT_SIZE,
@@ -505,25 +455,14 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
         }
 
         const currentEmbedding = embeddingOutput[0] as Float32Array;
-        console.log('🧠 Embedding generated:', {
-          length: currentEmbedding.length,
-          sample: Array.from(currentEmbedding.slice(0, 5)).map((x) =>
-            x.toFixed(4)
-          ),
-        });
 
         // 🔹 Calculate similarity
         const similarity = cosineSimilarity(currentEmbedding, savedEmbedding);
         const success = similarity >= SIMILARITY_THRESHOLD;
 
-        console.log(
-          `📊 Similarity: ${(similarity * 100).toFixed(2)}% (threshold: ${(SIMILARITY_THRESHOLD * 100).toFixed(1)}%)`
-        );
-
         // ✅ Update state based on result
         if (success) {
           setVerifiedPhotoUri(photo.uri);
-          console.log('✅ Verification successful');
 
           // Handle success callback
           if (handleTakePhoto) {
@@ -536,7 +475,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
           );
         } else {
           setVerifiedPhotoUri(null);
-          console.log('❌ Verification failed');
 
           Alert.alert(
             '❌ Verifikasi Gagal',
@@ -567,14 +505,12 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
         if (croppedUri && croppedUri !== photo.uri) {
           try {
             await FileSystem.deleteAsync(croppedUri, { idempotent: true });
-            console.log('🗑️ Cleaned up cropped image');
           } catch (cleanupError) {
             console.warn('⚠️ Failed to cleanup cropped image:', cleanupError);
           }
         }
 
         setIsVerifying(false);
-        console.log(`🏁 Verification attempt #${currentAttempt} completed`);
       }
     },
     [

@@ -1,12 +1,16 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormBuktiBayar from '@/components/pelayanan-publik-component/bapenda-component/bukti-bayar-component/form-bukti-bayar';
 import { Image, ScrollView, View } from '@/components/ui';
 
 export default function MenuBuktiBayar() {
   return (
-    <SafeAreaView className="flex-1 bg-[#2B1DAC]">
+    <SafeAreaView
+      className="flex-1 bg-[#2B1DAC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#2B1DAC" barStyle="dark-content" />
       <Stack.Screen
         options={{

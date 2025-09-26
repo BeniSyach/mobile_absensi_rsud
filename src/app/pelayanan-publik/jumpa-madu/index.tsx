@@ -1,12 +1,16 @@
 import { Stack } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import BackSimpeg from '@/components/back-simpeg';
 import { Text } from '@/components/ui';
 
 export default function MenuJumpaMadu() {
   return (
-    <SafeAreaView className="flex-1 bg-[#2400A4]">
+    <SafeAreaView
+      className="flex-1 bg-[#2400A4]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#2400A4" barStyle="dark-content" />
       <Stack.Screen
         options={{

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { type Permohonan } from '@/api/perizinan';
 import DataHasilSeriDeli from '@/components/pelayanan-publik-component/seri-deli-component/data-hasil-seri-deli';
@@ -14,7 +15,10 @@ export default function MenuSeriDeli() {
     setData(data);
   };
   return (
-    <SafeAreaView className="flex-1 bg-[#2563EB]">
+    <SafeAreaView
+      className="flex-1 bg-[#2563EB]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#2563EB" barStyle="dark-content" />
       <Stack.Screen
         options={{

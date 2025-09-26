@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { type ResponseSPM } from '@/api/keuangan';
 import DataHasilSp2d from '@/components/pelayanan-publik-component/keuangan-sp2d-component/data-hasil-sp2d';
@@ -14,7 +15,10 @@ export default function KeuanganSp2d() {
     setData(data);
   };
   return (
-    <SafeAreaView className="flex-1 bg-[#53B175]">
+    <SafeAreaView
+      className="flex-1 bg-[#53B175]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#53B175" barStyle="dark-content" />
       <Stack.Screen
         options={{

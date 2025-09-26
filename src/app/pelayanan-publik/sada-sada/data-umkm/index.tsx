@@ -3,7 +3,8 @@ import axios from 'axios';
 import { Stack } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { Alert, ImageBackground, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { type UMKMResponse } from '@/api/sada-sada';
@@ -69,7 +70,10 @@ export default function DataUmkm() {
     }
   };
   return (
-    <SafeAreaView className="flex-1 bg-[#91F4F4]">
+    <SafeAreaView
+      className="flex-1 bg-[#91F4F4]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#91F4F4" barStyle="dark-content" />
       <Stack.Screen
         options={{

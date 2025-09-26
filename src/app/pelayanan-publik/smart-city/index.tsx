@@ -1,11 +1,15 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, StatusBar } from 'react-native';
+import { StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
 export default function MenuSmartCity() {
   return (
-    <SafeAreaView className="flex-1 bg-[#2400A4]">
+    <SafeAreaView
+      className="flex-1 bg-[#2400A4]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#2400A4" barStyle="dark-content" />
       <Stack.Screen
         options={{

@@ -1,8 +1,10 @@
+/* eslint-disable max-lines-per-function */
 import { type AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, SafeAreaView } from 'react-native';
+import { ImageBackground } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { type LoginResponse, type LoginVariables, useLogin } from '@/api';
 import Footer from '@/components/home/footer';
@@ -74,7 +76,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-transparent">
+    <SafeAreaView className="flex-1 " edges={['top', 'left', 'right']}>
       <ImageBackground
         source={require('../../assets/background/background_login.png')}
         resizeMode="cover"

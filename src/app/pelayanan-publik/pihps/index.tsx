@@ -1,7 +1,8 @@
 /* eslint-disable max-lines-per-function */
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, SafeAreaView, ScrollView, View } from 'react-native';
+import { ImageBackground, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   type HargaKomoditiPasarRataRata,
@@ -51,7 +52,7 @@ export default function MenuPihps() {
         className="ml-5 h-40 w-60"
         contentFit="contain"
       />
-      <SafeAreaView className="flex-1">
+      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <Stack.Screen
           options={{
             title: 'Home Simpeg',

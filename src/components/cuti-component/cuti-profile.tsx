@@ -2,32 +2,23 @@
 import { Env } from '@env';
 import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import * as Progress from 'react-native-progress';
 
 import { type UseFaceUserResponse } from '@/api';
-import { Image, Text, View } from '@/components/ui';
+import { Image, Text } from '@/components/ui';
 import { useAuth } from '@/lib';
 
 type Props = {
   gelarDepan?: string;
   nama: string;
   gelarBelakang?: string;
-  instansi: string;
   isLoading: boolean;
   isError: boolean;
   photo?: UseFaceUserResponse;
 };
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 11) return 'Selamat pagi';
-  if (hour < 15) return 'Selamat siang';
-  if (hour < 18) return 'Selamat sore';
-  return 'Selamat malam';
-};
-
-// helper: pastikan folder tujuan ada
 async function ensureFilePath(localPath: string) {
   const folder = localPath.substring(0, localPath.lastIndexOf('/') + 1);
   const folderInfo = await FileSystem.getInfoAsync(folder);
@@ -36,15 +27,14 @@ async function ensureFilePath(localPath: string) {
   }
 }
 
-export default function ProfileCardAbsensi({
+export const CutiProfile = ({
   gelarDepan,
   nama,
   gelarBelakang,
-  instansi,
   photo,
   isError,
   isLoading,
-}: Props) {
+}: Props) => {
   const token = useAuth.getState().token?.access;
   const storage = new MMKV({ id: 'face-auth' });
   const FACE_URI_KEY = 'face_photo_uri';
@@ -75,7 +65,7 @@ export default function ProfileCardAbsensi({
         setPhotoUri(cached);
       }
     }
-  }, [isError, photo]);
+  }, [isError, photo, storage]);
   // load foto profil dari server (cache ke lokal)
   useEffect(() => {
     if (isError) return;
@@ -108,44 +98,12 @@ export default function ProfileCardAbsensi({
     };
 
     loadProfilePhoto();
-  }, [photo?.photo_path, token]);
+  }, [photo?.photo_path, token, isError]);
 
   return (
-    <View className="flex-row items-center rounded-2xl p-4">
-      {/* Info Text */}
-      <View className="flex-1">
-        {/* Greeting */}
-        <Text className="text-sm text-gray-500">{getGreeting()}</Text>
-
-        {/* Gelar Depan */}
-        {gelarDepan && (
-          <Text className="text-xl font-bold text-[#20A0D8]">{gelarDepan}</Text>
-        )}
-
-        {/* Nama */}
-        <Text className="text-2xl font-bold text-[#20A0D8]">{displayNama}</Text>
-
-        {/* Gelar Belakang */}
-        {gelarBelakang && (
-          <Text className="text-xl font-bold text-[#20A0D8]">
-            {gelarBelakang}
-          </Text>
-        )}
-
-        {/* Instansi */}
-        <View className="mt-2">
-          <Text className="text-md text-black">Instansi:</Text>
-          <Text
-            className="text-sm font-bold text-gray-700"
-            numberOfLines={0} // biar bisa lebih dari 1 baris
-          >
-            {instansi}
-          </Text>
-        </View>
-      </View>
-
-      {/* Foto Profile */}
-      <View className="ml-4 size-36 items-center justify-center">
+    <View className="items-center rounded-b-3xl bg-[#20A0D8] px-4 py-3">
+      {/* Foto Profil */}
+      <View className="relative">
         <Image
           source={{ uri: photoUri }}
           className="size-36 rounded-full"
@@ -157,9 +115,9 @@ export default function ProfileCardAbsensi({
           }}
         />
 
-        {/* Loading overlay (pakai react-query flag) */}
+        {/* Overlay loading */}
         {isLoading && (
-          <View className="absolute size-36 items-center justify-center rounded-full bg-white/60">
+          <View className="absolute inset-0 items-center justify-center rounded-full bg-white/60">
             <Progress.Circle
               size={40}
               progress={progress}
@@ -172,6 +130,18 @@ export default function ProfileCardAbsensi({
           </View>
         )}
       </View>
+
+      {/* Nama & Gelar */}
+      <View className="mt-4 items-center">
+        <Text className="text-xl font-semibold text-white">Halo, </Text>
+        {gelarDepan && (
+          <Text className="text-xl font-bold text-white">{gelarDepan}</Text>
+        )}
+        <Text className="text-2xl font-bold text-white">{displayNama}</Text>
+        {gelarBelakang && (
+          <Text className="text-xl font-bold text-white">{gelarBelakang}</Text>
+        )}
+      </View>
     </View>
   );
-}
+};

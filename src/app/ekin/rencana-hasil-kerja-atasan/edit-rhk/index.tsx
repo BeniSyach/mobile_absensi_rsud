@@ -1,8 +1,9 @@
 /* eslint-disable max-lines-per-function */
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ImageBackground, SafeAreaView, StatusBar } from 'react-native';
+import { ImageBackground, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   PutRHKPejabat,
@@ -71,7 +72,10 @@ export default function EditRHK() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#287BDC]">
+    <SafeAreaView
+      className="flex-1 bg-[#287BDC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#287BDC" barStyle="dark-content" />
       <Stack.Screen
         options={{

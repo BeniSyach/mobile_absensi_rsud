@@ -1,12 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import {
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  View,
-} from 'react-native';
+import { ImageBackground, ScrollView, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Header from '@/components/home/header';
 import MenuKeduaSimpeg from '@/components/simpegComponent/menu-kedua-simpeg';
@@ -19,7 +14,10 @@ export default function Simpeg() {
   const storedMessage = getMessage();
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0B3880]">
+    <SafeAreaView
+      className="flex-1 bg-[#0B3880]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#0B3880" barStyle="dark-content" />
       <Stack.Screen
         options={{

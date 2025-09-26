@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, SafeAreaView, StatusBar, View } from 'react-native';
+import { ImageBackground, StatusBar, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DataDetailPad from '@/components/pelayanan-publik-component/bapenda-component/info-pad-component/data-detail-pad';
 import { Text } from '@/components/ui';
@@ -17,7 +18,10 @@ export default function DetailPad() {
     setPending(false);
   }
   return (
-    <SafeAreaView className="flex-1 bg-[#2B1DAC]">
+    <SafeAreaView
+      className="flex-1 bg-[#2B1DAC]"
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar backgroundColor="#2B1DAC" barStyle="dark-content" />
       <Stack.Screen
         options={{
