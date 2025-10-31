@@ -15,7 +15,7 @@ export const GetSatuanEkin = createQuery<SatuanResponse, Variables, AxiosError>(
     queryKey: ['getSatuanEkin'] as const,
     fetcher: async (variables) => {
       const response = await client({
-        url: '/ekinerja/satuan',
+        url: '/aggregation/satuan',
         method: 'GET',
         params: variables,
       });

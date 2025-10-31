@@ -1,11 +1,11 @@
 import { StyleSheet } from 'react-native';
 
-import { type KegiatanHarianPejabat } from '@/api';
+import { type KegiatanItem } from '@/api';
 import { Text, View } from '@/components/ui';
 import { formatTanggalWIB } from '@/utils/format-days';
 
 interface CardProps {
-  dataHarian: KegiatanHarianPejabat;
+  dataHarian: KegiatanItem;
 }
 
 export default function CardListKomponentPejabat({ dataHarian }: CardProps) {
@@ -31,14 +31,13 @@ export default function CardListKomponentPejabat({ dataHarian }: CardProps) {
 
       {/* RHK */}
       <Text style={styles.meta}>
-        <Text style={styles.metaLabel}>RHK: </Text>{' '}
-        {dataHarian?.rhk_pejabat?.uraian}
+        <Text style={styles.metaLabel}>RHK: </Text> {dataHarian?.uraian_rhk}
       </Text>
 
       {/* Indikator */}
       <Text style={styles.meta}>
         <Text style={styles.metaLabel}>Indikator: </Text>{' '}
-        {dataHarian?.rhk_pejabat?.indikator}
+        {dataHarian?.indikator}
       </Text>
 
       {/* Status */}

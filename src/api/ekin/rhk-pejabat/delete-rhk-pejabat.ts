@@ -17,7 +17,7 @@ export const DeleteRHKPejabat = createMutation<
   mutationFn: async ({ id }) => {
     try {
       const response = await client({
-        url: `/ekinerja/rhk-pejabat/${id}`,
+        url: `/ekinerja-new/rhk-pejabat/${id}`,
         method: 'DELETE',
       });
 

@@ -5,14 +5,17 @@ import {
   ActivityIndicator,
   Alert,
   ImageBackground,
+  Linking,
   Modal,
   ScrollView,
   StatusBar,
   View,
 } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
+import RNExitApp from 'react-native-exit-app';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useCheckPasswordUser } from '@/api';
+import { CheckUpdateApp, useCheckPasswordUser } from '@/api';
 // import VersionCheck from 'react-native-version-check';
 import Footer from '@/components/home/footer';
 import MenuUtama from '@/components/home/menu-utama';
@@ -21,10 +24,47 @@ import { Image, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function Feed() {
-  const storedMessage = getMessage();
-  const { data, isPending, isError } = useCheckPasswordUser();
-
   const router = useRouter();
+  const storedMessage = getMessage();
+  const versionCode = DeviceInfo.getBuildNumber();
+  const { data, isPending, isError } = useCheckPasswordUser();
+  const { data: dataUpdateAndroid, isPending: pendingCheckAndroid } =
+    CheckUpdateApp({
+      variables: {
+        version_code: versionCode,
+      },
+    });
+
+  useEffect(() => {
+    // cek versi update setelah data dari server tersedia
+    if (dataUpdateAndroid?.update_required) {
+      Alert.alert(
+        'Update Required',
+        dataUpdateAndroid.message,
+        [
+          {
+            text: 'Update',
+            onPress: async () => {
+              try {
+                // Buka Play Store
+                await Linking.openURL(
+                  'https://play.google.com/store/apps/details?id=com.deliserdang.sehat'
+                );
+              } catch (error) {
+                console.warn('Gagal membuka Play Store:', error);
+              } finally {
+                // Tutup aplikasi setelah 1 detik agar URL sempat terbuka
+                setTimeout(() => {
+                  RNExitApp.exitApp();
+                }, 1000);
+              }
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [dataUpdateAndroid]);
 
   useEffect(() => {
     if (data && data.password_changed === false) {
@@ -63,6 +103,11 @@ export default function Feed() {
     );
   }
 
+  // ❌ Jangan render konten utama ketika update_required true
+  if (dataUpdateAndroid?.update_required) {
+    return null;
+  }
+
   return (
     <SafeAreaView
       className="flex-1 bg-[#0B3880]"
@@ -71,7 +116,11 @@ export default function Feed() {
       <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
 
       {/* 🔹 Loading Modal tetap ditampilkan tapi berada di dalam return */}
-      <Modal visible={isPending} transparent animationType="fade">
+      <Modal
+        visible={isPending || pendingCheckAndroid}
+        transparent
+        animationType="fade"
+      >
         <View className="flex-1 items-center justify-center bg-black/40">
           <View className="items-center rounded-2xl bg-white px-6 py-8 shadow-lg">
             <ActivityIndicator size="large" color="#0B3880" />

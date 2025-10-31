@@ -8,7 +8,7 @@ export const UseProfileEkin = createQuery<UserDataEkin, void, AxiosError>({
   queryKey: ['UseProfileEkin'] as const,
   fetcher: async () =>
     client({
-      url: '/ekinerja/profile',
+      url: '/ekinerja-new/profile',
       method: 'GET',
       params: { _t: Date.now() },
     }).then((response) => response.data),

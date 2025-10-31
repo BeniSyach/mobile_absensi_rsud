@@ -32,25 +32,33 @@ export type RhkUserStaffChild = {
 };
 
 // item utama per data
-export type RhkStaffChildItem = {
-  id: number;
-  id_rhk_pejabat: number;
-  id_rhk_staff: number;
+export interface RhkStaffChildItem {
+  id: string;
+  id_rhk_pejabat: string;
+  id_rhk_staff: string;
+  indikator: string;
+  kode_unit_kerja: string;
+  nama_pegawai: string;
+  nama_unit_kerja: string;
   nik: string;
-  created_at: string;
-  updated_at: string;
-  user?: RhkUserStaffChild; // optional karena di JSON ada yang tidak ada `user`
-  rhk_staff: RhkStaffChild;
-};
+  nilai: number;
+  tahun: string;
+  uraian: string;
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
+}
+
+export interface PaginationRHKStaffChild {
+  last_page: number;
+  limit: number;
+  page: number;
+  total: number;
+}
 
 // full response
-export type RhkStaffChildResponse = {
-  status: number;
-  message: string;
+export interface RhkStaffChildResponse {
   data: RhkStaffChildItem[];
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-  };
-};
+  message: string;
+  pagination: PaginationRHKStaffChild;
+  status: number;
+}

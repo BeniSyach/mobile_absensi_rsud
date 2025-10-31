@@ -12,65 +12,35 @@ import { showErrorMessage, Text } from '@/components/ui';
 
 interface CardProps {
   dataRHKItems: RhkStaffChildItem;
-  atasanNik: string | undefined;
 }
 
 export default function CardHasilKerja({ dataRHKItems }: CardProps) {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const { mutateAsync: deleteRHK, isPending: isPosting } = DeleteRHKStaff();
+  const { mutateAsync: deleteRHK, isPending: isPosting } = DeleteRHKStaff({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+    },
+    onError: (e) => {
+      showErrorMessage(e.message);
+    },
+  });
 
   const handleSetujuiHapus = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
   const handleConfirm = async () => {
     setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
-
-    try {
-      const response = await deleteRHK({ id: dataRHKItems.id_rhk_staff });
-      console.log('✅ Data berhasil dikirim:', response);
-      queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
-      showMessage({
-        message: response.message,
-        type: 'success',
-        duration: 7000,
-      });
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.error) {
-        errorMessage = error.error;
-      }
-
-      showErrorMessage(errorMessage);
-    }
+    await deleteRHK({
+      id: Number(dataRHKItems.id_rhk_staff),
+    });
+    queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
+    queryClient.invalidateQueries({ queryKey: ['useRhkStaffChildInfinite'] });
   };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
@@ -86,21 +56,21 @@ export default function CardHasilKerja({ dataRHKItems }: CardProps) {
       </Text>
       <View className="mb-3 rounded-md bg-gray-100 p-2">
         <Text className="text-base text-gray-800">
-          {dataRHKItems?.rhk_staff?.uraian ?? '-'}
+          {dataRHKItems?.uraian ?? '-'}
         </Text>
       </View>
 
       <Text className="mb-1 text-lg font-bold text-gray-700">INDIKATOR</Text>
       <View className="mb-3 rounded-md bg-gray-100 p-2">
         <Text className="text-base text-gray-800">
-          {dataRHKItems?.rhk_staff?.indikator ?? '-'}
+          {dataRHKItems?.indikator ?? '-'}
         </Text>
       </View>
 
       <Text className="mb-1 text-lg font-bold text-gray-700">TARGET</Text>
       <View className="mb-3 rounded-md bg-gray-100 p-2">
         <Text className="text-base text-gray-800">
-          {dataRHKItems?.rhk_staff?.nilai ?? '-'}
+          {dataRHKItems?.nilai ?? '-'}
         </Text>
       </View>
 
@@ -111,11 +81,12 @@ export default function CardHasilKerja({ dataRHKItems }: CardProps) {
             router.push({
               pathname: '/ekin/rencana-hasil-kerja/edit-rhk',
               params: {
-                uraian: dataRHKItems?.rhk_staff?.uraian ?? null,
-                indikator: dataRHKItems?.rhk_staff?.indikator ?? null,
-                nilai: dataRHKItems?.rhk_staff?.nilai ?? null,
+                uraian: dataRHKItems?.uraian ?? null,
+                indikator: dataRHKItems?.indikator ?? null,
+                nilai: dataRHKItems?.nilai ?? null,
                 id_rhk_pejabat: dataRHKItems?.id_rhk_pejabat ?? null,
                 id: dataRHKItems?.id_rhk_staff ?? null,
+                // id_satuan: dataRHKItems?.id_satuan ?? null,
               },
             })
           }

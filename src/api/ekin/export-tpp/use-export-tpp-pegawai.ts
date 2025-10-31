@@ -12,7 +12,7 @@ export const ExportTPPPegawai = createQuery<
   queryKey: ['ExportTPPPegawai'] as const,
   fetcher: async (variables) => {
     const response = await client({
-      url: '/ekinerja/export-tpp-staff-bulanan',
+      url: '/ekinerja-new/export-tpp-staff-bulanan',
       method: 'GET',
       params: variables,
       responseType: 'arraybuffer', // ⬅️ penting!

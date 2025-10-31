@@ -15,7 +15,7 @@ export const PostSPT = createMutation<
 
     // Check if id_user is defined
     if (variables.id_user === undefined) {
-      throw new Error('id_user is required but was not provided.');
+      throw new Error('id User masih kosong.');
     }
 
     formData.append('id_user', variables.id_user.toString());
@@ -42,19 +42,16 @@ export const PostSPT = createMutation<
 
       return response.data;
     } catch (error) {
-      // Type the error as AxiosError
       const axiosError = error as AxiosError;
 
-      // Tangkap dan log error
-      if (axiosError.response) {
-        console.error('Error Response:', axiosError.response.data);
-      } else if (axiosError.request) {
-        console.error('Error Request:', axiosError.request);
-      } else {
-        console.error('Error Message:', axiosError.message);
+      if (!axiosError.response) {
+        console.error(
+          'Jaringan Error: Tidak ada koneksi atau server tidak merespon'
+        );
+        throw new Error('Jaringan Error: Periksa koneksi internet Anda.');
       }
 
-      // Lempar kembali error agar bisa ditangani oleh onError
+      // lempar ulang error non-network agar bisa ditangani onError
       throw error;
     }
   },

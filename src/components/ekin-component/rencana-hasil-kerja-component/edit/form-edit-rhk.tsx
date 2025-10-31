@@ -71,7 +71,7 @@ export default function FormEditRHK({
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [tahun, setTahun] = useState<string>(currentYear.toString());
-
+  console.log('data edit', dataEdit);
   const {
     control,
     formState: { errors },
@@ -112,9 +112,11 @@ export default function FormEditRHK({
           nik: dataAtasan,
         });
 
+        console.log('data option rhk', data);
+
         return (
           data.data?.map((item: RhkStaffChildItem) => ({
-            label: item.rhk_staff.uraian || '',
+            label: item.uraian || '',
             value: item.id_rhk_staff,
           })) || []
         );
@@ -122,6 +124,49 @@ export default function FormEditRHK({
     } catch (error) {
       console.error('Error fetching RHK:', error);
       return [];
+    }
+  };
+
+  const fetchOPDByValue = async (value: string | number) => {
+    try {
+      if (isSekda || isKadis) {
+        // ambil dari pejabat
+        const data = await useRhkPejabatChildByNik.fetcher({
+          page: 1,
+          limit: 1,
+          nik: dataAtasan,
+          search: String(value), // kalau API support search
+        });
+
+        const found = data.data?.find(
+          (item: RhkPejabatDataItem) => item.id_rhk_pejabat === value
+        );
+
+        return found
+          ? {
+              label: found.rhk_pejabat.uraian || '',
+              value: found.id_rhk_pejabat,
+            }
+          : null;
+      } else {
+        // ambil dari staff
+        const data = await GetRhkStaffChild.fetcher({
+          page: 1,
+          limit: 20,
+          nik: dataAtasan,
+        });
+
+        const found = data.data?.find(
+          (item: RhkStaffChildItem) => item.id_rhk_staff === value
+        );
+
+        return found
+          ? { label: found.uraian || '', value: found.id_rhk_staff }
+          : null;
+      }
+    } catch (e) {
+      console.error('Error fetching OPD by value:', e);
+      return null;
     }
   };
 
@@ -159,7 +204,7 @@ export default function FormEditRHK({
   };
 
   useEffect(() => {
-    if (dataEdit?.id) {
+    if (dataEdit) {
       reset({
         id_rhk_pejabat: dataEdit.id_rhk_pejabat.toString() || '',
         uraian: dataEdit.uraian || '',
@@ -186,6 +231,7 @@ export default function FormEditRHK({
                 debounceMs={400}
                 pageSize={10}
                 fetchOptions={fetchOptionOPDsWithQuery}
+                fetchOptionByValue={fetchOPDByValue}
               />
             )}
           />

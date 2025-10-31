@@ -1,10 +1,10 @@
 /* eslint-disable max-lines-per-function */
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useListDetailKegiatan } from '@/api';
+import { type DetailKegiatan, useGetListDetailKegiatanInfinite } from '@/api';
 import DiterimaComponent from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/diterima-component';
 import DitolakComponent from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/ditolak-component';
 import LogoKegiatanHarianBawahan from '@/components/ekin-component/beri-nilai-bawahan/list-kegiatan-harian-bawahan-compoenet/logo-kegiatan-harian-bawahan';
@@ -17,119 +17,41 @@ type TabType = 'pending' | 'disetujui' | 'ditolak';
 
 export default function ListKegiatanHarianBawahan() {
   const { nik } = useLocalSearchParams<{ nik: string }>();
-  const [page, setPage] = useState(1);
-  const [allItems, setAllItems] = useState<any[]>([]); // Optional: use KegiatanHarianItem[]
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [status, setStatus] = useState('0');
   const [selectedTab, setSelectedTab] = useState<TabType>('pending');
-  const queryParams = {
+
+  const page = 1;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isRefetching,
+    error,
+    isLoading,
+  } = useGetListDetailKegiatanInfinite({
     nik,
     page,
     limit: 30,
     status,
-  };
-
-  const {
-    data: dataListDetailBawahan,
-    refetch,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-  } = useListDetailKegiatan({
-    variables: queryParams,
   });
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-
-    // Reset state untuk refresh
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-    setRefreshKey((prev) => prev + 1); // Force re-render
-
-    try {
-      // Tunggu refetch selesai
-      await refetch();
-    } catch (err) {
-      console.error('Refresh error:', err);
-    }
-
-    setRefreshing(false);
-  };
+  const dataListKegiatanBawahan: DetailKegiatan[] =
+    data?.pages.flatMap((page) => page.data) ?? [];
 
   const handleLoadMore = () => {
-    if (!isLoading && hasNextPage) {
-      setPage((prev) => prev + 1);
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
-  useEffect(() => {
-    if (dataListDetailBawahan) {
-      // Coba berbagai kemungkinan struktur response
-      let items = [];
-
-      // Kemungkinan 1: data.data
-      if (
-        dataListDetailBawahan.data &&
-        Array.isArray(dataListDetailBawahan.data)
-      ) {
-        items = dataListDetailBawahan.data;
-      }
-      // Kemungkinan 2: data saja (langsung array)
-      else if (Array.isArray(dataListDetailBawahan)) {
-        items = dataListDetailBawahan;
-      }
-      // Kemungkinan 3: data.items
-      else if (
-        dataListDetailBawahan.data &&
-        Array.isArray(dataListDetailBawahan.data)
-      ) {
-        items = dataListDetailBawahan.data;
-      }
-      // Kemungkinan 4: data.result
-      else if (
-        dataListDetailBawahan.data &&
-        Array.isArray(dataListDetailBawahan.data)
-      ) {
-        items = dataListDetailBawahan.data;
-      } else {
-        items = [];
-      }
-
-      if (items.length >= 0) {
-        // Ubah dari > 0 ke >= 0 untuk handle empty array
-        setAllItems((prevItems) => {
-          // Jika sedang refresh (refreshing true), langsung replace
-          if (refreshing && page === 1) {
-            return items;
-          }
-
-          const newItems = page === 1 ? items : [...prevItems, ...items];
-
-          return newItems;
-        });
-
-        // Update hasNextPage
-        setHasNextPage(items.length >= 10);
-      }
-    }
-  }, [dataListDetailBawahan, page, refreshing]); // Tambahkan refreshing ke dependency
-
-  useEffect(() => {
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-    setRefreshKey((prev) => prev + 1);
-
-    // Langsung refetch data baru
+  const handleRefresh = () => {
     refetch();
-  }, [status]);
+  };
 
-  if (isError) {
+  if (error) {
     return (
       <Text className="text-red-500">
         Terjadi kesalahan:{' '}
@@ -171,35 +93,32 @@ export default function ListKegiatanHarianBawahan() {
         />
         {selectedTab === 'pending' && (
           <PendingComponent
-            dataPending={allItems}
-            key={refreshKey}
-            Pending={isLoading || isFetching}
+            dataPending={dataListKegiatanBawahan}
+            Pending={isLoading || isFetchingNextPage}
             onLoadMore={handleLoadMore}
-            hasNextPage={hasNextPage}
+            hasNextPage={hasNextPage ?? false}
             onRefresh={handleRefresh}
-            refreshing={refreshing}
+            refreshing={isRefetching}
           />
         )}
         {selectedTab === 'disetujui' && (
           <DiterimaComponent
-            key={refreshKey}
-            dataDisetujui={allItems}
-            Pending={isLoading || isFetching}
+            dataDisetujui={dataListKegiatanBawahan}
+            Pending={isLoading || isFetchingNextPage}
             onLoadMore={handleLoadMore}
-            hasNextPage={hasNextPage}
+            hasNextPage={hasNextPage ?? false}
             onRefresh={handleRefresh}
-            refreshing={refreshing}
+            refreshing={isRefetching}
           />
         )}
         {selectedTab === 'ditolak' && (
           <DitolakComponent
-            key={refreshKey}
-            dataDitolak={allItems}
-            Pending={isLoading || isFetching}
+            dataDitolak={dataListKegiatanBawahan}
+            Pending={isLoading || isFetchingNextPage}
             onLoadMore={handleLoadMore}
-            hasNextPage={hasNextPage}
+            hasNextPage={hasNextPage ?? false}
             onRefresh={handleRefresh}
-            refreshing={refreshing}
+            refreshing={isRefetching}
           />
         )}
       </ImageBackground>

@@ -5,13 +5,14 @@ import dayjs from 'dayjs';
 import { CalendarDays } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
+
 dayjs.locale('id');
 
 interface DateInputProps {
   label: string;
   placeholder: string;
-  value?: string; // format: 'DD MMMM YYYY'
-  onChange: (date: string) => void;
+  value?: string; // format: 'YYYY-MM-DD' (ISO)
+  onChange: (date: string) => void; // kirim balik ISO
   error?: string;
 }
 
@@ -26,13 +27,13 @@ export const DateInputOriginal = ({
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
-      setShow(false); // Android: picker selalu ditutup setelah pilih/cancel
+      setShow(false);
     }
 
     if (event.type === 'set' && selectedDate) {
-      // Format dd MMMM YYYY → contoh: 02 September 2025
-      const formatted = dayjs(selectedDate).format('DD MMMM YYYY');
-      onChange(formatted);
+      // ✅ simpan ISO di state parent
+      const formattedISO = dayjs(selectedDate).format('YYYY-MM-DD');
+      onChange(formattedISO);
     }
   };
 
@@ -48,13 +49,13 @@ export const DateInputOriginal = ({
       >
         <CalendarDays size={20} color="black" strokeWidth={2.5} />
         <Text className={`text-base ${value ? 'text-black' : 'text-gray-500'}`}>
-          {value || placeholder}
+          {value ? dayjs(value).format('DD MMMM YYYY') : placeholder}
         </Text>
       </Pressable>
 
       {show && (
         <DateTimePicker
-          value={value ? dayjs(value, 'DD MMMM YYYY').toDate() : new Date()}
+          value={value ? dayjs(value, 'YYYY-MM-DD').toDate() : new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
           onChange={handleDateChange}

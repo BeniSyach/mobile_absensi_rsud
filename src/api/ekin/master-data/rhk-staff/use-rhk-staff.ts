@@ -14,7 +14,7 @@ export const GetRhkStaff = createQuery<RhkStaffResponse, Variables, AxiosError>(
     queryKey: ['getRhkStaff'] as const,
     fetcher: async (variables) => {
       const response = await client({
-        url: '/ekinerja/rhk-staff',
+        url: '/aggregation/rhk-staff',
         method: 'GET',
         params: variables,
       });

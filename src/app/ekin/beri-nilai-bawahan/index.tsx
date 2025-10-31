@@ -1,118 +1,55 @@
 /* eslint-disable max-lines-per-function */
+import { FlashList } from '@shopify/flash-list';
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import React from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useListBawahan } from '@/api';
+import { type BawahanRekapNilaiBawahan, useListBawahanInfinite } from '@/api';
+import CardNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/card-list-nilai-bawahan';
 import FormNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/form-nilai-bawahan';
-import ListNilaiBawahanComponent from '@/components/ekin-component/beri-nilai-bawahan/list-nilai-bawahan';
 import LogoNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/logo-nilai-bawahan';
 import NavbarNilaiBawahan from '@/components/ekin-component/beri-nilai-bawahan/navbar-nilai-bawahan';
-import { Text } from '@/components/ui';
+import { EmptyList, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
+import { useDebouncedValue } from '@/utils/debaunce';
 
 export default function BeriNilaiBawahan() {
   const storedMessage = getMessage();
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [allItems, setAllItems] = useState<any[]>([]); // Optional: use KegiatanHarianItem[]
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const queryParams = {
-    nik_atasan: storedMessage?.nik ?? '',
-    page,
-    limit: 30,
-    search,
-  };
+  const debouncedSearch = useDebouncedValue(search, 500);
 
   const {
-    data: dataListBawahan,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-    isLoading,
-    isFetching,
-    isError,
+    isRefetching,
     error,
-  } = useListBawahan({
-    variables: queryParams,
+    isLoading,
+  } = useListBawahanInfinite({
+    nik_atasan: storedMessage?.nik ?? '',
+    limit: 30,
+    search: debouncedSearch,
   });
-  const handleRefresh = async () => {
-    setRefreshing(true);
 
-    // Reset state untuk refresh
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-    setRefreshKey((prev) => prev + 1); // Force re-render
+  const listKegiatanHarianBawahan: BawahanRekapNilaiBawahan[] =
+    data?.pages.flatMap((page) => page.data) ?? [];
 
-    try {
-      // Tunggu refetch selesai
-      await refetch();
-    } catch (err) {
-      console.error('Refresh error:', err);
-    }
-
-    setRefreshing(false);
-  };
-
-  const handleLoadMore = () => {
-    if (!isLoading && hasNextPage) {
-      setPage((prev) => prev + 1);
-    }
-  };
+  const renderItem = React.useCallback(
+    ({ item }: { item: BawahanRekapNilaiBawahan }) => (
+      <CardNilaiBawahan dataCardbawahan={item} />
+    ),
+    []
+  );
 
   const handleSearchChange = (newSearch: string) => {
     setSearch(newSearch);
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
   };
 
-  useEffect(() => {
-    if (dataListBawahan) {
-      // Coba berbagai kemungkinan struktur response
-      let items = [];
-
-      // Kemungkinan 1: data.data
-      if (dataListBawahan.data && Array.isArray(dataListBawahan.data)) {
-        items = dataListBawahan.data;
-      }
-      // Kemungkinan 2: data saja (langsung array)
-      else if (Array.isArray(dataListBawahan)) {
-        items = dataListBawahan;
-      }
-      // Kemungkinan 3: data.items
-      else if (dataListBawahan.data && Array.isArray(dataListBawahan.data)) {
-        items = dataListBawahan.data;
-      }
-      // Kemungkinan 4: data.result
-      else if (dataListBawahan.data && Array.isArray(dataListBawahan.data)) {
-        items = dataListBawahan.data;
-      } else {
-        items = [];
-      }
-
-      if (items.length >= 0) {
-        // Ubah dari > 0 ke >= 0 untuk handle empty array
-        setAllItems((prevItems) => {
-          // Jika sedang refresh (refreshing true), langsung replace
-          if (refreshing && page === 1) {
-            return items;
-          }
-
-          const newItems = page === 1 ? items : [...prevItems, ...items];
-
-          return newItems;
-        });
-
-        // Update hasNextPage
-        setHasNextPage(items.length >= 10);
-      }
-    }
-  }, [dataListBawahan, page, refreshing]); // Tambahkan refreshing ke dependency
-
-  if (isError) {
+  if (error) {
     return (
       <Text className="text-red-500">
         Terjadi kesalahan:{' '}
@@ -147,15 +84,28 @@ export default function BeriNilaiBawahan() {
           <NavbarNilaiBawahan />
           <LogoNilaiBawahan />
         </ImageBackground>
+
         <FormNilaiBawahan search={search} onSearchChange={handleSearchChange} />
-        <ListNilaiBawahanComponent
-          key={refreshKey}
-          dataBawahan={allItems}
-          Pending={isLoading || isFetching}
-          onLoadMore={handleLoadMore}
-          hasNextPage={hasNextPage}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
+
+        <FlashList
+          data={listKegiatanHarianBawahan}
+          estimatedItemSize={60}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          ListEmptyComponent={<EmptyList isLoading={isLoading} />}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <Text className="py-2 text-center">Memuat lebih banyak…</Text>
+            ) : null
+          }
         />
       </ImageBackground>
     </SafeAreaView>

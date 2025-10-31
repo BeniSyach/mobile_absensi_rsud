@@ -1,5 +1,6 @@
 export * from './absensi';
 export * from './auth';
+export * from './check-app';
 export * from './common';
 export * from './divisi';
 export * from './ekin';

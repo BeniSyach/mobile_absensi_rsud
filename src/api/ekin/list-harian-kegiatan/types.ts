@@ -1,3 +1,40 @@
+export interface KegiatanResponse {
+  status: number;
+  message: string;
+  data: KegiatanItem[];
+  pagination: PaginationKegiatanResponse;
+}
+
+export interface KegiatanItem {
+  id: number;
+  id_rhk_pejabat: string;
+  id_rhkstaff: string;
+  id_satuan: number;
+  indikator: string;
+  kode_unit_kerja: string;
+  nama_pegawai: string;
+  nama_satuan: string;
+  nama_unit_kerja: string;
+  nik: string;
+  nilai: number;
+  status: 0 | 1 | 2;
+  tahun: string;
+  tgl_kinerja: string; // ISO date string
+  tte_status: number;
+  uraian_rhk: string;
+  uraian_tugas: string;
+  waktu_kinerja: number;
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
+}
+
+export interface PaginationKegiatanResponse {
+  page: number;
+  limit: number;
+  total: number;
+  last_page: number;
+}
+
 export interface KegiatanHarianResponseByNIK {
   status: number;
   message: string;

@@ -19,7 +19,7 @@ export const GetIndikatorByUnitKerja = createQuery<
   queryKey: ['getIndikatorByUnitKerja'] as const,
   fetcher: async (variables) => {
     const response = await client({
-      url: '/ekinerja/indikator/by-unit-kerja',
+      url: '/aggregation/indikator',
       method: 'GET',
       params: variables,
     });

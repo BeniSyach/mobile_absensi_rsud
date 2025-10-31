@@ -36,21 +36,23 @@ export default function TambahKegiatan() {
           duration: 7000,
         });
       },
-      onError: (e) => {
-        showErrorMessage(e.message);
+      onError: (e: any) => {
+        showErrorMessage(e.error);
       },
     });
 
   const onSubmit: FormKegiatanProps['onSubmit'] = async (data) => {
+    console.log('data tanggal', data.tanggal);
+    console.log('data waktu tanggal', data.waktu_tanggal);
     const tgl_kinerja = dayjs(
       `${data.tanggal} ${data.waktu_tanggal}`,
-      'DD MMMM YYYY HH:mm'
+      'YYYY-MM-DD HH:mm' // ✅ Sesuaikan dengan format data
     ).format('YYYY-MM-DDTHH:mm:ss');
 
     const payload: PostKegiatanHarianVariables = {
       waktu_kinerja: data.lamaWaktu,
       tgl_kinerja: tgl_kinerja,
-      id_rhkstaff: data.selectedrhk,
+      id_rhkstaff: Number(data.selectedrhk),
       indikator: data.selectedIndikator ?? '',
       id_satuan: data.satuan,
       uraian_tugas: data.uraian_tugas,

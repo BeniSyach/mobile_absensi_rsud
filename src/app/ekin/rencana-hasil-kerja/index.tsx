@@ -1,122 +1,61 @@
 /* eslint-disable max-lines-per-function */
+import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ImageBackground, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { GetRhkStaffChild, UseProfileEkin } from '@/api';
+import {
+  type RhkStaffChildItem,
+  useGetUser,
+  useRhkStaffChildInfinite,
+} from '@/api';
+import CardHasilKerja from '@/components/ekin-component/rencana-hasil-kerja-component/card-list-hasil-kerja';
 import FormHasilKerja from '@/components/ekin-component/rencana-hasil-kerja-component/form-hasil-kerja';
-import ListHasilKerjaComponent from '@/components/ekin-component/rencana-hasil-kerja-component/list-hasil-kerja';
 import LogoHasilKerja from '@/components/ekin-component/rencana-hasil-kerja-component/logo-hasil-kerja';
 import NavbarHasilKerjaComponent from '@/components/ekin-component/rencana-hasil-kerja-component/navbar-hasil-kerja-component';
-import { Button, Text } from '@/components/ui';
+import { Button, EmptyList, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function RencanaHasilKinerja() {
   const router = useRouter();
   const storedMessage = getMessage();
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [allItems, setAllItems] = useState<any[]>([]); // Optional: use KegiatanHarianItem[]
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  const { data: dataProfile, error: errorProfileEkin } = UseProfileEkin();
-
-  const queryParams = {
-    nik: storedMessage?.nik ?? '',
-    page,
-    limit: 30,
-    search,
-  };
+  const { data: dataProfile, error: errorProfileEkin } = useGetUser(
+    storedMessage?.nik ?? ''
+  );
 
   const {
-    data: dataRHK,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-    isLoading,
-    isFetching,
-    isError,
+    isRefetching,
     error,
-  } = GetRhkStaffChild({
-    variables: queryParams,
+    isLoading,
+  } = useRhkStaffChildInfinite({
+    nik: storedMessage?.nik ?? '',
+    limit: 30,
+    search,
   });
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
+  const ListRHKStaffChild: RhkStaffChildItem[] =
+    data?.pages.flatMap((page) => page.data) ?? [];
 
-    // Reset state untuk refresh
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-    setRefreshKey((prev) => prev + 1); // Force re-render
-
-    try {
-      // Tunggu refetch selesai
-      await refetch();
-    } catch (err) {
-      console.error('Refresh error:', err);
-    }
-
-    setRefreshing(false);
-  };
-
-  const handleLoadMore = () => {
-    if (!isLoading && hasNextPage) {
-      setPage((prev) => prev + 1);
-    }
-  };
+  const renderItem = React.useCallback(
+    ({ item }: { item: RhkStaffChildItem }) => (
+      <CardHasilKerja dataRHKItems={item} />
+    ),
+    []
+  );
 
   const handleSearchChange = (newSearch: string) => {
     setSearch(newSearch);
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
   };
 
-  useEffect(() => {
-    if (dataRHK) {
-      // Coba berbagai kemungkinan struktur response
-      let items = [];
-
-      // Kemungkinan 1: data.data
-      if (dataRHK.data && Array.isArray(dataRHK.data)) {
-        items = dataRHK.data;
-      }
-      // Kemungkinan 2: data saja (langsung array)
-      else if (Array.isArray(dataRHK)) {
-        items = dataRHK;
-      }
-      // Kemungkinan 3: data.items
-      else if (dataRHK.data && Array.isArray(dataRHK.data)) {
-        items = dataRHK.data;
-      }
-      // Kemungkinan 4: data.result
-      else if (dataRHK.data && Array.isArray(dataRHK.data)) {
-        items = dataRHK.data;
-      } else {
-        items = [];
-      }
-
-      if (items.length >= 0) {
-        // Ubah dari > 0 ke >= 0 untuk handle empty array
-        setAllItems((prevItems) => {
-          // Jika sedang refresh (refreshing true), langsung replace
-          if (refreshing && page === 1) {
-            return items;
-          }
-
-          const newItems = page === 1 ? items : [...prevItems, ...items];
-          return newItems;
-        });
-
-        // Update hasNextPage
-        setHasNextPage(items.length >= 10);
-      }
-    }
-  }, [dataRHK, page, refreshing]); // Tambahkan refreshing ke dependency
-
-  if (isError || errorProfileEkin) {
+  if (error || errorProfileEkin) {
     return (
       <Text className="text-red-500">
         Terjadi kesalahan:{' '}
@@ -151,17 +90,30 @@ export default function RencanaHasilKinerja() {
           <NavbarHasilKerjaComponent />
           <LogoHasilKerja />
         </ImageBackground>
+
         <FormHasilKerja search={search} onSearchChange={handleSearchChange} />
-        <ListHasilKerjaComponent
-          key={refreshKey}
-          dataRHK={allItems}
-          Pending={isLoading || isFetching}
-          onLoadMore={handleLoadMore}
-          hasNextPage={hasNextPage}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-          atasan={dataProfile?.atasan.nik as string | undefined}
+
+        <FlashList
+          data={ListRHKStaffChild}
+          estimatedItemSize={60}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          ListEmptyComponent={<EmptyList isLoading={isLoading} />}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <Text className="py-2 text-center">Memuat lebih banyak…</Text>
+            ) : null
+          }
         />
+
         <View className="flex-row justify-center px-5 py-2">
           <Button
             label="Tambah Rencana hasil Kerja"
@@ -169,7 +121,7 @@ export default function RencanaHasilKinerja() {
               router.push({
                 pathname: '/ekin/rencana-hasil-kerja/post-rhk',
                 params: {
-                  atasan: dataProfile?.atasan.nik,
+                  atasan: dataProfile?.data.atasan_id,
                 },
               })
             }

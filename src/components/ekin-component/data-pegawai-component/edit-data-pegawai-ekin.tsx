@@ -35,6 +35,7 @@ export interface DataProfileEdit {
   nik: string;
   nip: string;
   pangkat: string;
+  kode_eselon: string;
 }
 
 const schema = z.object({
@@ -84,6 +85,7 @@ export default function EditDataPegawaiEkin({
         pangkat_id: dataProfileEdit.pangkat || '',
         golongan_ruang_id: dataProfileEdit.golongan || '',
         atasan: dataProfileEdit.atasan || '',
+        eselon_id: dataProfileEdit.kode_eselon || '',
       });
     }
   }, [dataProfileEdit, reset]);
@@ -107,6 +109,25 @@ export default function EditDataPegawaiEkin({
     }
   };
 
+  const fetchOPDByValue = async (value: string | number) => {
+    try {
+      const data = await useUnitKerjaSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find(
+        (item: UnitKerjaSimpeg) => item.kode_unit_kerja === value
+      );
+      return found
+        ? { label: found.nama_unit_kerja, value: found.kode_unit_kerja }
+        : null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
   const fetchOptionPangkatsWithQuery = async (page: number, search: string) => {
     try {
       const data = await usePangkatSimpeg.fetcher({
@@ -123,6 +144,25 @@ export default function EditDataPegawaiEkin({
     } catch (error) {
       console.error('Error fetching RHK staff:', error);
       return [];
+    }
+  };
+
+  const fetchPangkatsByValue = async (value: string | number) => {
+    try {
+      const data = await usePangkatSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find(
+        (item: PangkatSimpeg) => item.kode_pangkat === value
+      );
+      return found
+        ? { label: found.nama_pangkat, value: found.kode_pangkat }
+        : null;
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   };
 
@@ -145,6 +185,25 @@ export default function EditDataPegawaiEkin({
     }
   };
 
+  const fetchJabatanByValue = async (value: string | number) => {
+    try {
+      const data = await useJabatanSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find(
+        (item: JabatanSimpeg) => item.kode_jabatan === value
+      );
+      return found
+        ? { label: found.nama_jabatan, value: found.kode_jabatan }
+        : null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
   const fetchOptionEselonsWithQuery = async (page: number, search: string) => {
     try {
       const data = await useEselonSimpeg.fetcher({
@@ -161,6 +220,25 @@ export default function EditDataPegawaiEkin({
     } catch (error) {
       console.error('Error fetching RHK staff:', error);
       return [];
+    }
+  };
+
+  const fetchEselonsByValue = async (value: string | number) => {
+    try {
+      const data = await useEselonSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find(
+        (item: Eselon) => item.kode_eselon === value
+      );
+      return found
+        ? { label: found.nama_eselon, value: found.kode_eselon }
+        : null;
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   };
 
@@ -183,6 +261,21 @@ export default function EditDataPegawaiEkin({
     }
   };
 
+  const fetchAtasansByValue = async (value: string | number) => {
+    try {
+      const data = await usePegawaiSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find((item: Pegawai) => item.nik === value);
+      return found ? { label: found.nama, value: found.nik } : null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
   const fetchOptionGolongansWithQuery = async (
     page: number,
     search: string
@@ -202,6 +295,25 @@ export default function EditDataPegawaiEkin({
     } catch (error) {
       console.error('Error fetching RHK staff:', error);
       return [];
+    }
+  };
+
+  const fetchGolongansByValue = async (value: string | number) => {
+    try {
+      const data = await useGolonganRuangSimpeg.fetcher({
+        page: 1,
+        limit: 20,
+        search: String(value),
+      });
+      const found = data.data?.find(
+        (item: GolonganRuangSimpeg) => item.kode_golongan_ruang === value
+      );
+      return found
+        ? { label: found.nama_golongan_ruang, value: found.kode_golongan_ruang }
+        : null;
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   };
 
@@ -255,6 +367,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionOPDsWithQuery}
+              fetchOptionByValue={fetchOPDByValue}
             />
           )}
         />
@@ -270,6 +383,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionJabatansWithQuery}
+              fetchOptionByValue={fetchJabatanByValue}
             />
           )}
         />
@@ -285,6 +399,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionPangkatsWithQuery}
+              fetchOptionByValue={fetchPangkatsByValue}
             />
           )}
         />
@@ -300,6 +415,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionGolongansWithQuery}
+              fetchOptionByValue={fetchGolongansByValue}
             />
           )}
         />
@@ -315,6 +431,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionEselonsWithQuery}
+              fetchOptionByValue={fetchEselonsByValue}
             />
           )}
         />
@@ -330,6 +447,7 @@ export default function EditDataPegawaiEkin({
               debounceMs={400}
               pageSize={10}
               fetchOptions={fetchOptionAtasansWithQuery}
+              fetchOptionByValue={fetchAtasansByValue}
             />
           )}
         />

@@ -1,18 +1,12 @@
 /* eslint-disable max-lines-per-function */
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  PutPegawai,
-  type PutPegawaiVariables,
-  queryClient,
-  UpdateAtasanUser,
-  type UpdateAtasanVariables,
-} from '@/api';
+import { PutPegawai, type PutPegawaiVariables, queryClient } from '@/api';
 import EditDataPegawaiEkin, {
   type DataProfileEdit,
   type EditDataPegawaiProps,
@@ -23,20 +17,7 @@ import { showErrorMessage } from '@/components/ui';
 
 export default function EditPegawaiEkin() {
   const params = useLocalSearchParams();
-
-  const { mutateAsync: updateAtasan, isPending: isPosting } = UpdateAtasanUser({
-    onSuccess: (res) => {
-      showMessage({
-        message: res.message,
-        type: 'success',
-        duration: 7000,
-      });
-    },
-    onError: (e) => {
-      showErrorMessage(e.message);
-    },
-  });
-
+  const router = useRouter();
   const { mutateAsync: updatePegawai, isPending: isPostingPegawai } =
     PutPegawai({
       onSuccess: (res) => {
@@ -45,6 +26,7 @@ export default function EditPegawaiEkin() {
           type: 'success',
           duration: 7000,
         });
+        router.back();
       },
       onError: (e) => {
         showErrorMessage(e.message);
@@ -62,16 +44,12 @@ export default function EditPegawaiEkin() {
       nik: String(params.nik ?? ''),
       nip: String(params.nip ?? ''),
       pangkat: String(params.pangkat ?? ''),
+      kode_eselon: String(params.kode_eselon ?? ''),
     }),
     [params]
   );
 
   const onSubmit: EditDataPegawaiProps['onSubmit'] = async (data) => {
-    const payload: UpdateAtasanVariables = {
-      nik_user: dataProfileEdit?.nik ?? '',
-      nik_atasan: data.atasan ?? '0',
-    };
-
     const payloadPegawai: PutPegawaiVariables = {
       nama: dataProfileEdit?.nama ?? '',
       nip: dataProfileEdit?.nip ?? '',
@@ -80,11 +58,11 @@ export default function EditPegawaiEkin() {
       jabatan_id: data.jabatan_id ?? '',
       eselon_id: data.eselon_id ?? '',
       nik: dataProfileEdit?.nik ?? '',
+      atasan_id: data.atasan,
     };
 
-    await updateAtasan(payload);
     await updatePegawai(payloadPegawai);
-    queryClient.invalidateQueries({ queryKey: ['UseProfileEkin'] });
+    queryClient.invalidateQueries({ queryKey: ['getUser'] });
   };
 
   return (
@@ -121,7 +99,7 @@ export default function EditPegawaiEkin() {
           <EditDataPegawaiEkin
             dataProfileEdit={dataProfileEdit}
             onSubmit={onSubmit}
-            isPending={isPostingPegawai && isPosting}
+            isPending={isPostingPegawai}
           />
         </ImageBackground>
       </KeyboardAvoidingView>

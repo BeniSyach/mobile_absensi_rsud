@@ -8,8 +8,9 @@ import { MMKV } from 'react-native-mmkv';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  type AbsenMasuk,
   useFaceRecognition,
-  useGetAllAbsenMasukByUser,
+  useInfiniteAbsenMasukByUser,
   useRekapitulasiAbsenUser,
 } from '@/api';
 import CardRekapAbsensi from '@/components/absensi/menu-utama/card-rekap-absensi';
@@ -35,15 +36,21 @@ export default function MenuAbsensi() {
   const cachedEmbedding = storage.getString(FACE_EMBED_KEY);
 
   const userId = storedMessage?.nik ?? '';
-  const page = 1;
+
+  const limit = 10;
+
   const {
     data: fetchedData,
     isPending,
     isError,
-  } = useGetAllAbsenMasukByUser({
-    variables: { userId, page },
+  } = useInfiniteAbsenMasukByUser({
+    variables: { userId, limit },
     enabled: !!userId,
   });
+
+  const absensi: AbsenMasuk[] =
+    fetchedData?.pages.flatMap((page) => page.data).slice(0, 10) ?? [];
+
   const {
     data: rekapAbsen,
     isPending: isPendingRekap,
@@ -52,6 +59,7 @@ export default function MenuAbsensi() {
     variables: { nik: userId },
     enabled: !!userId,
   });
+
   const {
     data: wajah,
     isLoading: loadingWajah,
@@ -115,10 +123,8 @@ export default function MenuAbsensi() {
             photo={wajah}
           />
           <CardWaktuAbsensi
-            jamMasuk={fetchedData?.data[0]?.waktu_masuk ?? undefined}
-            jamKeluar={
-              fetchedData?.data[0]?.absen_pulang[0]?.waktu_pulang ?? undefined
-            }
+            jamMasuk={absensi[0]?.waktu_masuk}
+            jamKeluar={absensi[0]?.absen_pulang?.[0]?.waktu_pulang}
           />
           <CardRekapAbsensi
             progress={rekapAbsen?.data.persentase_durasi}
@@ -130,7 +136,7 @@ export default function MenuAbsensi() {
           />
           <MenuAbsensiComponent />
           <DaftarAbsensiCard
-            data={fetchedData?.data ?? []}
+            data={absensi ?? []}
             isPending={isPending}
             isError={isError}
           />

@@ -51,16 +51,16 @@ export default function MenuUtama() {
             />
           </Pressable>
         </Link>
-        <Link href="/cuti" asChild>
-          <Pressable>
-            <Image
-              source={require('../../../../assets/image/icon_cuti.png')}
-              className="size-52 rounded-lg"
-              transition={1000}
-              contentFit="contain"
-            />
-          </Pressable>
-        </Link>
+        {/* <Link href="/cuti" asChild> */}
+        <Pressable>
+          <Image
+            source={require('../../../../assets/image/icon_cuti.png')}
+            className="size-52 rounded-lg"
+            transition={1000}
+            contentFit="contain"
+          />
+        </Pressable>
+        {/* </Link> */}
       </View>
     </View>
   );

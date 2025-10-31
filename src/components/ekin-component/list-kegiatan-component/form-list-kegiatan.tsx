@@ -1,47 +1,56 @@
+/* eslint-disable max-lines-per-function */
 import { Search } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { TextInput } from 'react-native';
 
 import { DateInputOriginal, View } from '@/components/ui';
 
-interface Props {
+type FormValues = {
   search: string;
   tanggalAwal: string;
   tanggalAkhir: string;
-  onSearchChange: (val: string) => void;
-  onTanggalAwalChange: (val: string) => void;
-  onTanggalAkhirChange: (val: string) => void;
+};
+
+interface Props {
+  defaultValues: FormValues;
+  onChange: (val: FormValues) => void;
 }
 
-export default function FormListKegiatan({
-  search,
-  tanggalAwal,
-  tanggalAkhir,
-  onSearchChange,
-  onTanggalAwalChange,
-  onTanggalAkhirChange,
-}: Props) {
+export default function FormListKegiatan({ defaultValues, onChange }: Props) {
+  const { setValue, watch } = useForm<FormValues>({
+    defaultValues,
+  });
+
+  const values = watch();
+
+  // ✅ hanya panggil onChange kalau values berubah
+  useEffect(() => {
+    onChange(values);
+  }, [values, onChange]);
+
   return (
     <View className="px-4 pt-6">
-      {/* Search Bar */}
+      {/* Search */}
       <View className="mb-4 flex-row items-center rounded-xl border border-gray-300 bg-gray-200 px-4 py-3 shadow-sm">
         <Search className="mr-3 size-5" color="black" strokeWidth={2.5} />
         <TextInput
           className="flex-1 text-base text-black"
           placeholder="Cari"
           placeholderTextColor="#6B7280"
-          value={search}
-          onChangeText={onSearchChange}
+          value={values.search}
+          onChangeText={(text) => setValue('search', text)}
         />
       </View>
 
-      {/* Tanggal Picker */}
+      {/* Tanggal */}
       <View className="flex-row gap-3">
         <View className="flex-1">
           <DateInputOriginal
             label="Tanggal Awal"
             placeholder="Pilih tanggal awal"
-            value={tanggalAwal}
-            onChange={onTanggalAwalChange}
+            value={values.tanggalAwal}
+            onChange={(val) => setValue('tanggalAwal', val)}
           />
         </View>
 
@@ -49,8 +58,8 @@ export default function FormListKegiatan({
           <DateInputOriginal
             label="Tanggal Akhir"
             placeholder="Pilih tanggal akhir"
-            value={tanggalAkhir}
-            onChange={onTanggalAkhirChange}
+            value={values.tanggalAkhir}
+            onChange={(val) => setValue('tanggalAkhir', val)}
           />
         </View>
       </View>

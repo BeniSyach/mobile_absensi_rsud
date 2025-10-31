@@ -24,10 +24,7 @@ import {
   Text,
   View,
 } from '@/components/ui';
-import {
-  imageUriToSpoofTensor,
-  imageUriToTensor,
-} from '@/utils/face-utils-lite';
+import { imageUriToTensor } from '@/utils/face-utils-lite';
 import { EMB_INPUT_SIZE } from '@/utils/model-loader-lite';
 
 import { type FormType } from './absensi-types';
@@ -71,9 +68,7 @@ const storage = new MMKV({
 const FACE_EMBED_KEY = 'face_embedding';
 
 // ===== Constants =====
-const SIMILARITY_THRESHOLD = 0.7; // Increased for better security
-const SPOOF_INPUT_SIZE = 256;
-const SPOOF_THRESHOLD = 0.2;
+const SIMILARITY_THRESHOLD = 0.6; // Increased for better security
 // ===== Types =====
 interface VerificationResult {
   success: boolean;
@@ -163,7 +158,7 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
       const photo = await cameraRef.current.takePictureAsync({
         base64: true, // Don't need base64 for verification
         skipProcessing: true,
-        quality: 0.5,
+        quality: 0.4,
       });
 
       if (!photo?.uri) {
@@ -190,6 +185,13 @@ const CameraSectionVerify: React.FC<CameraSectionProps> = ({
       >
         {/* Overlay Face Box */}
         <View className="absolute inset-0 items-center justify-center">
+          {/* Instruction text */}
+          <View className="rounded-2xl bg-black/60 px-4 py-2">
+            <Text className="text-center text-base font-semibold text-white">
+              👁️ Pastikan mata anda menghadap kamera
+            </Text>
+          </View>
+
           <View className="h-[70%] w-1/2 rounded-full border-4 border-green-500 bg-transparent" />
         </View>
 
@@ -229,10 +231,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
   const [attempts, setAttempts] = React.useState(0);
   const [isVerifying, setIsVerifying] = React.useState(false);
 
-  const spoofModel = useTensorflowModel(
-    require('../../../assets/model/FaceAntiSpoofing.tflite')
-  );
-
   const embedModel = useTensorflowModel(
     require('../../../assets/model/mobilefacenet.tflite')
   );
@@ -261,110 +259,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
       Alert.alert('Error', 'Gagal Mengambil Data Face Recognition');
     }
   }, [embedModel.state]);
-
-  async function runSpoofCheck(uri: string): Promise<'Real' | 'Spoof'> {
-    if (!spoofModel.model || spoofModel.state !== 'loaded') {
-      console.warn('⚠️ Spoof model not loaded');
-      return 'Real'; // fallback biar app tetap jalan
-    }
-
-    try {
-      // 🔹 Normalisasi gambar jadi Float32Array
-      const input = await imageUriToSpoofTensor(uri, SPOOF_INPUT_SIZE);
-
-      // ✅ Validasi ukuran input
-      const expectedSize = SPOOF_INPUT_SIZE * SPOOF_INPUT_SIZE * 3;
-      if (input.length !== expectedSize) {
-        console.error(
-          `❌ Input size mismatch. Expected: ${expectedSize}, Got: ${input.length}`
-        );
-        return 'Real';
-      }
-
-      // 🔹 Bentuk input sesuai model: [1, 256, 256, 3]
-      const reshaped = new Float32Array(1 * expectedSize);
-      reshaped.set(input);
-
-      // 🔹 Jalankan model
-      const outputs = spoofModel.model.runSync([reshaped]);
-
-      if (!outputs || outputs.length === 0) {
-        console.error('❌ Spoof model returned empty output:', outputs);
-        return 'Real';
-      }
-
-      let spoofScore = 0;
-
-      if (outputs.length >= 2) {
-        // 🔹 Case: model punya 2 output → [classification_pred, leaf_node_mask]
-        const clssPred = Float32Array.from(outputs[0] as Float32Array);
-        const leafNodeMask = Float32Array.from(outputs[1] as Float32Array);
-
-        if (clssPred.length !== leafNodeMask.length) {
-          console.warn(
-            '⚠️ Output length mismatch:',
-            clssPred.length,
-            'vs',
-            leafNodeMask.length
-          );
-          // Fallback ke output pertama saja
-          spoofScore = clssPred.length > 0 ? clssPred[0] : 0;
-        } else {
-          // ✅ Weighted sum approach (typical untuk ensemble models)
-          let weightedSum = 0;
-          let totalWeight = 0;
-
-          for (let i = 0; i < clssPred.length; i++) {
-            const pred = clssPred[i];
-            const weight = leafNodeMask[i];
-
-            if (!isNaN(pred) && !isNaN(weight) && weight > 0) {
-              weightedSum += pred * weight;
-              totalWeight += weight;
-            }
-          }
-
-          spoofScore =
-            totalWeight > 0 ? weightedSum / totalWeight : clssPred[0] || 0;
-        }
-      } else {
-        // 🔹 Case: model cuma punya 1 output
-        const output = Float32Array.from(outputs[0] as Float32Array);
-
-        if (output.length === 1) {
-          // Single value prediction (common case)
-          spoofScore = output[0];
-        } else if (output.length === 2) {
-          // Binary classification [real_prob, spoof_prob]
-          spoofScore = output[1]; // spoof probability
-        } else if (output.length > 2) {
-          // Multi-class atau feature vector - ambil yang pertama
-          console.warn(
-            '⚠️ Unexpected output length:',
-            output.length,
-            'using first value'
-          );
-          spoofScore = output[0];
-        } else {
-          console.error('❌ Empty output array');
-          return 'Real';
-        }
-      }
-
-      // ✅ Handle edge cases
-      if (isNaN(spoofScore)) {
-        console.error('❌ Spoof score is NaN, defaulting to Real');
-        return 'Real';
-      }
-
-      const result = spoofScore > SPOOF_THRESHOLD ? 'Spoof' : 'Real';
-
-      return result;
-    } catch (err) {
-      console.error('❌ runSpoofCheck error:', err);
-      return 'Real'; // fallback aman
-    }
-  }
 
   const onVerifyPhoto = React.useCallback(
     async (photo: { uri: string }) => {
@@ -434,14 +328,6 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
 
         croppedUri = cropped.uri;
 
-        // ✅ Anti-Spoofing Check (PENTING untuk verifikasi!)
-        const spoofResult = await runSpoofCheck(cropped.uri);
-        if (spoofResult === 'Spoof') {
-          throw new Error(
-            'Terdeteksi menggunakan foto/video. Gunakan wajah asli!'
-          );
-        }
-
         // 🔹 Generate embedding
         const embeddingTensor = await imageUriToTensor(
           cropped.uri,
@@ -462,17 +348,36 @@ export const FaceVerifyScreen: React.FC<FaceVerifyScreenProps> = ({
 
         // ✅ Update state based on result
         if (success) {
-          setVerifiedPhotoUri(photo.uri);
+          try {
+            // 🔹 Compress image dulu
+            const compressed = await ImageManipulator.manipulateAsync(
+              photo.uri,
+              [
+                { resize: { width: 800 } }, // ✅ cara benar untuk ubah ukuran
+              ],
+              {
+                compress: 0.3, // nilai antara 0 - 1 (semakin kecil = semakin kecil ukuran file)
+                format: ImageManipulator.SaveFormat.JPEG,
+                base64: true, // kalau kamu butuh kirim base64 ke backend
+              }
+            );
+            setVerifiedPhotoUri(compressed.uri);
 
-          // Handle success callback
-          if (handleTakePhoto) {
-            await handleTakePhoto(photo);
+            // Handle success callback
+            if (handleTakePhoto) {
+              await handleTakePhoto({
+                uri: compressed.uri,
+                base64: compressed.base64 ?? '',
+              });
+            }
+
+            Alert.alert(
+              '✅ Verifikasi Berhasil',
+              `Wajah cocok dengan tingkat kemiripan ${(similarity * 100).toFixed(1)}%`
+            );
+          } catch (error) {
+            console.error('Gagal compress foto:', error);
           }
-
-          Alert.alert(
-            '✅ Verifikasi Berhasil',
-            `Wajah cocok dengan tingkat kemiripan ${(similarity * 100).toFixed(1)}%`
-          );
         } else {
           setVerifiedPhotoUri(null);
 

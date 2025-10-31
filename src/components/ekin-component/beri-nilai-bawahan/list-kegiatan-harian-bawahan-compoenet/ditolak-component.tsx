@@ -3,6 +3,7 @@ import React from 'react';
 
 import { type DetailKegiatan } from '@/api';
 import { EmptyListEkin } from '@/components/ui';
+import { Text } from '@/components/ui';
 
 import CardListKegiatanHarianBawahan from './card-list-kegiatan-harian-bawahan';
 
@@ -29,22 +30,27 @@ export default function DitolakComponent({
     ),
     []
   );
-  const handleLoadMore = React.useCallback(() => {
-    if (!Pending && hasNextPage) {
-      onLoadMore();
-    }
-  }, [Pending, hasNextPage, onLoadMore]);
+
   return (
     <FlashList
       data={dataDitolak}
+      estimatedItemSize={60}
       renderItem={renderItem}
-      keyExtractor={(_, index) => `item-${index}`}
-      ListEmptyComponent={<EmptyListEkin isLoading={Pending} />}
-      estimatedItemSize={300}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.5}
-      onRefresh={onRefresh}
+      keyExtractor={(item) => String(item.id)}
       refreshing={refreshing}
+      onRefresh={onRefresh}
+      onEndReached={() => {
+        if (hasNextPage && !Pending) {
+          onLoadMore();
+        }
+      }}
+      ListEmptyComponent={<EmptyListEkin isLoading={Pending} />}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        Pending ? (
+          <Text className="py-2 text-center">Memuat lebih banyak…</Text>
+        ) : null
+      }
     />
   );
 }

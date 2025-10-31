@@ -2,9 +2,14 @@ export interface RekapKegiatanHarianResponse {
   status: number;
   message: string;
   data: BawahanRekapNilaiBawahan[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+  };
 }
 
 export interface BawahanRekapNilaiBawahan {
+  id: number;
   nik: string;
   nip: string;
   nama: string;

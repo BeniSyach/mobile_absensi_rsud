@@ -91,6 +91,7 @@ export type PutPegawaiVariables = Partial<{
   struktural_fungsional_id: string;
   eselon_id: string | null;
   nik: string;
+  atasan_id: string;
 }>;
 
 export type PutPegawaiResponse = {

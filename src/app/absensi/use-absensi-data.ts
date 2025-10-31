@@ -9,7 +9,6 @@ export default function useAbsensiData() {
     data: userStatus,
     isLoading: statusUserLoading,
     isError: statusUserError,
-    refetch: getStatusDataAbsenUser,
   } = useStatusAbsenUser({
     variables: {
       nik: storedMessage?.nik ?? '',
@@ -28,6 +27,5 @@ export default function useAbsensiData() {
     isError: isErrorUser || statusUserError,
     isLoading: userLoading && statusUserLoading,
     userStatus,
-    getStatusDataAbsenUser,
   };
 }

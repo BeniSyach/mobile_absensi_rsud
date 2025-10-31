@@ -25,8 +25,8 @@ export default function PostRHK() {
         duration: 7000,
       });
     },
-    onError: (e) => {
-      showErrorMessage(e.message);
+    onError: (e: any) => {
+      showErrorMessage(e.error);
     },
   });
 
@@ -44,6 +44,7 @@ export default function PostRHK() {
 
     await postRHK(payload);
     queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
+    queryClient.invalidateQueries({ queryKey: ['useRhkStaffChildInfinite'] });
   };
 
   return (

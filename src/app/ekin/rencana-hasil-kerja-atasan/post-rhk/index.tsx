@@ -8,7 +8,7 @@ import {
   type CreateRHKPejabatPayload,
   PostRHKPejabat,
   queryClient,
-  UseProfileEkin,
+  useGetUser,
 } from '@/api';
 import FormAddRHKAtasan, {
   type FormAddRHKPejabatProps,
@@ -19,8 +19,8 @@ import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function PostRHKAtasan() {
-  const { data: dataProfil } = UseProfileEkin();
   const storedMessage = getMessage();
+  const { data: dataProfil } = useGetUser(storedMessage?.nik ?? '');
   const { mutateAsync: postRHK, isPending: isPosting } = PostRHKPejabat({
     onSuccess: (res) => {
       showMessage({
@@ -42,8 +42,8 @@ export default function PostRHKAtasan() {
       nilai: Number(data.nilai),
       tahun: Number(data.tahun),
       id_satuan: Number(data.id_satuan),
-      kode_pangkat: dataProfil?.detail_pegawai?.data?.pangkat_id ?? '',
-      kode_jabatan: dataProfil?.detail_pegawai?.data?.jabatan_id ?? '',
+      kode_pangkat: dataProfil?.data?.pangkat_id ?? '',
+      kode_jabatan: dataProfil?.data?.jabatan_id ?? '',
     };
 
     await postRHK(payload);

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable max-lines-per-function */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -7,13 +8,13 @@ import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import {
-  GetRhkStaffChild,
   GetSatuanEkin,
   type RhkPejabatDataItem,
   type RhkStaffChildItem,
   type Satuan,
   useGetUser,
-  useRhkPejabatChildByNik,
+  useRhkPejabatChildInfinite,
+  useRhkStaffChildInfinite,
 } from '@/api';
 import { AlertModal } from '@/components/title-second';
 import {
@@ -25,6 +26,7 @@ import {
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
+import { RemoteSelectInfinite } from '@/components/ui/remote-select-infinite';
 
 const schema = z.object({
   id_rhk_pejabat: z.string().min(1, 'RHK Atasan wajib diisi'),
@@ -63,7 +65,6 @@ export default function FormAddRHK({
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [tahun, setTahun] = useState<string>(currentYear.toString());
-
   const {
     control,
     formState: { errors },
@@ -76,46 +77,11 @@ export default function FormAddRHK({
       tahun: currentYear.toString(), // langsung set default
     },
   });
-  console.log('data error', errors);
+
   const isSekda =
     user?.data?.nama_eselon === 'II.a' || user?.data?.nama_eselon === 'II/a';
   const isKadis =
     user?.data?.nama_eselon === 'II.b' || user?.data?.nama_eselon === 'II/b';
-
-  const fetchOptionRHKsWithQuery = async (page: number) => {
-    try {
-      if (isSekda || isKadis) {
-        const data = await useRhkPejabatChildByNik.fetcher({
-          page,
-          limit: 20,
-          nik: dataAtasan,
-        });
-
-        return (
-          data.data?.map((item: RhkPejabatDataItem) => ({
-            label: item.rhk_pejabat.uraian || '',
-            value: item.id_rhk_pejabat,
-          })) || []
-        );
-      } else {
-        const data = await GetRhkStaffChild.fetcher({
-          page,
-          limit: 100,
-          nik: dataAtasan,
-        });
-
-        return (
-          data.data?.map((item: RhkStaffChildItem) => ({
-            label: item.rhk_staff.uraian || '',
-            value: item.id_rhk_staff,
-          })) || []
-        );
-      }
-    } catch (error) {
-      console.error('Error fetching RHK:', error);
-      return [];
-    }
-  };
 
   const fetchOptionSatuansWithQuery = async (page: number, search: string) => {
     try {
@@ -157,14 +123,53 @@ export default function FormAddRHK({
             control={control}
             name="id_rhk_pejabat"
             render={({ field: { value, onChange } }) => (
-              <RemoteSelect
+              // <RemoteSelect
+              //   label="Rencana Hasil Kerja Atasan"
+              //   value={value}
+              //   onSelect={(val) => onChange(val as string)}
+              //   placeholder="Pilih Rencana Hasil Kerja Atasan..."
+              //   debounceMs={400}
+              //   pageSize={10}
+              //   fetchOptions={fetchOptionRHKsWithQuery}
+              // />
+              <RemoteSelectInfinite
                 label="Rencana Hasil Kerja Atasan"
                 value={value}
-                onSelect={(val) => onChange(val as string)}
                 placeholder="Pilih Rencana Hasil Kerja Atasan..."
+                onSelect={(val) => onChange(val as string)}
                 debounceMs={400}
-                pageSize={10}
-                fetchOptions={fetchOptionRHKsWithQuery}
+                getQueryResult={(search) => {
+                  if (isSekda || isKadis) {
+                    return useRhkPejabatChildInfinite({
+                      limit: 20,
+                      search,
+                      nik: dataAtasan || '',
+                    });
+                  } else {
+                    return useRhkStaffChildInfinite({
+                      limit: 20,
+                      search,
+                      nik: dataAtasan || '',
+                    });
+                  }
+                }}
+                transformData={(pageData) => {
+                  if (isSekda || isKadis) {
+                    return (
+                      pageData?.data?.map((item: RhkPejabatDataItem) => ({
+                        label: item.rhk_pejabat.uraian || '',
+                        value: item.id_rhk_pejabat,
+                      })) || []
+                    );
+                  } else {
+                    return (
+                      pageData?.data?.map((item: RhkStaffChildItem) => ({
+                        label: item.uraian || '',
+                        value: item.id_rhk_staff,
+                      })) || []
+                    );
+                  }
+                }}
               />
             )}
           />
@@ -191,6 +196,7 @@ export default function FormAddRHK({
             label="Target"
             placeholder="Target"
             error={errors.nilai?.message}
+            keyboardType="number-pad"
           />
           <Controller
             control={control}

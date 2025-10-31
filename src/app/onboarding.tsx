@@ -1,11 +1,34 @@
 import { Link } from 'expo-router';
-import React from 'react';
-import { ImageBackground, Pressable, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, ImageBackground, Pressable, View } from 'react-native';
+import RNExitApp from 'react-native-exit-app';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FocusAwareStatusBar, Image } from '@/components/ui';
+import { checkDeveloperMode } from '@/utils/check-developer-mode';
 
+// eslint-disable-next-line max-lines-per-function
 export default function Onboarding() {
+  useEffect(() => {
+    checkDeveloperMode().then((enabled) => {
+      if (enabled) {
+        Alert.alert(
+          'Peringatan',
+          'Developer mode aktif di perangkat ini!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Keluar aplikasi setelah tombol OK ditekan
+                RNExitApp.exitApp();
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+    });
+  }, []);
   return (
     <SafeAreaView
       className="flex-1 bg-[#0B3880]"

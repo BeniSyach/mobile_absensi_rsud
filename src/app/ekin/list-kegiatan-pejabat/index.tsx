@@ -1,145 +1,72 @@
 /* eslint-disable max-lines-per-function */
+import 'dayjs/locale/id';
+
+import { FlashList } from '@shopify/flash-list';
+import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useGetKegiatanHarianPejabatByUser } from '@/api';
+import { type KegiatanItem, useGetKegiatanHarianPejabatByUser } from '@/api';
+import CardListPejabatKomponent from '@/components/ekin-component/list-kegiatan-component/card-list-pejabat-komponent';
 import FormListKegiatan from '@/components/ekin-component/list-kegiatan-component/form-list-kegiatan';
-import ListKegiatanPejabatComponent from '@/components/ekin-component/list-kegiatan-component/list-kegiatan-pejabat-compoent';
 import LogoListKegiatan from '@/components/ekin-component/list-kegiatan-component/logo-list-kegiatan';
 import NavbarListKegiatan from '@/components/ekin-component/list-kegiatan-component/navbar-list-kegiatan';
-import { Text } from '@/components/ui';
+import { EmptyList, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
+import { useDebouncedValue } from '@/utils/debaunce';
 
-const formatDate = (date: Date) => date.toISOString().split('T')[0];
+dayjs.locale('id');
 
 const now = new Date();
-const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
-const akhirBulan = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+const awalBulan = dayjs(new Date(now.getFullYear(), now.getMonth(), 1)).format(
+  'YYYY-MM-DD'
+);
+const akhirBulan = dayjs(
+  new Date(now.getFullYear(), now.getMonth() + 1, 0)
+).format('YYYY-MM-DD');
 
 export default function ListKegiatanPejabat() {
   const storedMessage = getMessage();
-  const [search, setSearch] = useState('');
-  const [tanggalAwal, setTanggalAwal] = useState(formatDate(awalBulan));
-  const [tanggalAkhir, setTanggalAkhir] = useState(formatDate(akhirBulan));
-  const [page, setPage] = useState(1);
-  const [allItems, setAllItems] = useState<any[]>([]);
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const queryParams = {
-    userId: storedMessage?.nik ?? '',
-    page,
-    limit: 30,
-    tanggal_awal: tanggalAwal,
-    tanggal_akhir: tanggalAkhir,
-    search,
-  };
-
-  const {
-    data: dataListHarian,
-    refetch,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-  } = useGetKegiatanHarianPejabatByUser({
-    variables: queryParams,
+  // simpan filter global di parent
+  const [filters, setFilters] = useState({
+    search: '',
+    tanggalAwal: awalBulan,
+    tanggalAkhir: akhirBulan,
   });
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
+  const debouncedSearch = useDebouncedValue(filters.search, 500);
 
-    // Reset state untuk refresh
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-    setRefreshKey((prev) => prev + 1); // Force re-render
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isRefetching,
+    error,
+    isLoading,
+  } = useGetKegiatanHarianPejabatByUser({
+    userId: storedMessage?.nik ?? '',
+    limit: 30,
+    tanggalAwal: filters.tanggalAwal,
+    tanggalAkhir: filters.tanggalAkhir,
+    search: debouncedSearch,
+  });
 
-    try {
-      // Tunggu refetch selesai
-      await refetch();
-    } catch (err) {
-      console.error('Refresh error:', err);
-    }
+  // gabung semua page
+  const listKegiatanPejabat: KegiatanItem[] =
+    data?.pages.flatMap((page) => page.data) ?? [];
 
-    setRefreshing(false);
-  };
+  const renderItem = React.useCallback(
+    ({ item }: { item: KegiatanItem }) => (
+      <CardListPejabatKomponent dataHarian={item} />
+    ),
+    []
+  );
 
-  const handleLoadMore = () => {
-    if (!isLoading && hasNextPage) {
-      setPage((prev) => prev + 1);
-    }
-  };
-
-  // Handle search/filter changes
-  const handleSearchChange = (newSearch: string) => {
-    setSearch(newSearch);
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-  };
-
-  const handleTanggalAwalChange = (newDate: string) => {
-    setTanggalAwal(newDate);
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-  };
-
-  const handleTanggalAkhirChange = (newDate: string) => {
-    setTanggalAkhir(newDate);
-    setPage(1);
-    setAllItems([]);
-    setHasNextPage(true);
-  };
-
-  // Handle data updates
-  useEffect(() => {
-    if (dataListHarian) {
-      // Coba berbagai kemungkinan struktur response
-      let items = [];
-
-      // Kemungkinan 1: data.data
-      if (dataListHarian.data && Array.isArray(dataListHarian.data)) {
-        items = dataListHarian.data;
-      }
-      // Kemungkinan 2: data saja (langsung array)
-      else if (Array.isArray(dataListHarian)) {
-        items = dataListHarian;
-      }
-      // Kemungkinan 3: data.items
-      else if (dataListHarian.data && Array.isArray(dataListHarian.data)) {
-        items = dataListHarian.data;
-      }
-      // Kemungkinan 4: data.result
-      else if (dataListHarian.data && Array.isArray(dataListHarian.data)) {
-        items = dataListHarian.data;
-      } else {
-        items = [];
-      }
-
-      if (items.length >= 0) {
-        // Ubah dari > 0 ke >= 0 untuk handle empty array
-        setAllItems((prevItems) => {
-          // Jika sedang refresh (refreshing true), langsung replace
-          if (refreshing && page === 1) {
-            return items;
-          }
-
-          const newItems = page === 1 ? items : [...prevItems, ...items];
-          return newItems;
-        });
-
-        // Update hasNextPage
-        setHasNextPage(items.length >= 10);
-      }
-    }
-  }, [dataListHarian, page, refreshing]); // Tambahkan refreshing ke dependency
-
-  if (isError) {
+  if (error) {
     console.error('❌ API Error:', error);
     return (
       <SafeAreaView
@@ -182,22 +109,39 @@ export default function ListKegiatanPejabat() {
         </ImageBackground>
 
         <FormListKegiatan
-          search={search}
-          tanggalAwal={tanggalAwal}
-          tanggalAkhir={tanggalAkhir}
-          onSearchChange={handleSearchChange}
-          onTanggalAwalChange={handleTanggalAwalChange}
-          onTanggalAkhirChange={handleTanggalAkhirChange}
+          key="form-kegiatan" // biar stabil
+          defaultValues={{
+            search: filters.search,
+            tanggalAwal: filters.tanggalAwal,
+            tanggalAkhir: filters.tanggalAkhir,
+          }}
+          onChange={(values) => {
+            // hindari loop: update state hanya kalau beda
+            setFilters((prev) =>
+              JSON.stringify(prev) === JSON.stringify(values) ? prev : values
+            );
+          }}
         />
 
-        <ListKegiatanPejabatComponent
-          key={refreshKey}
-          dataHarian={{ items: allItems }}
-          Pending={isLoading || isFetching}
-          onLoadMore={handleLoadMore}
-          hasNextPage={hasNextPage}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
+        <FlashList
+          data={listKegiatanPejabat}
+          estimatedItemSize={60}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          ListEmptyComponent={<EmptyList isLoading={isLoading} />}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <Text className="py-2 text-center">Memuat lebih banyak…</Text>
+            ) : null
+          }
         />
       </ImageBackground>
     </SafeAreaView>

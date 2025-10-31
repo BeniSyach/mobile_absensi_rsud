@@ -18,57 +18,29 @@ export default function CardHasilKerjaAtasan({ dataRHKItems }: CardProps) {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const { mutateAsync: deleteRHK, isPending: isPosting } = DeleteRHKPejabat();
+  const { mutateAsync: deleteRHK, isPending: isPosting } = DeleteRHKPejabat({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+    },
+    onError: (e) => {
+      showErrorMessage(e.message);
+    },
+  });
 
   const handleSetujuiHapus = () => {
     setShowConfirmModal(true); // tampilkan konfirmasi
   };
   const handleConfirm = async () => {
     setShowConfirmModal(false);
-    console.log('✅ Data disetujui secara final');
-
-    try {
-      const response = await deleteRHK({ id: dataRHKItems.id_rhk_pejabat });
-      console.log('✅ Data berhasil dikirim:', response);
-      queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
-      showMessage({
-        message: 'RHK berhasil dihapus.',
-        type: 'success',
-        duration: 7000,
-      });
-    } catch (error: any) {
-      console.error('Error submitting EKIN:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim EKIN';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        } else if (data?.message) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      showErrorMessage(errorMessage);
-    }
+    await deleteRHK({ id: dataRHKItems.id_rhk_pejabat });
+    queryClient.invalidateQueries({ queryKey: ['useRHKPejabatByNIK'] });
+    queryClient.invalidateQueries({
+      queryKey: ['useRhkPejabatChildInfinite'],
+    });
   };
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);

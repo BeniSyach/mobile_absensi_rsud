@@ -109,4 +109,10 @@ export type SptResponse = {
   status: number;
   message: string;
   data: SptData[];
+  pagination: {
+    last_page: number;
+    limit: number;
+    page: number;
+    total: number;
+  };
 };

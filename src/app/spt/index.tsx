@@ -14,7 +14,19 @@ import { getMessage } from '@/lib/message-storage';
 
 export default function Spt() {
   const router = useRouter();
-  const { mutateAsync, isPending, isError } = PostSPT();
+  const { mutateAsync, isPending, isError } = PostSPT({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+      router.back();
+    },
+    onError: (e) => {
+      showErrorMessage(e.message);
+    },
+  });
 
   const onSubmit: SptFormProps['onSubmit'] = async (data) => {
     const userData = getMessage();
@@ -29,50 +41,8 @@ export default function Spt() {
       mimeType: data.file_spt.mimeType,
     };
 
-    try {
-      await mutateAsync(formData);
-      queryClient.invalidateQueries({ queryKey: ['getAllSPTByUser'] });
-      showMessage({
-        message: 'SPT berhasil dikirim',
-        type: 'success',
-        duration: 7000,
-      });
-
-      router.back(); // kembali ke halaman sebelumnya
-    } catch (error: any) {
-      console.error('Error submitting SPT:', error);
-
-      let errorMessage = 'Terjadi kesalahan saat mengirim SPT';
-
-      if (error?.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        if (status === 413) {
-          errorMessage = 'Ukuran data terlalu besar (Request Entity Too Large)';
-        } else if (status === 422) {
-          errorMessage =
-            'Data tidak valid. Silakan periksa kembali input Anda.';
-        } else if (status === 500) {
-          errorMessage =
-            'Terjadi kesalahan server. Silakan coba beberapa saat lagi.';
-        }
-
-        if (typeof data === 'string') {
-          errorMessage = data;
-        } else if (data?.message) {
-          errorMessage = data.message;
-        } else if (data?.messages) {
-          errorMessage = data.messages;
-        } else if (data?.error) {
-          errorMessage = data.error;
-        }
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      showErrorMessage(errorMessage);
-    }
+    await mutateAsync(formData);
+    queryClient.invalidateQueries({ queryKey: ['getAllSPTByUser'] });
   };
 
   return (

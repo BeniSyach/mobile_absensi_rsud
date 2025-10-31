@@ -12,7 +12,7 @@ export const GetDashboardPegawaiBawahan = createQuery<
   queryKey: ['getDashboardPegawaiBawahan'] as const,
   fetcher: async () => {
     const response = await client({
-      url: '/ekinerja/dashboard/pegawai_bawahan',
+      url: '/ekinerja-new/dashboard/pegawai_bawahan',
       method: 'GET',
     });
     return response.data;

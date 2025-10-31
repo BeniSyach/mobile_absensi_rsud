@@ -257,6 +257,8 @@ export interface EmployeeData {
   nama_struktural_fungsional: string;
   eselon_id: string;
   nama_eselon: string;
+  atasan_id: string;
+  nama_atasan: string;
   created_at: string; // ISO 8601
   updated_at: string; // ISO 8601
 }

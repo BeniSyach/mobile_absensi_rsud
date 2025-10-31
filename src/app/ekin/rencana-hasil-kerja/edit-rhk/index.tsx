@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { ImageBackground, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
@@ -10,7 +10,7 @@ import {
   PutRHKStaff,
   type PutRhkStaffVariables,
   queryClient,
-  UseProfileEkin,
+  useGetUser,
 } from '@/api';
 import FormEditRHK, {
   type FormEditRHKProps,
@@ -21,21 +21,25 @@ import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function EditRHK() {
-  const { data: dataProfile } = UseProfileEkin();
   const rawParams = useLocalSearchParams();
+  const router = useRouter();
   const storedMessage = getMessage();
+  const { data: dataProfile } = useGetUser(storedMessage?.nik ?? '');
   const { mutateAsync: putRHK, isPending: isPosting } = PutRHKStaff({
     onSuccess: (res) => {
+      console.log('res', res);
       showMessage({
         message: res.message,
         type: 'success',
         duration: 7000,
       });
+      router.back();
     },
     onError: (e) => {
       showErrorMessage(e.message);
     },
   });
+  console.log('rawParams', rawParams);
   const item = {
     uraian: typeof rawParams.uraian === 'string' ? rawParams.uraian : '',
     indikator:
@@ -69,6 +73,7 @@ export default function EditRHK() {
 
     await putRHK(payload);
     queryClient.invalidateQueries({ queryKey: ['getRhkStaffChild'] });
+    queryClient.invalidateQueries({ queryKey: ['useRhkStaffChildInfinite'] });
   };
 
   return (
@@ -103,7 +108,7 @@ export default function EditRHK() {
             <LogoEditRHK />
           </ImageBackground>
           <FormEditRHK
-            dataAtasan={dataProfile?.atasan.nik}
+            dataAtasan={dataProfile?.data.atasan_id}
             dataEdit={item}
             onSubmit={onSubmit}
             isPending={isPosting}

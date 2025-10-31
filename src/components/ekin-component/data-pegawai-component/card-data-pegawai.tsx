@@ -2,13 +2,12 @@
 import { useRouter } from 'expo-router';
 import { ScrollView, TouchableOpacity } from 'react-native';
 
-import { useGetUser, type UserDataEkin, type UserPegawai } from '@/api';
+import { type ApiResponse } from '@/api';
 import { Image, Text, View } from '@/components/ui';
 
-interface Props {
-  data: UserPegawai | null;
-  dataProfileEkin?: UserDataEkin;
-}
+type Props = {
+  dataProfileEkin?: ApiResponse | null;
+};
 
 const renderField = (label: string, value: string | null | undefined) => {
   const getValue = (val: string | null | undefined) => {
@@ -26,15 +25,8 @@ const renderField = (label: string, value: string | null | undefined) => {
   );
 };
 
-export default function CardDataPegawaiComponent({
-  data,
-  dataProfileEkin,
-}: Props) {
+export default function CardDataPegawaiComponent({ dataProfileEkin }: Props) {
   const route = useRouter();
-  const { data: user, isLoading, isError } = useGetUser(data?.nik ?? '');
-
-  if (isLoading) return <Text>Loading...</Text>;
-  if (isError || !user) return <Text>Error loading user data</Text>;
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -50,17 +42,17 @@ export default function CardDataPegawaiComponent({
                 route.push({
                   pathname: '/ekin/pegawai-ekin/edit-pegawai-ekin',
                   params: {
-                    id: dataProfileEkin?.id,
-                    nama: dataProfileEkin?.nama,
-                    nip: data?.nip,
-                    nik: data?.nik,
-                    kode_opd: data?.kode_unit_kerja,
-                    jabatan: dataProfileEkin?.detail_pegawai.data.jabatan_id,
-                    pangkat: dataProfileEkin?.detail_pegawai.data.pangkat_id,
-                    golongan:
-                      dataProfileEkin?.detail_pegawai.data.golongan_ruang_id,
-                    eselon: dataProfileEkin?.detail_pegawai.data.nama_eselon,
-                    atasan: dataProfileEkin?.atasan.nik,
+                    id: dataProfileEkin?.data.id,
+                    nama: dataProfileEkin?.data.nama,
+                    nip: dataProfileEkin?.data.nip,
+                    nik: dataProfileEkin?.data.nik,
+                    kode_opd: dataProfileEkin?.data.unit_kerja_id,
+                    jabatan: dataProfileEkin?.data.jabatan_id,
+                    pangkat: dataProfileEkin?.data.pangkat_id,
+                    golongan: dataProfileEkin?.data.golongan_ruang_id,
+                    eselon: dataProfileEkin?.data.nama_eselon,
+                    atasan: dataProfileEkin?.data.atasan_id,
+                    kode_eselon: dataProfileEkin?.data.eselon_id,
                   },
                 })
               }
@@ -73,31 +65,37 @@ export default function CardDataPegawaiComponent({
             </TouchableOpacity>
           </View>
 
-          {renderField('Nama Lengkap', user.data.nama)}
-          {renderField('NIP', user.data.nip)}
-          {renderField('NIK', user.data.nik)}
+          {renderField('Nama Lengkap', dataProfileEkin?.data.nama)}
+          {renderField('NIP', dataProfileEkin?.data.nip)}
+          {renderField('NIK', dataProfileEkin?.data.nik)}
           {renderField(
             'Alamat',
-            user.data.alamat.length > 25
-              ? `${user.data.alamat.substring(0, 25)}...`
-              : user.data.alamat
+            dataProfileEkin?.data.alamat
+              ? dataProfileEkin.data.alamat.length > 25
+                ? `${dataProfileEkin.data.alamat.substring(0, 25)}...`
+                : dataProfileEkin.data.alamat
+              : '-'
           )}
+
           {renderField(
             'Unit Kerja',
-            user.data.nama_unit_kerja.length > 25
-              ? `${user.data.nama_unit_kerja.substring(0, 25)}...`
-              : user.data.nama_unit_kerja
+            dataProfileEkin?.data.nama_unit_kerja
+              ? dataProfileEkin.data.nama_unit_kerja.length > 25
+                ? `${dataProfileEkin.data.nama_unit_kerja.substring(0, 25)}...`
+                : dataProfileEkin.data.nama_unit_kerja
+              : '-'
           )}
-          {renderField('Jenis Kelamin', user.data.jenis_kelamin)}
-          {renderField('Jabatan', dataProfileEkin?.jabatan)}
-          {renderField('Pangkat', dataProfileEkin?.pangkat)}
-          {renderField('Golongan', dataProfileEkin?.golongan)}
+
+          {renderField('Jenis Kelamin', dataProfileEkin?.data.jenis_kelamin)}
+          {renderField('Jabatan', dataProfileEkin?.data.nama_jabatan)}
+          {renderField('Pangkat', dataProfileEkin?.data.nama_pangkat)}
+          {renderField('Golongan', dataProfileEkin?.data.nama_golongan_ruang)}
+          {renderField('Eselon', dataProfileEkin?.data.nama_eselon)}
+          {renderField('Atasan', dataProfileEkin?.data.nama_atasan)}
           {renderField(
-            'Eselon',
-            dataProfileEkin?.detail_pegawai.data.nama_eselon
+            'Status Pegawai',
+            dataProfileEkin?.data.nama_jenis_pegawai
           )}
-          {renderField('Atasan', dataProfileEkin?.atasan.nama)}
-          {renderField('Status Pegawai', user.data.nama_jenis_pegawai)}
         </View>
       </View>
     </ScrollView>

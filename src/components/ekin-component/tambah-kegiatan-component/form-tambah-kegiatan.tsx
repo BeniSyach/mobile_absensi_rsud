@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable max-lines-per-function */
 import 'dayjs/locale/id';
 
@@ -6,16 +7,16 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Save } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { ScrollView, TextInput } from 'react-native';
 import { z } from 'zod';
 
 import {
-  GetRhkStaffChild,
   GetSatuanEkin,
   type RhkStaffChildItem,
   type Satuan,
+  useRhkStaffChildInfinite,
   type UserPegawai,
 } from '@/api';
 import { AlertPostModal } from '@/components/title-second';
@@ -28,6 +29,7 @@ import {
   View,
 } from '@/components/ui';
 import { RemoteSelect } from '@/components/ui/remote-select';
+import { RemoteSelectInfinite } from '@/components/ui/remote-select-infinite';
 dayjs.extend(customParseFormat);
 dayjs.locale('id');
 
@@ -38,7 +40,7 @@ const schema = z.object({
   satuan: z.number().min(1, 'Satuan wajib dipilih'),
   tanggal: z.string().min(1, 'Tanggal wajib dipilih'),
   waktu_tanggal: z.string().min(1, 'Jam wajib dipilih'),
-  selectedrhk: z.number().min(1, 'RHK wajib dipilih'),
+  selectedrhk: z.string().min(1, 'RHK wajib dipilih'),
   selectedIndikator: z.string().optional(),
 });
 
@@ -63,42 +65,13 @@ export default function FormTambahKegiatan({
     handleSubmit,
     setValue,
     reset,
-    watch,
   } = useForm<FormType>({ resolver: zodResolver(schema) });
 
-  const [rhkMap, setRhkMap] = useState<Record<string, RhkStaffChildItem>>({});
+  console.log('control', errors);
 
-  const selectedrhk = watch('selectedrhk');
+  // const [rhkMap, setRhkMap] = useState<Record<string, RhkStaffChildItem>>({});
 
-  const fetchOptionRHKsWithQuery = async (page: number, search: string) => {
-    try {
-      console.log('API Call - Page:', page, 'Search:', search); // Debug log
-      const data = await GetRhkStaffChild.fetcher({
-        page,
-        limit: 20, // Sesuaikan dengan pageSize di RemoteSelect
-        search: search || undefined,
-        nik: dataUserLogin?.nik ?? '',
-      });
-
-      console.log('API Response:', data.data?.length, 'items'); // Debug log
-
-      const newMap: Record<string, RhkStaffChildItem> = {};
-      data.data?.forEach((item: RhkStaffChildItem) => {
-        newMap[item.id_rhk_staff] = item;
-      });
-      setRhkMap((prev) => ({ ...prev, ...newMap }));
-
-      return (
-        data.data?.map((item: RhkStaffChildItem) => ({
-          label: item.rhk_staff.uraian || '',
-          value: item.id_rhk_staff,
-        })) || []
-      );
-    } catch (error) {
-      console.error('Error fetching RHK staff:', error);
-      return [];
-    }
-  };
+  // const selectedrhk = watch('selectedrhk');
 
   const fetchOptionSatuansWithQuery = async (page: number, search: string) => {
     try {
@@ -133,15 +106,15 @@ export default function FormTambahKegiatan({
     setShowConfirmModal(false);
   };
 
-  // Saat selectedrhk berubah, update selectedIndikator
-  useEffect(() => {
-    if (selectedrhk && rhkMap[selectedrhk]) {
-      const indikatorText = rhkMap[selectedrhk]?.rhk_staff?.indikator ?? '';
-      setValue('selectedIndikator', indikatorText);
-    } else {
-      setValue('selectedIndikator', '');
-    }
-  }, [selectedrhk, rhkMap, setValue]);
+  // // Saat selectedrhk berubah, update selectedIndikator
+  // useEffect(() => {
+  //   if (selectedrhk && rhkMap[selectedrhk]) {
+  //     const indikatorText = rhkMap[selectedrhk]?.indikator ?? '';
+  //     setValue('selectedIndikator', indikatorText);
+  //   } else {
+  //     setValue('selectedIndikator', '');
+  //   }
+  // }, [selectedrhk, rhkMap, setValue]);
 
   return (
     <ScrollView
@@ -234,14 +207,37 @@ export default function FormTambahKegiatan({
             control={control}
             name="selectedrhk"
             render={({ field: { value, onChange } }) => (
-              <RemoteSelect
+              <RemoteSelectInfinite
                 label="Rencana Hasil Kerja"
                 value={value}
-                onSelect={(val) => onChange(val as string)}
+                onSelect={(val, option) => {
+                  // simpan id RHK ke form
+                  onChange(val as string);
+                  console.log('selectedIndikator', option);
+                  // simpan indikator dari option ke form
+                  if (option?.indikator) {
+                    setValue('selectedIndikator', option.indikator);
+                  } else {
+                    console.log('option.indikator', option.indikator);
+                    setValue('selectedIndikator', '');
+                  }
+                }}
                 placeholder="Pilih RHK..."
                 debounceMs={400}
-                pageSize={10}
-                fetchOptions={fetchOptionRHKsWithQuery}
+                getQueryResult={(search) =>
+                  useRhkStaffChildInfinite({
+                    limit: 20,
+                    search,
+                    nik: dataUserLogin?.nik ?? '',
+                  })
+                }
+                transformData={(pageData) =>
+                  (pageData?.data || []).map((item: RhkStaffChildItem) => ({
+                    label: item.uraian || '',
+                    value: item.id_rhk_staff,
+                    indikator: item.indikator, // tambahin indikator di option
+                  }))
+                }
               />
             )}
           />

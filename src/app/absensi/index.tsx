@@ -1,6 +1,6 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, ImageBackground, StatusBar, View } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,56 +51,56 @@ const ErrorState = ({ message }: ErrorStateProps) => (
 export default function Absensi() {
   const router = useRouter();
 
-  const { user, isError, isLoading, userStatus, getStatusDataAbsenUser } =
-    useAbsensiData();
+  const { user, isError, isLoading, userStatus } = useAbsensiData();
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const { mutateAsync: addPost, isPending: isAddingMasuk } = PostAbsenMasuk();
-  const { mutateAsync: addPostPulang, isPending: isAddingPulang } =
-    PostAbsenPulang();
-  const submitAbsensi = useAbsensiSubmit(addPost, addPostPulang);
-  // kalau ada cache, langsung pakai
-
-  useFocusEffect(
-    useCallback(() => {
-      getStatusDataAbsenUser();
-    }, [getStatusDataAbsenUser])
-  );
-  const onSubmit: AbsensiFormProps['onSubmit'] = async (data) => {
-    setSubmitLoading(true);
-    try {
-      const response = await submitAbsensi(data);
-
-      if (response?.error) {
-        showErrorMessage(response.error);
-        return;
-      }
-      const queries = [
-        ['getAllAbsenMasukByUser'],
-        ['getAllAbsenMasuk'],
-        ['useRekapitulasiAbsenUser'],
-        ['GetStatusAbsenUser'],
-        ['getWaktuKerjaByShiftAndOPD'],
-        ['getLocationDetail'],
-        ['getShiftsByOpd'],
-      ];
-
-      queries.forEach((q) => {
-        queryClient.invalidateQueries({ queryKey: q });
-      });
+  const { mutateAsync: addPost, isPending: isAddingMasuk } = PostAbsenMasuk({
+    onSuccess: (res) => {
       showMessage({
-        message: 'Absensi berhasil dilakukan!',
+        message: res.message,
         type: 'success',
         duration: 7000,
       });
       router.back();
-    } catch (error: any) {
-      showErrorMessage(
-        error?.response?.data?.error || error?.message || 'Terjadi kesalahan'
-      );
-    } finally {
-      setSubmitLoading(false);
-    }
+    },
+    onError: (e) => {
+      showErrorMessage(e.message);
+    },
+  });
+  const { mutateAsync: addPostPulang, isPending: isAddingPulang } =
+    PostAbsenPulang({
+      onSuccess: (res) => {
+        showMessage({
+          message: res.message,
+          type: 'success',
+          duration: 7000,
+        });
+        router.back();
+      },
+      onError: (e) => {
+        showErrorMessage(e.message);
+      },
+    });
+  const submitAbsensi = useAbsensiSubmit(addPost, addPostPulang);
+  // kalau ada cache, langsung pakai
+
+  const onSubmit: AbsensiFormProps['onSubmit'] = async (data) => {
+    setSubmitLoading(true);
+    await submitAbsensi(data);
+
+    const queries = [
+      ['getAllAbsenMasukByUser'],
+      ['getAllAbsenMasuk'],
+      ['useRekapitulasiAbsenUser'],
+      ['GetStatusAbsenUser'],
+      ['getWaktuKerjaByShiftAndOPD'],
+      ['getLocationDetail'],
+      ['getShiftsByOpd'],
+    ];
+
+    queries.forEach((q) => {
+      queryClient.invalidateQueries({ queryKey: q });
+    });
   };
 
   if (isLoading) return <LoadingState />;

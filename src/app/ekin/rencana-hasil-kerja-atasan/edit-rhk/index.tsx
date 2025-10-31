@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ImageBackground, StatusBar } from 'react-native';
 import { showMessage } from 'react-native-flash-message';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -9,7 +9,7 @@ import {
   PutRHKPejabat,
   queryClient,
   type UpdateRHKPejabatPayload,
-  UseProfileEkin,
+  useGetUser,
 } from '@/api';
 import FormEditRHKAtasan, {
   type FormEditRHKPejabatProps,
@@ -20,9 +20,10 @@ import { showErrorMessage } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function EditRHK() {
-  const { data: dataProfile } = UseProfileEkin();
   const storedMessage = getMessage();
   const rawParams = useLocalSearchParams();
+  const router = useRouter();
+  const { data: dataProfile } = useGetUser(storedMessage?.nik ?? '');
   const { mutateAsync: putRHK, isPending: isPosting } = PutRHKPejabat({
     onSuccess: (res) => {
       showMessage({
@@ -30,6 +31,7 @@ export default function EditRHK() {
         type: 'success',
         duration: 7000,
       });
+      router.back();
     },
     onError: (e) => {
       showErrorMessage(e.message);
@@ -59,8 +61,8 @@ export default function EditRHK() {
       id: Number(item.id),
       kode_unit_kerja: storedMessage?.kode_unit_kerja ?? '',
       uraian: data.uraian,
-      kode_jabatan: dataProfile?.detail_pegawai.data.jabatan_id ?? '',
-      kode_pangkat: dataProfile?.detail_pegawai.data.pangkat_id ?? '',
+      kode_jabatan: dataProfile?.data.jabatan_id ?? '',
+      kode_pangkat: dataProfile?.data.pangkat_id ?? '',
       indikator: data.indikator,
       nilai: Number(data.nilai),
       tahun: Number(data.tahun),

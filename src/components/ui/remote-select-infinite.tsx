@@ -1,60 +1,93 @@
 /* eslint-disable max-lines-per-function */
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { type UseInfiniteQueryResult } from '@tanstack/react-query';
 import { Search } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import React from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 
 import colors from '@/components/ui/colors';
+import { useDebouncedValue } from '@/utils/debaunce';
 
 import { Modal, useModal } from './modal';
 import { Text } from './text';
 
-export type OptionType = {
+// Ubah OptionType jadi generic agar bisa extend
+export type OptionType<T = Record<string, any>> = {
   label: string;
   value: string | number;
-};
+} & T;
 
-interface RemoteSelectProps {
+interface RemoteSelectInfiniteProps<T = Record<string, any>> {
   label?: string;
   value?: string | number;
   placeholder?: string;
-  onSelect: (value: string | number) => void;
 
-  fetchOptions: (page: number, search: string) => Promise<OptionType[]>;
-  fetchOptionByValue?: (value: string | number) => Promise<OptionType | null>;
+  // Ubah signature onSelect untuk menerima option lengkap
+  onSelect: (value: string | number, option: OptionType<T>) => void;
 
-  pageSize?: number;
+  // Function yang return infinite query result (bukan hook langsung)
+  // Parent component yang handle state search dan panggil hook
+  getQueryResult: (search: string) => UseInfiniteQueryResult<any, Error>;
+
+  // Function untuk transform data API ke format OptionType[]
+  transformData: (data: any) => OptionType<T>[];
+
+  // Optional: fetch single option by value (untuk display saat edit)
+  fetchOptionByValue?: (
+    value: string | number
+  ) => Promise<OptionType<T> | null>;
+
   debounceMs?: number;
 }
 
-export const RemoteSelect: React.FC<RemoteSelectProps> = ({
+export const RemoteSelectInfinite = <
+  T extends Record<string, any> = Record<string, any>,
+>({
   label,
   value,
   onSelect,
   placeholder = 'Pilih...',
-  fetchOptions,
+  getQueryResult,
+  transformData,
   fetchOptionByValue,
-  pageSize = 20,
   debounceMs = 400,
-}) => {
+}: RemoteSelectInfiniteProps<T>) => {
   const modal = useModal();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [options, setOptions] = React.useState<OptionType[]>([]);
   const [searchText, setSearchText] = React.useState('');
-  const [committedSearch, setCommittedSearch] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-  const [loadingMore, setLoadingMore] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [hasMore, setHasMore] = React.useState(true);
-  const [selectedOption, setSelectedOption] = React.useState<OptionType | null>(
-    null
-  );
+  const [selectedOption, setSelectedOption] =
+    React.useState<OptionType<T> | null>(null);
 
-  const debounceRef = React.useRef<NodeJS.Timeout>();
+  const isMountedRef = React.useRef(true);
+
+  // Debounce search
+  const debouncedSearch = useDebouncedValue(searchText, debounceMs);
+
+  // Get query result dengan debounced search
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = getQueryResult(debouncedSearch);
+
+  // Transform semua pages jadi flat array
+  const options = React.useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page: any) => transformData(page));
+  }, [data, transformData]);
+
+  /** Cleanup on unmount */
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   /** Ambil label dari value saat mount (edit form) */
   React.useEffect(() => {
@@ -63,98 +96,42 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
       return;
     }
 
-    const found = options.find((opt) => opt.value === value);
+    const found = options.find((opt: OptionType<T>) => opt.value === value);
     if (found) {
       setSelectedOption(found);
     } else if (fetchOptionByValue) {
-      fetchOptionByValue(value).then((opt) => {
-        if (opt) setSelectedOption(opt);
-      });
+      fetchOptionByValue(value)
+        .then((opt: OptionType<T> | null) => {
+          if (opt && isMountedRef.current) {
+            setSelectedOption(opt);
+          }
+        })
+        .catch(() => {
+          // Silent fail jika fetch gagal
+        });
     }
   }, [value, options, fetchOptionByValue]);
 
-  /** Load data list */
-  const loadData = React.useCallback(
-    async (page: number, searchTerm: string, reset = false) => {
-      try {
-        if (reset) {
-          setLoading(true);
-          setOptions([]);
-        } else {
-          setLoadingMore(true);
-        }
-
-        const fetched = await fetchOptions(page, searchTerm);
-
-        if (reset) {
-          setOptions(fetched);
-          setCurrentPage(2);
-          setHasMore(fetched.length >= pageSize);
-        } else {
-          setOptions((prev) => {
-            const newOptions = fetched.filter(
-              (opt) => !prev.some((p) => p.value === opt.value)
-            );
-            return [...prev, ...newOptions];
-          });
-          setCurrentPage((prev) => prev + 1);
-          setHasMore(fetched.length >= pageSize);
-        }
-
-        // ✅ kalau kosong, jangan load lagi
-        if (fetched.length === 0) {
-          setHasMore(false);
-        }
-      } catch (e) {
-        console.error('loadData error:', e);
-        setHasMore(false);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [fetchOptions, pageSize]
-  );
-
-  /** Debounce search */
-  React.useEffect(() => {
-    if (!isVisible) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      setCommittedSearch(searchText);
-      loadData(1, searchText, true);
-    }, debounceMs);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [searchText, isVisible, debounceMs, loadData]);
-
-  /** Load awal saat modal buka */
-  React.useEffect(() => {
-    if (isVisible && options.length === 0 && !loading) {
-      loadData(1, '', true);
-    }
-  }, [isVisible, options.length, loading, loadData]);
-
   /** Handlers */
   const handleOpen = () => {
-    setIsVisible(true);
     modal.present();
   };
+
   const handleClose = () => {
-    setIsVisible(false);
     modal.dismiss();
+    // Reset search saat modal ditutup (optional)
+    setSearchText('');
   };
-  const handleSelect = (opt: OptionType) => {
+
+  const handleSelect = (opt: OptionType<T>) => {
     setSelectedOption(opt);
-    onSelect(opt.value);
+    // ✅ Kirim value DAN option lengkap
+    onSelect(opt.value, opt);
     handleClose();
   };
 
   /** UI helpers */
-  const renderItem = ({ item }: { item: OptionType }) => (
+  const renderItem = ({ item }: { item: OptionType<T> }) => (
     <Pressable
       onPress={() => handleSelect(item)}
       className="border-b border-neutral-200 p-3 dark:border-neutral-700"
@@ -162,37 +139,47 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
       <Text className="dark:text-white">{item.label}</Text>
     </Pressable>
   );
-  const keyExtractor = (item: OptionType, index: number) =>
+
+  const keyExtractor = (item: OptionType<T>, index: number) =>
     `option-${item.value}-${index}`;
 
   const handleEndReached = () => {
-    if (!hasMore) return; // ✅ stop kalau tidak ada data lagi
-    if (!loading && !loadingMore) {
-      loadData(currentPage, committedSearch, false);
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
-  const LoadingFooter = loadingMore ? (
+  const LoadingFooter = isFetchingNextPage ? (
     <View className="py-4">
       <ActivityIndicator color={colors.primary?.[600]} />
     </View>
   ) : null;
 
   const EmptyComponent =
-    !loading && options.length === 0 ? (
+    !isLoading && options.length === 0 ? (
       <View className="items-center justify-center p-8">
         <Text className="text-gray-500 dark:text-gray-400">
-          {committedSearch
-            ? `Tidak ada hasil untuk "${committedSearch}"`
+          {debouncedSearch
+            ? `Tidak ada hasil untuk "${debouncedSearch}"`
             : 'Tidak ada data tersedia'}
         </Text>
       </View>
     ) : null;
 
+  const ErrorComponent = isError ? (
+    <View className="items-center justify-center p-8">
+      <Text className="text-red-500">Terjadi kesalahan saat memuat data</Text>
+    </View>
+  ) : null;
+
   return (
     <>
       <View className="mb-4">
-        {label && <Text className="mb-1 text-lg text-black">{label}</Text>}
+        {label && (
+          <Text className="mb-1 text-lg text-black dark:text-white">
+            {label}
+          </Text>
+        )}
         <Pressable
           onPress={handleOpen}
           className="rounded-xl border border-gray-300 bg-white p-3 dark:border-neutral-500 dark:bg-neutral-800"
@@ -230,7 +217,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
               autoCorrect={false}
               clearButtonMode="while-editing"
             />
-            {loading && (
+            {isLoading && (
               <ActivityIndicator size="small" color={colors.primary?.[600]} />
             )}
           </View>
@@ -244,13 +231,15 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
             onEndReachedThreshold={0.2}
             ListFooterComponent={LoadingFooter}
             ListEmptyComponent={
-              loading ? (
+              isLoading ? (
                 <View className="items-center justify-center p-8">
                   <ActivityIndicator color={colors.primary?.[600]} />
                   <Text className="mt-2 text-gray-500 dark:text-gray-400">
-                    Mencari "{committedSearch}"...
+                    Memuat data...
                   </Text>
                 </View>
+              ) : ErrorComponent ? (
+                ErrorComponent
               ) : (
                 EmptyComponent
               )
