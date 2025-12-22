@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Modal } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import { z } from 'zod';
 
 import { queryClient } from '@/api';
@@ -14,6 +15,7 @@ import {
   ControlledInput,
   Image,
   Select,
+  showErrorMessage,
   Text,
   View,
 } from '@/components/ui';
@@ -35,7 +37,18 @@ export type FormType = z.infer<typeof schema>;
 export default function FormAjukanCuti() {
   const storedMessage = getMessage();
   const [openConfirm, setOpenConfirm] = useState(false);
-  const { mutateAsync: postCuti, isPending } = PostCutiPegawai();
+  const { mutateAsync: postCuti, isPending } = PostCutiPegawai({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+    },
+    onError: (e: any) => {
+      showErrorMessage(e.error);
+    },
+  });
   const { data, isLoading, isError } = useInfiniteJenisCutiPegawai({
     limit: 20,
   });

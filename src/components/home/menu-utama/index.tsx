@@ -4,6 +4,7 @@ import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ActivityIndicator, Modal, Pressable, View } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import { z } from 'zod';
 
 import { queryClient } from '@/api';
@@ -12,7 +13,13 @@ import {
   PostSaldoCuti,
   useCheckSaldoCuti,
 } from '@/api/cuti';
-import { Button, ControlledInput, Image, Text } from '@/components/ui';
+import {
+  Button,
+  ControlledInput,
+  Image,
+  showErrorMessage,
+  Text,
+} from '@/components/ui';
 import { getMessage } from '@/lib';
 
 const cutiSchema = z.object({
@@ -58,7 +65,18 @@ export default function MenuUtama() {
   // eslint-disable-next-line unused-imports/no-unused-vars
   const [apiResponse, setApiResponse] = useState<any>(null);
   const storedMessage = getMessage();
-  const { mutateAsync: postSaldoCuti } = PostSaldoCuti();
+  const { mutateAsync: postSaldoCuti } = PostSaldoCuti({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+    },
+    onError: (e: any) => {
+      showErrorMessage(e.error);
+    },
+  });
   const nik = storedMessage?.nik ?? '';
 
   const { isLoading, isFetching, isError, error, refetch } = useCheckSaldoCuti({
