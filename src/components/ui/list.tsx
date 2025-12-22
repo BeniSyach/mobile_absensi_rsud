@@ -25,6 +25,21 @@ export const EmptyList = React.memo(({ isLoading }: Props) => {
   );
 });
 
+export const EmptyListCuti = React.memo(({ isLoading }: Props) => {
+  return (
+    <View className="min-h-[400px] flex-1 items-center justify-center">
+      {!isLoading ? (
+        <View>
+          <NoData />
+          <Text className="pt-4 text-center">Belum Ada yg Mengajukan Cuti</Text>
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )}
+    </View>
+  );
+});
+
 export const EmptyListPad = React.memo(({ isLoading }: Props) => {
   return (
     <View className="min-h-[400px] flex-1 items-center justify-center">

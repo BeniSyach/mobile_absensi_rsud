@@ -1,68 +1,132 @@
-import { Briefcase, Calendar, User } from 'lucide-react-native';
+/* eslint-disable max-lines-per-function */
+import { Link } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import * as Progress from 'react-native-progress';
 
-import { Text } from '@/components/ui';
+import type { StatistikCutiResponse } from '@/api/cuti';
+import { Image, Text } from '@/components/ui';
 
-const cards = [
-  {
-    id: 1,
-    icon: User,
-    title: 'Akumulasi Sisa Cuti Tahunan Anda',
-    progress: 0.7,
-  },
-  {
-    id: 2,
-    icon: Calendar,
-    title: 'Total Hari Cuti yang Sudah Dipakai',
-    progress: 0.4,
-  },
-  {
-    id: 3,
-    icon: Briefcase,
-    title: 'Sisa Cuti Besar Anda',
-    progress: 0.9,
-  },
-];
+const gifAssets = {
+  'akumulasi_sisa_cuti.gif': require('../../../assets/gif/akumulasi_sisa_cuti.gif'),
+  'sisa_cuti.gif': require('../../../assets/gif/sisa_cuti.gif'),
+  'cuti_yg_digunakan.gif': require('../../../assets/gif/cuti_yg_digunakan.gif'),
+  'pengajuan_cuti.gif': require('../../../assets/gif/pengajuan_cuti.gif'),
+} as const;
 
-export const DashboardCuti = () => {
+type GifKey = keyof typeof gifAssets;
+
+interface Card {
+  id: number;
+  icon: GifKey;
+  title: string;
+  progress: number;
+  link: string;
+  clickable: boolean;
+}
+
+interface Props {
+  data?: StatistikCutiResponse;
+}
+
+export const DashboardCuti = ({ data }: Props) => {
+  const statistik = data?.data;
+
+  // fallback supaya tidak NaN
+  const totalCuti = statistik?.sisa_cuti_total ?? 0;
+  const sisaTahunIni = statistik?.sisa_cuti_tahun_ini ?? 0;
+  const terpakaiTahunIni = statistik?.cuti_terpakai_tahun_ini ?? 0;
+
+  const safeProgress = (value: number, max: number) =>
+    max > 0 ? Math.min(value / max, 1) : 0;
+
+  const cards: Card[] = [
+    {
+      id: 1,
+      icon: 'akumulasi_sisa_cuti.gif',
+      title: 'Akumulasi Sisa Cuti Tahunan Anda',
+      progress: safeProgress(totalCuti, 12),
+      link: '/cuti/akumulasi',
+      clickable: false,
+    },
+    {
+      id: 2,
+      icon: 'sisa_cuti.gif',
+      title: 'Sisa Cuti Anda',
+      progress: safeProgress(sisaTahunIni, 12),
+      link: '/cuti/sisa',
+      clickable: false,
+    },
+    {
+      id: 3,
+      icon: 'cuti_yg_digunakan.gif',
+      title: 'Cuti Yang Digunakan',
+      progress: safeProgress(terpakaiTahunIni, 12),
+      link: '/cuti/digunakan',
+      clickable: false,
+    },
+    {
+      id: 4,
+      icon: 'pengajuan_cuti.gif',
+      title: 'Pengajuan Cuti Staff',
+      progress: statistik?.pengajuan_pending ? 1 : 0,
+      link: '/cuti/pengajuan',
+      clickable: true,
+    },
+  ];
+
   return (
-    <View className="p-4">
-      <Text className="mb-2 text-lg font-bold text-black">Papan Pandu :</Text>
-      {cards.map(({ id, icon: Icon, title, progress }) => (
-        <View
-          key={id}
-          className="mb-3 w-full rounded-2xl border border-black bg-white p-4 shadow-lg"
-        >
-          <View className="flex-row items-start justify-between">
-            {/* Kiri: Icon di atas + teks di bawah (rata kiri) */}
-            <View className="flex-1 flex-col items-start">
-              <Icon size={40} color="#20A0D8" />
+    <View className="px-6 py-2">
+      <Text className="mb-1 text-lg font-bold text-black">Papan Pandu :</Text>
 
-              <Text className="mt-2 flex-1 text-base font-bold text-black">
-                {title}
-              </Text>
-            </View>
+      {cards.map(({ id, icon, title, progress, link, clickable }) => {
+        const percent = Math.round(progress * 100);
 
-            {/* Kanan: Progress Circle */}
-            <View className="ml-4 items-center justify-center">
-              <Progress.Circle
-                size={70}
-                progress={progress}
-                color="#20A0D8"
-                thickness={6}
-                showsText={false}
-                borderWidth={0}
-                unfilledColor="#E5E7EB"
-              />
-              <Text className="absolute text-sm font-bold text-gray-700">
-                {Math.round(progress * 100)}%
-              </Text>
+        const CardContent = (
+          <View className="mb-3 w-full rounded-2xl border border-gray-300 bg-white p-2 shadow-lg">
+            <View className="flex-row items-start justify-between">
+              {/* Kiri */}
+              <View className="flex-1">
+                <Image
+                  source={gifAssets[icon]}
+                  className="size-20 rounded-lg"
+                  transition={1000}
+                  contentFit="contain"
+                />
+                <Text className="text-xl font-extrabold text-black">
+                  {title}
+                </Text>
+              </View>
+
+              {/* Kanan */}
+              <View className="mx-4 my-1 items-center justify-center">
+                <Progress.Circle
+                  size={80}
+                  progress={progress}
+                  color="#20A0D8"
+                  thickness={12}
+                  borderWidth={0}
+                  unfilledColor="#E5E7EB"
+                  strokeCap="round"
+                />
+                <Text className="absolute text-3xl font-extrabold text-[#20A0D8]">
+                  {percent}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
+        );
+
+        if (clickable) {
+          return (
+            <Link key={id} href={link as any} asChild>
+              <Pressable>{CardContent}</Pressable>
+            </Link>
+          );
+        }
+
+        return <View key={id}>{CardContent}</View>;
+      })}
     </View>
   );
 };

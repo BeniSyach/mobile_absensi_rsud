@@ -1,6 +1,6 @@
 /* eslint-disable max-lines-per-function */
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { Search } from 'lucide-react-native';
+import { ChevronDown, Search } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import React from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
@@ -26,6 +26,7 @@ interface RemoteSelectProps {
 
   pageSize?: number;
   debounceMs?: number;
+  showIcons?: boolean;
 }
 
 export const RemoteSelect: React.FC<RemoteSelectProps> = ({
@@ -37,6 +38,7 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
   fetchOptionByValue,
   pageSize = 20,
   debounceMs = 400,
+  showIcons = true, // default: tampilkan icon
 }) => {
   const modal = useModal();
   const { colorScheme } = useColorScheme();
@@ -195,11 +197,35 @@ export const RemoteSelect: React.FC<RemoteSelectProps> = ({
         {label && <Text className="mb-1 text-lg text-black">{label}</Text>}
         <Pressable
           onPress={handleOpen}
-          className="rounded-xl border border-gray-300 bg-white p-3 dark:border-neutral-500 dark:bg-neutral-800"
+          className="flex-row items-center justify-between rounded-xl border border-gray-300 bg-white p-3 dark:border-neutral-500 dark:bg-neutral-800"
         >
-          <Text className="dark:text-white">
-            {selectedOption?.label || placeholder}
-          </Text>
+          {/* Kiri: search icon + label */}
+          <View className="flex-1 flex-row items-center">
+            {showIcons && (
+              <Search
+                size={20}
+                color={isDark ? '#D1D5DB' : '#6B7280'}
+                strokeWidth={2.2}
+                className="mr-2"
+              />
+            )}
+            <Text
+              className={`flex-1 ${
+                selectedOption ? 'text-black dark:text-white' : 'text-gray-400'
+              }`}
+            >
+              {selectedOption?.label || placeholder}
+            </Text>
+          </View>
+
+          {/* Kanan: panah bawah */}
+          {showIcons && (
+            <ChevronDown
+              size={18}
+              color={isDark ? '#D1D5DB' : '#6B7280'}
+              strokeWidth={2}
+            />
+          )}
         </Pressable>
       </View>
 

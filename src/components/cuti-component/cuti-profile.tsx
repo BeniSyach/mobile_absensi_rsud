@@ -101,12 +101,12 @@ export const CutiProfile = ({
   }, [photo?.photo_path, token, isError]);
 
   return (
-    <View className="items-center rounded-b-3xl bg-[#20A0D8] px-4 py-3">
+    <View className="items-center rounded-b-3xl bg-[#20A0D8] px-4">
       {/* Foto Profil */}
       <View className="relative">
         <Image
           source={{ uri: photoUri }}
-          className="size-36 rounded-full"
+          className="size-32 rounded-full"
           contentFit="cover"
           onProgress={({ loaded, total }) => {
             if (loaded && total) {
@@ -132,12 +132,13 @@ export const CutiProfile = ({
       </View>
 
       {/* Nama & Gelar */}
-      <View className="mt-4 items-center">
-        <Text className="text-xl font-semibold text-white">Halo, </Text>
+      <View className="mb-3 mt-2 items-center">
         {gelarDepan && (
           <Text className="text-xl font-bold text-white">{gelarDepan}</Text>
         )}
-        <Text className="text-2xl font-bold text-white">{displayNama}</Text>
+        <Text className="text-xl font-bold text-white">
+          Halo, {displayNama}
+        </Text>
         {gelarBelakang && (
           <Text className="text-xl font-bold text-white">{gelarBelakang}</Text>
         )}

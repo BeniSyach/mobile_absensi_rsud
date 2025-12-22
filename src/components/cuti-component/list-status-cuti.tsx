@@ -2,23 +2,20 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
-import type { PengajuanCutiItem } from '@/api/cuti';
+import { type PengajuanCutiItem } from '@/api/cuti';
 import { Image, Text } from '@/components/ui';
 
-/* ================== Helper ================== */
+/* ================== Types ================== */
 
-const mapStatusText = (status: number) => {
-  switch (status) {
-    case 1:
-      return 'diterima';
-    case 2:
-      return 'ditolak';
-    default:
-      return 'tertunda';
-  }
-};
+type StatusCuti = 1 | 2 | 3;
 
-const getBadgeStyle = (status: number) => {
+interface Props {
+  data: PengajuanCutiItem;
+}
+
+/* ================== Helpers ================== */
+
+const getBadgeStyle = (status: StatusCuti) => {
   switch (status) {
     case 1:
       return 'bg-[#479F76] border-[#479F76]';
@@ -29,29 +26,16 @@ const getBadgeStyle = (status: number) => {
   }
 };
 
-const formatDate = (date: string) =>
-  new Date(date).toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-
-/* ================== Props ================== */
-
-interface Props {
-  data: PengajuanCutiItem;
-}
-
 /* ================== Component ================== */
 
-export const ListRiwayatCuti = ({ data }: Props) => {
+export const ListStatusCuti = ({ data }: Props) => {
   const router = useRouter();
 
   return (
     <TouchableOpacity
       className="mb-3 w-full rounded-2xl border border-gray-400 bg-white p-4 shadow-lg"
       onPress={() =>
-        router.push(`/cuti/riwayat-cuti/detail-riwayat-cuti/${data.id}`)
+        router.push(`/cuti/status-cuti/detail-status-cuti/${data.id}`)
       }
     >
       <View className="flex-row items-center justify-between">
@@ -66,12 +50,11 @@ export const ListRiwayatCuti = ({ data }: Props) => {
 
           <View className="ml-3 flex-1">
             <Text className="pb-2 text-xl font-bold text-black">
-              Cuti Tahunan
+              {data.kode_jenis_cuti}
             </Text>
 
             <Text className="pb-2 text-sm font-semibold text-gray-600">
-              {formatDate(data.tanggal_mulai)} -{' '}
-              {formatDate(data.tanggal_selesai)}
+              {data.tanggal_mulai} - {data.tanggal_selesai}
             </Text>
 
             <Text className="text-sm text-gray-600">{data.alasan}</Text>
@@ -82,11 +65,11 @@ export const ListRiwayatCuti = ({ data }: Props) => {
         <View className="flex-row items-center space-x-2">
           <View
             className={`rounded-full border px-3 py-1 ${getBadgeStyle(
-              data.status
+              data.status as StatusCuti
             )}`}
           >
             <Text className="text-sm font-bold capitalize text-white">
-              {mapStatusText(data.status)}
+              {data.status}
             </Text>
           </View>
 

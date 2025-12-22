@@ -10,7 +10,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 interface DateInputProps {
   control: any;
   name: string;
-  label: string;
+  label?: string;
   placeholder: string;
   error?: string;
 }
