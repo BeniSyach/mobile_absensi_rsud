@@ -2,11 +2,11 @@ import { Link } from 'expo-router';
 import { Eye } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
-import { type BawahanRekapNilaiBawahan } from '@/api';
+import { type CutiPegawaiVerif } from '@/api/cuti';
 import { Text } from '@/components/ui';
 
 interface CardProps {
-  dataCardbawahan: BawahanRekapNilaiBawahan;
+  dataCardbawahan: CutiPegawaiVerif;
 }
 
 export default function CardPengajuanCuti({ dataCardbawahan }: CardProps) {
@@ -14,7 +14,9 @@ export default function CardPengajuanCuti({ dataCardbawahan }: CardProps) {
     <Link
       href={{
         pathname: '/cuti/pengajuan/detail-pengajuan-cuti',
-        params: { nik: dataCardbawahan.nik }, // ganti sesuai nilai nik
+        params: {
+          data: JSON.stringify(dataCardbawahan),
+        },
       }}
       asChild
     >
@@ -29,12 +31,12 @@ export default function CardPengajuanCuti({ dataCardbawahan }: CardProps) {
           <View className="flex-1">
             {/* Nama */}
             <Text className="text-lg font-bold text-black">
-              {dataCardbawahan?.nama ?? '-'}
+              {dataCardbawahan?.nama_pegawai ?? '-'}
             </Text>
 
             {/* NIP */}
             <Text className="text-base text-gray-500">
-              {dataCardbawahan?.nip ?? '-'}
+              {dataCardbawahan?.nama_unit_kerja ?? '-'}
             </Text>
 
             {/* Status */}

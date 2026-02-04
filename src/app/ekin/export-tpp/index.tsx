@@ -8,7 +8,7 @@ import LogoExportTPP from '@/components/ekin-component/export-tpp/logo-export-tp
 import NavbarExportTPP from '@/components/ekin-component/export-tpp/navbar-export-tpp';
 import ViewTPP from '@/components/ekin-component/export-tpp/view-tpp';
 
-export default function ExportTpp() {
+export default function ExportTppPage() {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   return (

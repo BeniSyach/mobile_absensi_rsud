@@ -1,12 +1,18 @@
 /* eslint-disable max-lines-per-function */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import Stack from 'expo-router/build/layouts/Stack';
-import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Modal, ScrollView, StatusBar } from 'react-native';
+import { Modal, Pressable, ScrollView, StatusBar } from 'react-native';
+import { showMessage } from 'react-native-flash-message';
 import { z } from 'zod';
 
+import { queryClient } from '@/api';
+import { type PutVerifCutiPayload } from '@/api/cuti';
+import { PutVerifCuti } from '@/api/cuti/put-verif-cuti';
+import { useInfiniteJenisCutiPegawai } from '@/api/cuti/use-jenis-cuti';
 import { CutiNavbar } from '@/components/cuti-component/cuti-navbar';
 import {
   Button,
@@ -14,6 +20,7 @@ import {
   Image,
   SafeAreaView,
   Select,
+  showErrorMessage,
   Text,
   View,
 } from '@/components/ui';
@@ -28,6 +35,8 @@ const schema = z.object({
   tanggal_selesai: z.string().min(1, 'Tanggal selesai wajib dipilih'),
   alamat_cuti: z.string().min(1, 'Alamat wajib diisi'),
   keterangan: z.string().min(1, 'Keterangan wajib diisi'),
+  passphrase_tte: z.string().min(1, 'Passpharase wajib diisi'),
+  alasan: z.string().min(1, 'Alasan wajib diisi'),
   pertimbangan_atasan_langsung: z
     .string()
     .min(1, 'Pertimbangan Atasan Langsung wajib diisi'),
@@ -36,12 +45,51 @@ const schema = z.object({
 export type FormType = z.infer<typeof schema>;
 
 export default function DetailPengajuanCuti() {
+  const { data } = useLocalSearchParams<{ data?: string }>();
+
+  const detail = useMemo(() => {
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }, [data]);
+
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [submittedData, setSubmittedData] = useState<FormType | null>(null);
-  const router = useRouter();
+  const [openConfirmTolak, setOpenConfirmTolak] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const { data: dataJenisCuti, isLoading } = useInfiniteJenisCutiPegawai({
+    limit: 20,
+  });
+
+  const { mutateAsync: putVerifCuti } = PutVerifCuti({
+    onSuccess: (res) => {
+      showMessage({
+        message: res.message,
+        type: 'success',
+        duration: 7000,
+      });
+    },
+    onError: (e: any) => {
+      showErrorMessage(e.error);
+    },
+  });
+
+  const jenisCutiOptions =
+    dataJenisCuti?.pages
+      .flatMap((page) => page.data)
+      .map((item) => ({
+        label: item.nama_jenis_cuti,
+        value: item.kode, // biasanya kirim kode ke backend
+      })) ?? [];
+
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormType>({
     resolver: zodResolver(schema),
@@ -51,11 +99,57 @@ export default function DetailPengajuanCuti() {
     setOpenConfirm(true);
   };
 
-  const onSubmit = (data: FormType) => {
-    setSubmittedData(data);
-    console.log('data submit', submittedData);
+  const ConfirmTolak = () => {
+    setOpenConfirmTolak(true);
+  };
+
+  const onSubmit = async (data: FormType) => {
+    const payloadVerifCuti: PutVerifCutiPayload = {
+      id: detail.id ?? '',
+      keputusan: 'disetujui',
+      passphrase_tte: data.passphrase_tte,
+      alasan: 'Disetujui',
+    };
+    console.log('data submit', payloadVerifCuti);
+    await putVerifCuti(payloadVerifCuti);
+    queryClient.invalidateQueries({
+      queryKey: ['useInfiniteCutiPegawaiVerif'],
+    });
+    queryClient.invalidateQueries({ queryKey: ['useInfiniteCutiPegawai'] });
     setOpenConfirm(false);
   };
+
+  const onSubmitTolak = async (data: FormType) => {
+    const payloadVerifCuti: PutVerifCutiPayload = {
+      id: detail.id ?? '',
+      keputusan: 'ditolak',
+      alasan: data.alasan,
+    };
+    console.log('data submit', payloadVerifCuti);
+    await putVerifCuti(payloadVerifCuti);
+    queryClient.invalidateQueries({
+      queryKey: ['useInfiniteCutiPegawaiVerif'],
+    });
+    queryClient.invalidateQueries({ queryKey: ['useInfiniteCutiPegawai'] });
+    setOpenConfirm(false);
+  };
+
+  useEffect(() => {
+    if (!detail) return;
+
+    reset({
+      jenis_cuti: detail.kode_jenis_cuti ?? '',
+      alasan_cuti: detail.alasan ?? '',
+      lama_cuti: String(detail.lama_cuti ?? ''),
+      satuan: detail.satuan_cuti ?? '',
+      tanggal_mulai: detail.tanggal_mulai?.split('T')[0] ?? '',
+      tanggal_selesai: detail.tanggal_selesai?.split('T')[0] ?? '',
+      alamat_cuti: detail.alamat_cuti ?? '',
+      keterangan: detail.keterangan ?? '',
+      pertimbangan_atasan_langsung: '',
+      passphrase_tte: '',
+    });
+  }, [detail, reset]);
 
   return (
     <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
@@ -87,15 +181,14 @@ export default function DetailPengajuanCuti() {
             render={({ field: { onChange, value } }) => (
               <Select
                 label="Jenis Cuti"
-                placeholder="Pilih Jenis Cuti..."
+                placeholder={
+                  isLoading ? 'Memuat jenis cuti...' : 'Pilih Jenis Cuti...'
+                }
                 value={value}
                 onSelect={onChange}
                 error={errors.jenis_cuti?.message}
-                options={[
-                  { label: 'Cuti Tahunan', value: 'tahunan' },
-                  { label: 'Cuti Sakit', value: 'sakit' },
-                  { label: 'Cuti Melahirkan', value: 'melahirkan' },
-                ]}
+                options={jenisCutiOptions}
+                disabled={true}
               />
             )}
           />
@@ -110,6 +203,7 @@ export default function DetailPengajuanCuti() {
             numberOfLines={3}
             style={{ height: 70, textAlignVertical: 'top' }}
             error={errors.alasan_cuti?.message}
+            disabled={true}
           />
 
           {/* LAMA CUTI */}
@@ -124,6 +218,7 @@ export default function DetailPengajuanCuti() {
                 keyboardType="number-pad"
                 placeholder="0"
                 error={errors.lama_cuti?.message}
+                disabled
               />
             </View>
 
@@ -142,6 +237,7 @@ export default function DetailPengajuanCuti() {
                       { label: 'Bulan', value: 'bulan' },
                     ]}
                     error={errors.satuan?.message}
+                    disabled={true}
                   />
                 )}
               />
@@ -157,6 +253,7 @@ export default function DetailPengajuanCuti() {
                 name="tanggal_mulai"
                 placeholder="Pilih Tanggal"
                 error={errors.tanggal_mulai?.message}
+                disabled={true}
               />
             </View>
 
@@ -167,6 +264,7 @@ export default function DetailPengajuanCuti() {
                 name="tanggal_selesai"
                 placeholder="Pilih Tanggal"
                 error={errors.tanggal_selesai?.message}
+                disabled={true}
               />
             </View>
           </View>
@@ -181,6 +279,7 @@ export default function DetailPengajuanCuti() {
             multiline
             numberOfLines={3}
             style={{ height: 70, textAlignVertical: 'top' }}
+            disabled={true}
           />
 
           {/* Keterangan */}
@@ -189,10 +288,11 @@ export default function DetailPengajuanCuti() {
             control={control}
             name="keterangan"
             placeholder="Masukkan Keterangan..."
-            error={errors.alamat_cuti?.message}
+            error={errors.keterangan?.message}
             multiline
             numberOfLines={3}
             style={{ height: 70, textAlignVertical: 'top' }}
+            disabled={true}
           />
 
           {/* Pertimbangan Atasan langsung */}
@@ -226,10 +326,10 @@ export default function DetailPengajuanCuti() {
             />
 
             <Button
-              label="Kembali"
+              label="Tolak"
               variant="outline"
-              className="flex-[1] bg-gray-400"
-              onPress={() => router.back()}
+              className="flex-[1] bg-red-500"
+              onPress={ConfirmTolak}
             />
           </View>
 
@@ -247,7 +347,25 @@ export default function DetailPengajuanCuti() {
                 <Text className="mb-3 text-center text-lg font-bold text-gray-800">
                   Apakah Anda Yakin Simpan Data ini ?
                 </Text>
-
+                <View className="mt-2">
+                  <ControlledInput
+                    label="Passpharase"
+                    control={control}
+                    name="passphrase_tte"
+                    placeholder="Masukkan Passpharase Anda..."
+                    error={errors.passphrase_tte?.message}
+                    secureTextEntry={showPassword}
+                    rightIcon={
+                      <Pressable onPress={togglePasswordVisibility}>
+                        {showPassword ? (
+                          <EyeOff size={20} color="gray" />
+                        ) : (
+                          <Eye size={20} color="gray" />
+                        )}
+                      </Pressable>
+                    }
+                  />
+                </View>
                 <View className="mt-4 flex-row gap-4">
                   <View className="flex-1">
                     <Button
@@ -263,6 +381,51 @@ export default function DetailPengajuanCuti() {
                       variant="outline"
                       className="w-full rounded-xl border-gray-400"
                       onPress={() => setOpenConfirm(false)}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
+          {/* MODAL KONFIRMASI */}
+          <Modal visible={openConfirmTolak} animationType="fade" transparent>
+            <View className="flex-1 items-center justify-center bg-black/50 px-4">
+              <View className="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl">
+                <View className="mb-3 items-center">
+                  <Image
+                    source={require('../../../../../assets/gif/danger.gif')}
+                    className="size-16"
+                    contentFit="contain"
+                  />
+                </View>
+                <Text className="mb-3 text-center text-lg font-bold text-gray-800">
+                  Apakah Anda Yakin Simpan Data ini ?
+                </Text>
+                <View className="mt-2">
+                  <ControlledInput
+                    label="Alasan Tolak"
+                    control={control}
+                    name="alasan"
+                    placeholder="Masukkan Alasan Anda..."
+                    error={errors.alasan?.message}
+                  />
+                </View>
+                <View className="mt-4 flex-row gap-4">
+                  <View className="flex-1">
+                    <Button
+                      label="Kirim"
+                      className="w-full rounded-xl bg-[#20A0D8]"
+                      onPress={handleSubmit(onSubmitTolak)}
+                    />
+                  </View>
+
+                  <View className="flex-1">
+                    <Button
+                      label="Batal"
+                      variant="outline"
+                      className="w-full rounded-xl border-gray-400"
+                      onPress={() => setOpenConfirmTolak(false)}
                     />
                   </View>
                 </View>

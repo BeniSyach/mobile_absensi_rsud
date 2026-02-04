@@ -27,6 +27,7 @@ export default function RiwayatCuti() {
   } = useInfiniteCutiPegawai({
     userId: storedMessage?.nik ?? '',
     limit: 30,
+    status: 1,
   });
 
   // gabung semua page

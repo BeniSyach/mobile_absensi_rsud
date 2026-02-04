@@ -57,20 +57,29 @@ const menuItems: { href: Href; image: any; disabled?: boolean }[] = [
     image: require('../../../assets/image/pelayanan-publik/icon-radiodsb.png'),
     disabled: false,
   },
+  // {
+  //   href: '/pelayanan-publik/salak-deli',
+  //   image: require('../../../assets/image/pelayanan-publik/icon-spbe.png'),
+  //   disabled: true,
+  // },
   {
-    href: '/pelayanan-publik/salak-deli',
-    image: require('../../../assets/image/pelayanan-publik/icon-spbe.png'),
-    disabled: true,
+    href: '/pelayanan-publik/epbb-sehat',
+    image: require('../../../assets/image/pelayanan-publik/icon-eppb-sehat.png'),
+    disabled: false,
   },
-
   {
     href: '/pelayanan-publik/salak-deli',
     image: require('../../../assets/image/pelayanan-publik/icon-salak-deli.png'),
     disabled: true,
   },
+  // {
+  //   href: '/pelayanan-publik/opd',
+  //   image: require('../../../assets/image/pelayanan-publik/icon-opd-true.png'),
+  //   disabled: false,
+  // },
   {
-    href: '/pelayanan-publik/opd',
-    image: require('../../../assets/image/pelayanan-publik/icon-opd-true.png'),
+    href: '/pelayanan-publik/aci',
+    image: require('../../../assets/image/pelayanan-publik/icon-aci.png'),
     disabled: false,
   },
 ];

@@ -8,7 +8,6 @@ import {
   Linking,
   Modal,
   ScrollView,
-  StatusBar,
   View,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
@@ -20,7 +19,7 @@ import { CheckUpdateApp, useCheckPasswordUser } from '@/api';
 import Footer from '@/components/home/footer';
 import MenuUtama from '@/components/home/menu-utama';
 import Navbar from '@/components/home/navbar';
-import { Image, Text } from '@/components/ui';
+import { FocusAwareStatusBar, Image, Text } from '@/components/ui';
 import { getMessage } from '@/lib';
 
 export default function Feed() {
@@ -113,8 +112,8 @@ export default function Feed() {
       className="flex-1 bg-[#0B3880]"
       edges={['top', 'left', 'right']}
     >
-      <StatusBar backgroundColor="#0B3880" barStyle="light-content" />
-
+      {/* <StatusBar backgroundColor="#0B3880" barStyle="dark-content" /> */}
+      <FocusAwareStatusBar hidden={true} />
       {/* 🔹 Loading Modal tetap ditampilkan tapi berada di dalam return */}
       <Modal
         visible={isPending || pendingCheckAndroid}

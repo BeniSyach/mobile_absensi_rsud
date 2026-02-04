@@ -4,22 +4,30 @@ import { client } from '../common';
 import type { PengajuanCutiResponse } from './types';
 
 interface UseInfiniteCutiParams {
-  userId: string | undefined;
+  userId?: string | undefined;
   limit?: number;
   search?: string;
+  status?: number;
+  kode_unit_kerja?: string;
 }
 
 export const useInfiniteCutiPegawai = ({
   userId,
   limit = 10,
   search,
+  status,
+  kode_unit_kerja,
 }: UseInfiniteCutiParams) => {
   return useInfiniteQuery({
     // Query key yang dynamic - auto refetch saat berubah
-    queryKey: ['useInfiniteCutiPegawai', userId, search, limit],
+    queryKey: [
+      'useInfiniteCutiPegawai',
+      search,
+      limit,
+      status,
+      kode_unit_kerja,
+    ],
     queryFn: async ({ pageParam = 1 }) => {
-      if (!userId) throw new Error('User ID is required');
-
       const response = await client.get<PengajuanCutiResponse>(
         '/aggregation/cuti',
         {
@@ -28,6 +36,8 @@ export const useInfiniteCutiPegawai = ({
             page: pageParam,
             limit,
             search,
+            status,
+            kode_unit_kerja,
           },
         }
       );
@@ -46,7 +56,6 @@ export const useInfiniteCutiPegawai = ({
       }
       return undefined;
     },
-    enabled: !!userId, // Hanya run query jika userId ada
     staleTime: 1000 * 60 * 5, // Cache selama 5 menit
   });
 };

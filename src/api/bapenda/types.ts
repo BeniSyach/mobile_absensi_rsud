@@ -52,3 +52,44 @@ export type TagihanPad = {
   JLH_SETOR: string | null;
   STATUS_BAYAR: 'BELUM DIBAYAR' | 'TERBAYAR';
 };
+
+export interface RiwayatNop {
+  tahun_pajak: string;
+  jatuh_tempo: string;
+  pokok_pajak: number;
+  denda: number;
+  total: number;
+  status: string;
+}
+
+export interface WajibPajakEpbbSehat {
+  nama: string;
+  alamat: string;
+  kelurahan: string;
+  kecamatan: string;
+  luas_tanah_m2: string;
+  luas_bangun_m2: string;
+}
+
+export interface ResponPbbApi {
+  success: boolean;
+  nop: string;
+  wajib_pajak: WajibPajakEpbbSehat;
+  riwayat_nop: RiwayatNop[];
+}
+
+export interface NopPerTahunResponse {
+  success: boolean;
+  nop: string;
+  detailNOP: DetailNOP;
+}
+
+export interface DetailNOP {
+  nama: string;
+  alamat: string;
+  tahun: string;
+  tanggalPembayaran: string | null;
+  sejumlah: number | null;
+  jumlahDiBayar: number | null;
+  tempatPembayaran: string | null;
+}

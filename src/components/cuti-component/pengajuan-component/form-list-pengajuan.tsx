@@ -10,7 +10,7 @@ import { RemoteSelect } from '@/components/ui/remote-select';
 
 type FormValues = {
   search: string;
-  kode_opd: string;
+  kode_unit_kerja: string;
 };
 
 interface Props {
@@ -82,7 +82,7 @@ export default function FormListPengajuan({ defaultValues, onChange }: Props) {
         <View className="flex-1">
           <Controller
             control={control}
-            name="kode_opd"
+            name="kode_unit_kerja"
             rules={{ required: 'OPD/UPT wajib dipilih' }}
             render={({ field: { value, onChange } }) => (
               <RemoteSelect

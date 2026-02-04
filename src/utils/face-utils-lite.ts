@@ -1,12 +1,9 @@
 /* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable max-params */
 /* eslint-disable max-lines-per-function */
-import * as FileSystem from 'expo-file-system';
 import * as jpeg from 'jpeg-js';
 import RNFS from 'react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
-
-const LAPLACE_THRESHOLD = 50; // ambang lokal piksel
 
 export async function imageUriToTensor(
   uri: string,
@@ -172,38 +169,6 @@ export async function imageUriToTensor(
   }
 }
 
-// Helper function to crop face from image before tensor conversion
-export async function cropFaceFromImage(
-  imageUri: string,
-  faceBox: { x: number; y: number; width: number; height: number },
-  targetSize: number = 112
-): Promise<string> {
-  try {
-    // Add some padding around the face
-
-    // Crop and resize the face
-    const croppedImage = await ImageResizer.createResizedImage(
-      imageUri,
-      targetSize,
-      targetSize,
-      'JPEG',
-      100,
-      0,
-      undefined,
-      false,
-      {
-        mode: 'cover',
-        onlyScaleDown: false,
-      }
-    );
-
-    return croppedImage.uri;
-  } catch (error) {
-    console.error('Error cropping face:', error);
-    throw error;
-  }
-}
-
 // Utility function to convert tensor back to image data (for debugging)
 export function tensorToImageData(
   tensor: Float32Array,
@@ -235,47 +200,6 @@ export function tensorToImageData(
   }
 
   return imageData;
-}
-
-// Helper to validate tensor shape and values
-export function validateTensor(
-  tensor: Float32Array,
-  expectedSize: number,
-  expectedRange: 'zero_one' | 'neg_one_pos_one'
-): boolean {
-  const expectedLength = expectedSize * expectedSize * 3;
-
-  if (tensor.length !== expectedLength) {
-    console.error(
-      `Invalid tensor length: expected ${expectedLength}, got ${tensor.length}`
-    );
-    return false;
-  }
-
-  // Check value ranges
-  const min = Math.min(...tensor);
-  const max = Math.max(...tensor);
-
-  if (expectedRange === 'zero_one') {
-    if (min < 0 || max > 1) {
-      console.error(
-        `Invalid tensor range for zero_one: min=${min}, max=${max}`
-      );
-      return false;
-    }
-  } else if (expectedRange === 'neg_one_pos_one') {
-    if (min < -1 || max > 1) {
-      console.error(
-        `Invalid tensor range for neg_one_pos_one: min=${min}, max=${max}`
-      );
-      return false;
-    }
-  }
-
-  console.log(
-    `Tensor validation passed: shape=[${expectedSize}, ${expectedSize}, 3], range=[${min.toFixed(3)}, ${max.toFixed(3)}]`
-  );
-  return true;
 }
 
 export async function imageUriToSpoofTensor(
@@ -426,52 +350,4 @@ export async function imageUriToSpoofTensor(
       }
     }
   }
-}
-
-export async function laplacianSharpness(uri: string): Promise<number> {
-  // Baca file sebagai buffer
-  const raw = await FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-
-  // Convert base64 ke buffer
-  const buffer = Buffer.from(raw, 'base64');
-
-  // Decode JPEG → RGBA
-  const decoded = jpeg.decode(buffer, { useTArray: true });
-  const { data, width, height } = decoded;
-
-  // Grayscale conversion
-  const gray: number[] = new Array(width * height);
-  for (let i = 0; i < width * height; i++) {
-    const r = data[i * 4];
-    const g = data[i * 4 + 1];
-    const b = data[i * 4 + 2];
-    gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
-  }
-
-  // Kernel Laplacian
-  const kernel = [
-    [0, 1, 0],
-    [1, -4, 1],
-    [0, 1, 0],
-  ];
-
-  let score = 0;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      let result = 0;
-      for (let ky = -1; ky <= 1; ky++) {
-        for (let kx = -1; kx <= 1; kx++) {
-          const pixel = gray[(y + ky) * width + (x + kx)];
-          result += pixel * kernel[ky + 1][kx + 1];
-        }
-      }
-      if (result > LAPLACE_THRESHOLD) {
-        score++;
-      }
-    }
-  }
-
-  return score;
 }

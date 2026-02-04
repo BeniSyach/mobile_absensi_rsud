@@ -1,4 +1,5 @@
-import 'dayjs/locale/id'; // untuk bahasa Indonesia
+/* eslint-disable max-lines-per-function */
+import 'dayjs/locale/id';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
@@ -13,6 +14,7 @@ interface DateInputProps {
   label?: string;
   placeholder: string;
   error?: string;
+  disabled?: boolean;
 }
 
 export const DateInput = ({
@@ -21,12 +23,22 @@ export const DateInput = ({
   label,
   placeholder,
   error,
+  disabled = false,
 }: DateInputProps) => {
   const [show, setShow] = useState(false);
 
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-lg text-gray-700">{label}</Text>
+      {label && (
+        <Text
+          className={`mb-1 text-lg ${
+            disabled ? 'text-gray-400' : 'text-gray-700'
+          }`}
+        >
+          {label}
+        </Text>
+      )}
+
       <Controller
         control={control}
         name={name}
@@ -39,24 +51,34 @@ export const DateInput = ({
           return (
             <>
               <Pressable
-                onPress={() => setShow(true)}
-                className={`flex-row items-center justify-between rounded-lg border bg-white px-2 py-3 ${
-                  error ? 'border-red-500' : 'border-gray-300'
-                }`}
+                disabled={disabled}
+                onPress={() => {
+                  if (!disabled) setShow(true);
+                }}
+                className={`flex-row items-center justify-between rounded-lg border px-2 py-3
+                  ${
+                    disabled
+                      ? 'border-gray-200 bg-gray-100'
+                      : 'border-gray-300 bg-white'
+                  }
+                  ${error && !disabled ? 'border-red-500' : ''}
+                `}
               >
-                <Text className="text-gray-700">
+                <Text
+                  className={`${disabled ? 'text-gray-400' : 'text-gray-700'}`}
+                >
                   {formattedValue || placeholder}
                 </Text>
-                <Calendar size={20} color="#6b7280" />
+
+                <Calendar size={20} color={disabled ? '#9ca3af' : '#6b7280'} />
               </Pressable>
 
-              {show && (
+              {show && !disabled && (
                 <DateTimePicker
                   value={value ? new Date(value) : new Date()}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'inline' : 'default'}
                   onChange={(event, date) => {
-                    // kalau user cancel/dismiss
                     if (event.type === 'dismissed') {
                       setShow(false);
                       return;
@@ -64,7 +86,6 @@ export const DateInput = ({
 
                     setShow(Platform.OS === 'ios');
                     if (date) {
-                      // tetap simpan format ISO (YYYY-MM-DD) ke form
                       onChange(date.toISOString().split('T')[0]);
                     }
                   }}
@@ -74,7 +95,10 @@ export const DateInput = ({
           );
         }}
       />
-      {error && <Text className="mt-1 text-sm text-red-500">{error}</Text>}
+
+      {error && !disabled && (
+        <Text className="mt-1 text-sm text-red-500">{error}</Text>
+      )}
     </View>
   );
 };

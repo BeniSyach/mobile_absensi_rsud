@@ -98,6 +98,7 @@ export default function MenuUtama() {
   });
 
   // Simulasi API trigger
+  // eslint-disable-next-line unused-imports/no-unused-vars
   const checkCutiStatus = async () => {
     const response = {
       success: true,
@@ -120,7 +121,6 @@ export default function MenuUtama() {
       // belum mengisi cuti
       setApiResponse(response);
       setModalVisible(true);
-      router.push('/cuti');
     }
   };
 
@@ -193,7 +193,7 @@ export default function MenuUtama() {
         </Link>
         <Pressable onPress={checkCutiStatus}>
           <Image
-            source={require('../../../../assets/image/icon_cuti.png')}
+            source={require('../../../../assets/image/icon-cuti.png')}
             className="size-52 rounded-lg"
             transition={1000}
             contentFit="contain"

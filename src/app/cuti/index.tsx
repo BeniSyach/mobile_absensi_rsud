@@ -35,7 +35,7 @@ export default function Cuti() {
   const cachedEmbedding = storage.getString(FACE_EMBED_KEY);
   const { data: dataCuti } = useGetDashboardCuti({
     variables: { nik },
-    enabled: false, // ⬅️ kita trigger manual
+    enabled: !!nik, // ⬅️ kita trigger manual
   });
 
   const {

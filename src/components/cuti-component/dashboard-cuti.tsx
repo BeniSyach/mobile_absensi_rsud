@@ -20,7 +20,8 @@ interface Card {
   id: number;
   icon: GifKey;
   title: string;
-  progress: number;
+  value: number; // angka asli (2, 5, 12, dst)
+  max: number; // batas (12)
   link: string;
   clickable: boolean;
 }
@@ -34,18 +35,17 @@ export const DashboardCuti = ({ data }: Props) => {
 
   // fallback supaya tidak NaN
   const totalCuti = statistik?.sisa_cuti_total ?? 0;
-  const sisaTahunIni = statistik?.sisa_cuti_tahun_ini ?? 0;
+  const sisaTahunIni = statistik?.sisa_cuti_total ?? 0;
   const terpakaiTahunIni = statistik?.cuti_terpakai_tahun_ini ?? 0;
-
-  const safeProgress = (value: number, max: number) =>
-    max > 0 ? Math.min(value / max, 1) : 0;
+  const pengajuanPending = statistik?.pengajuan_pending ?? 0;
 
   const cards: Card[] = [
     {
       id: 1,
       icon: 'akumulasi_sisa_cuti.gif',
       title: 'Akumulasi Sisa Cuti Tahunan Anda',
-      progress: safeProgress(totalCuti, 12),
+      value: totalCuti,
+      max: 12,
       link: '/cuti/akumulasi',
       clickable: false,
     },
@@ -53,7 +53,8 @@ export const DashboardCuti = ({ data }: Props) => {
       id: 2,
       icon: 'sisa_cuti.gif',
       title: 'Sisa Cuti Anda',
-      progress: safeProgress(sisaTahunIni, 12),
+      value: sisaTahunIni,
+      max: 12,
       link: '/cuti/sisa',
       clickable: false,
     },
@@ -61,7 +62,8 @@ export const DashboardCuti = ({ data }: Props) => {
       id: 3,
       icon: 'cuti_yg_digunakan.gif',
       title: 'Cuti Yang Digunakan',
-      progress: safeProgress(terpakaiTahunIni, 12),
+      value: terpakaiTahunIni,
+      max: 12,
       link: '/cuti/digunakan',
       clickable: false,
     },
@@ -69,7 +71,8 @@ export const DashboardCuti = ({ data }: Props) => {
       id: 4,
       icon: 'pengajuan_cuti.gif',
       title: 'Pengajuan Cuti Staff',
-      progress: statistik?.pengajuan_pending ? 1 : 0,
+      value: pengajuanPending,
+      max: 100, // bebas, karena hanya indikator
       link: '/cuti/pengajuan',
       clickable: true,
     },
@@ -79,8 +82,9 @@ export const DashboardCuti = ({ data }: Props) => {
     <View className="px-6 py-2">
       <Text className="mb-1 text-lg font-bold text-black">Papan Pandu :</Text>
 
-      {cards.map(({ id, icon, title, progress, link, clickable }) => {
-        const percent = Math.round(progress * 100);
+      {cards.map(({ id, icon, title, value, max, link, clickable }) => {
+        const progress = max > 0 ? Math.min(value / max, 1) : 0;
+        const displayValue = value;
 
         const CardContent = (
           <View className="mb-3 w-full rounded-2xl border border-gray-300 bg-white p-2 shadow-lg">
@@ -109,8 +113,9 @@ export const DashboardCuti = ({ data }: Props) => {
                   unfilledColor="#E5E7EB"
                   strokeCap="round"
                 />
+
                 <Text className="absolute text-3xl font-extrabold text-[#20A0D8]">
-                  {percent}
+                  {displayValue}
                 </Text>
               </View>
             </View>

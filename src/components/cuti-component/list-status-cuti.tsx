@@ -9,6 +9,17 @@ import { Image, Text } from '@/components/ui';
 
 type StatusCuti = 1 | 2 | 3;
 
+const mapStatusText = (status: number) => {
+  switch (status) {
+    case 1:
+      return 'diterima';
+    case 2:
+      return 'ditolak';
+    default:
+      return 'tertunda';
+  }
+};
+
 interface Props {
   data: PengajuanCutiItem;
 }
@@ -26,56 +37,69 @@ const getBadgeStyle = (status: StatusCuti) => {
   }
 };
 
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
 /* ================== Component ================== */
 
 export const ListStatusCuti = ({ data }: Props) => {
   const router = useRouter();
 
   return (
-    <TouchableOpacity
-      className="mb-3 w-full rounded-2xl border border-gray-400 bg-white p-4 shadow-lg"
-      onPress={() =>
-        router.push(`/cuti/status-cuti/detail-status-cuti/${data.id}`)
-      }
-    >
-      <View className="flex-row items-center justify-between">
-        {/* Kiri */}
-        <View className="flex-1 flex-row items-center">
-          <View className="w-10 items-center justify-center">
-            <Image
-              source={require('../../../assets/image/status_cuti.png')}
-              className="size-14"
-            />
+    <View className="p-4">
+      <TouchableOpacity
+        className="mb-3 rounded-2xl border border-gray-400 bg-white p-4 shadow-lg"
+        onPress={() =>
+          router.push({
+            pathname: '/cuti/status-cuti/detail-status-cuti/[id]',
+            params: { id: data.id, data: JSON.stringify(data) },
+          })
+        }
+      >
+        <View className="flex-row items-center justify-between">
+          {/* Kiri */}
+          <View className="flex-1 flex-row items-center">
+            <View className="w-10 items-center justify-center">
+              <Image
+                source={require('../../../assets/image/status_cuti.png')}
+                className="size-14"
+              />
+            </View>
+
+            <View className="ml-3 flex-1">
+              <Text className="pb-2 text-xl font-bold text-black">
+                {data.nama_jenis_cuti}
+              </Text>
+
+              <Text className="pb-2 text-sm font-semibold text-gray-600">
+                {formatDate(data.tanggal_mulai)} -{' '}
+                {formatDate(data.tanggal_selesai)}
+              </Text>
+
+              <Text className="text-sm text-gray-600">{data.alasan}</Text>
+            </View>
           </View>
 
-          <View className="ml-3 flex-1">
-            <Text className="pb-2 text-xl font-bold text-black">
-              {data.kode_jenis_cuti}
-            </Text>
+          {/* Kanan */}
+          <View className="flex-row items-center space-x-2">
+            <View
+              className={`rounded-full border px-3 py-1 ${getBadgeStyle(
+                data.status as StatusCuti
+              )}`}
+            >
+              <Text className="text-sm font-bold capitalize text-white">
+                {mapStatusText(data.status)}
+              </Text>
+            </View>
 
-            <Text className="pb-2 text-sm font-semibold text-gray-600">
-              {data.tanggal_mulai} - {data.tanggal_selesai}
-            </Text>
-
-            <Text className="text-sm text-gray-600">{data.alasan}</Text>
+            <Text className="text-lg font-bold text-gray-500">{'   >'}</Text>
           </View>
         </View>
-
-        {/* Kanan */}
-        <View className="flex-row items-center space-x-2">
-          <View
-            className={`rounded-full border px-3 py-1 ${getBadgeStyle(
-              data.status as StatusCuti
-            )}`}
-          >
-            <Text className="text-sm font-bold capitalize text-white">
-              {data.status}
-            </Text>
-          </View>
-
-          <Text className="text-lg font-bold text-gray-500">{'>'}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 };

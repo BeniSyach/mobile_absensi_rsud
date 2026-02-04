@@ -78,6 +78,8 @@ export default function FormAddRHK({
     },
   });
 
+  console.log('errors', errors);
+
   const isSekda =
     user?.data?.nama_eselon === 'II.a' || user?.data?.nama_eselon === 'II/a';
   const isKadis =
@@ -162,6 +164,7 @@ export default function FormAddRHK({
                       })) || []
                     );
                   } else {
+                    console.log('pageData', pageData);
                     return (
                       pageData?.data?.map((item: RhkStaffChildItem) => ({
                         label: item.uraian || '',

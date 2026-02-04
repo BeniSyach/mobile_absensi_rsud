@@ -8,7 +8,7 @@ import LogoExportTPPPejabat from '@/components/ekin-component/export-tpp-atasan/
 import NavbarExportTPPPejabat from '@/components/ekin-component/export-tpp-atasan/navbar-export-tpp-pejabat';
 import ViewTPPPejabat from '@/components/ekin-component/export-tpp-atasan/view-tpp-pejabat';
 
-export default function ExportTppPejabat() {
+export default function ExportTppPejabatPage() {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   return (

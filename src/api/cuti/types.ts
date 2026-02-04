@@ -15,6 +15,17 @@ export interface SisaCutiItem {
 }
 
 export interface SisaCutiResponse {
+  status: number;
+  message: string;
+  data: {
+    cuti_id: number;
+    level_verifikasi: number;
+    keputusan: string;
+    status: string;
+  };
+}
+
+export interface VerifCutiResponse {
   message: string;
   data: SisaCutiItem[];
 }
@@ -43,7 +54,8 @@ export interface StatistikCutiResponse {
 export interface StatistikCutiData {
   nik: string;
   nama_pegawai: string;
-
+  sisa_cuti_n1: number;
+  sisa_cuti_n2: number;
   kode_unit_kerja: string;
   nama_unit_kerja: string;
 
@@ -58,21 +70,22 @@ export interface StatistikCutiData {
 export interface PengajuanCutiItem {
   id: number;
   nik: string;
+  nama_pegawai: string;
   kode_unit_kerja: string;
   kode_jenis_cuti: string;
-
+  nama_jenis_cuti: string;
   lama_cuti: number;
   satuan_cuti: 'hari' | string;
-
+  nip: string;
   tanggal_mulai: string; // YYYY-MM-DD
   tanggal_selesai: string; // YYYY-MM-DD
   tanggal_pengajuan: string; // YYYY-MM-DD
-
+  nama_golongan_ruang: string;
   alasan: string;
   alamat_cuti: string;
-
+  no_hp: string;
   status: number; // 0 = pending, 1 = disetujui, dst (opsional mapping)
-
+  keterangan: string;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
 }
@@ -126,6 +139,13 @@ export interface PostCutiResponse {
   data: PostCutiData;
 }
 
+export interface PutVerifCutiPayload {
+  id: string | number;
+  keputusan: string;
+  passphrase_tte?: string;
+  alasan?: string;
+}
+
 export interface PostCutiPayload {
   nik: string;
   kode_unit_kerja: string;
@@ -138,4 +158,68 @@ export interface PostCutiPayload {
   alasan: string;
   alamat_cuti: string;
   status: number; // 0 = pending
+  keterangan: string;
+  no_hp: string;
+  nik_pengganti: string;
+  nik_verifikator1: string;
+  nik_verifikator2: string;
+  nik_verifikator3: string;
+  nik_verifikator4: string;
+  passphrase_tte: string;
+}
+export interface PengajuanCutiVerifResponse {
+  status: number;
+  message: string;
+  data: CutiPegawaiVerif[];
+  pagination: PaginationVerif;
+}
+export interface CutiPegawaiVerif {
+  id: number;
+  nik: string;
+  nama_pegawai: string;
+  nip: string;
+  kode_unit_kerja: string;
+  nama_unit_kerja: string;
+  nama_jabatan: string;
+  nama_golongan_ruang: string;
+
+  kode_jenis_cuti: string;
+  nama_jenis_cuti: string;
+  lama_cuti: number;
+  satuan_cuti: string;
+
+  tanggal_pengajuan: string; // ISO Date
+  tanggal_mulai: string; // ISO Date
+  tanggal_selesai: string; // ISO Date
+
+  alasan: string;
+  alamat_cuti: string;
+  keterangan: string;
+
+  no_hp: string | null;
+  nik_pengganti: string;
+  nama_pengganti: string;
+
+  status: string; // aslinya "0,"
+
+  nik_verifikator1: string;
+  nama_verifikator1: string;
+
+  nik_verifikator2: string;
+  nama_verifikator2: string;
+
+  nik_verifikator3: string;
+  nama_verifikator3: string;
+
+  nik_verifikator4: string;
+  nama_verifikator4: string;
+
+  current_verification_level: number;
+}
+
+export interface PaginationVerif {
+  total: number;
+  page: number;
+  limit: number;
+  last_page: number;
 }
