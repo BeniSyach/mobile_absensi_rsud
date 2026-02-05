@@ -42,7 +42,7 @@ const DataNopNewComponent = ({ data }: { data?: ResponPbbApi }) => {
 };
 
 export default function DetailEpbbSehat() {
-  const { data } = useLocalSearchParams<{ data?: string }>();
+  const { data, nop } = useLocalSearchParams<{ data?: string; nop?: string }>();
 
   const [pbb, setPbb] = useState<ResponPbbApi | null>(null);
   const [pending, setPending] = useState(true);
@@ -63,7 +63,7 @@ export default function DetailEpbbSehat() {
 
   const renderItem = React.useCallback(
     ({ item }: { item: RiwayatNop }) => (
-      <CardEPbbSehat dataTagihan={item} nop={pbb?.nop ?? 'null'} />
+      <CardEPbbSehat dataTagihan={item} nop={nop ?? 'null'} />
     ),
     []
   );

@@ -210,6 +210,7 @@ export default function EpbbSehatPage() {
           pathname: '/pelayanan-publik/epbb-sehat/detail',
           params: {
             data: JSON.stringify(response.data),
+            nop: data.nop,
           },
         });
         return;
